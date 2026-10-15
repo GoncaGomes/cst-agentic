@@ -78,4 +78,4 @@ Report:
 - Blocking questions or dependencies.
 - The expected implementation and verification scope.
 
-Do not implement the task or record checks that have not been executed.
+Do not implement the task or record checks that have not been executed. Write the task file only after explicit user approval.

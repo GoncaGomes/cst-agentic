@@ -7,7 +7,7 @@ description: Inspect the final change set and prepare a commit message and optio
 
 Resolve project paths from the repository root.
 Resolve bundled skill resources from this skill's directory.
-
+Every document edited should have an branch name at the begining.
 ## Gather context
 
 1. Read AGENTS.md and the assigned task.

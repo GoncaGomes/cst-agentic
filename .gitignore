@@ -9,6 +9,8 @@ wheels/
 # Virtual environments
 .venv
 .env
+.ruff_cache
+
 
 # Local agent drafts
 .agents/local/

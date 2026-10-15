@@ -15,3 +15,99 @@ The planned architecture will contain:
 - `uv` (Package manager)
 - CST Studio Suite 2025 (Windows environment for COM object interaction)
 
+## Project layout and installation
+
+Application code lives in `src/cst_agentic/`, offline tests and helpers in `tests/`,
+and the thin CLI entry point in root `main.py`. The distribution is named
+`cst-agentic`; Python imports use `cst_agentic`.
+
+Run `uv sync` from the repository root to install dependencies and the application
+package. Hatchling explicitly packages `src/cst_agentic`; imports use the installed
+package without path overrides.
+
+## Connectivity check (milestone 1)
+
+An explicit command verifies that the OpenAI Agents SDK can use the institutional Qwen
+endpoint to call `cst_connection_status` through the `cst-studio-mcp` MCP server, with the
+CST connection forced to disabled (offline) mode. A disconnected status is the *expected*
+result of this check. The check verifies connectivity only; it is not evidence of CST
+library compatibility, native modeling, or solver correctness.
+
+### Configuration
+
+Settings are read from a `.env` file in the repository root (the file is never modified),
+falling back to process environment variables. The `.env` file wins over the process
+environment so that unrelated ambient variables (for example a generic `AGENT`) cannot
+select a different model or endpoint.
+
+| Variable | Meaning |
+| --- | --- |
+| `SKYNET_BASE_URL` | Base URL of the institutional OpenAI-compatible endpoint |
+| `SKYNET_API_KEY` | API key for the institutional endpoint |
+| `AGENT` | Model ID (initially `qwen3.8-27b`) |
+| `CST_MCP_SERVER_EXECUTABLE` | Path to the runnable `cst-studio-mcp` executable |
+| `CST_MCP_SERVER_CWD` | Working directory for the MCP server process |
+
+An unrelated `OPENAI_API_KEY` is never used for this check; the institutional
+endpoint and `SKYNET_API_KEY` are always used explicitly.
+
+### Command
+
+Run from the repository root (after `uv sync`):
+
+```powershell
+uv run python main.py verify-connectivity
+```
+
+The check starts only when the subcommand is invoked; importing the project has no side
+effects. It:
+
+1. Starts the configured MCP subprocess with `CST_CONNECT_MODE=disabled` forced,
+   `CST_WORK_DIR` pinned to a client-owned work directory
+   (`%TEMP%\opencode\cst-agentic\work`), and `CST_TOOLSETS=core`. Credential-bearing
+   variables are removed from the child environment, and the CST application itself is
+   never started.
+2. Initializes MCP and discovers the tool catalog, following pagination.
+3. Exposes only `cst_connection_status` to the model. The allowlist is enforced in code
+   (only that tool is registered with the agent), so no other tool can be dispatched.
+4. Runs a bounded agent loop and asks the model to obtain and summarize the connection
+   status using the tool.
+5. Verifies that the model actually called the tool through MCP with an empty argument
+   object, that the MCP call had no error, that the payload reports `mode=offline` and
+   `project_open=false`, and that the final answer summarizes the disconnected status.
+   A partial success is reported as a failure.
+
+The model is configured with provider defaults; no explicit reasoning or thinking
+parameters are sent, so no claim is made about internal reasoning mode. OpenAI trace
+export is disabled for the check. Bounds: 6 agent turns, 120 s model request timeout,
+60 s MCP startup timeout, 30 s per MCP request (each `tools/list` page and each
+`tools/call`), and 15 s MCP shutdown timeout. A timed-out MCP request fails the check
+with a diagnostic rather than hanging.
+
+On success the command prints a diagnostic summary (server identity, discovered tools,
+recorded model and MCP tool calls, status payload, final answer, per-check results) and
+exits 0. On failure it prints the same summary with the failing checks and error and
+exits 1. Credentials never appear in the output.
+
+### Verification
+
+Offline tests (no network, no real MCP subprocess, no CST) cover configuration loading
+and precedence, provider request construction, MCP child environment settings, paginated
+discovery, tool restriction, response handling, resource cleanup, and representative
+failures:
+
+```powershell
+uv run pytest
+```
+
+Static checks:
+
+```powershell
+uv run ruff format --check .
+uv run ruff check .
+```
+
+The `verify-connectivity` command above is the explicitly invoked integration check
+against the institutional endpoint, the configured model, and the real MCP server; its
+evidence is recorded in the task file and kept separate from the mocked test results.
+

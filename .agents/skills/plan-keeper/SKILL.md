@@ -55,4 +55,4 @@ Report:
 - Which decisions or blockers remain.
 - The next recommended action.
 
-Do not modify application code or perform Git mutations.
+Do not modify application code or perform Git mutations. Only write PLAN.md uppon user approval. 
