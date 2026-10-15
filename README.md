@@ -2,13 +2,13 @@
 
 > Agentic System responsible for CST control and result analysis
 
-`cst-agentic` is a Python-based Model Context Protocol (MCP) server designed to bridge Large Language Models with CST Studio Suite. It enables autonomous agents to interact with electromagnetic simulations by separating the physical execution from data analysis.
+`cst-agentic` is a Python-based agentic workflow designed to bridge Large Language Models with CST Studio Suite. It enables autonomous agents to interact with electromagnetic simulations by separating the physical execution from data analysis.
 
 ## Architecture
 
-The system is divided into two primary agentic roles:
-1. **The Implementer (Controller):** Handles the mechanical interaction with CST via the COM interface. It updates parameters, rebuilds meshes, and triggers the solver.
-2. **The Reporter (Analyst):** Extracts simulation results (e.g., S-parameters, radiation patterns, mismatch efficiency) and compiles data-driven reports without hallucinating.
+The planned architecture will contain:
+1. **The CST Controller:** Handles the mechanical interaction with a MCP-server. It updates parameters, rebuilds meshes, and triggers the solver.
+2. **The Result Analyst:** Extracts simulation results (e.g., S-parameters, radiation patterns, mismatch efficiency), compiles the simulation results and generates a report.
 
 ## Prerequisites
 - Python 3.12+
