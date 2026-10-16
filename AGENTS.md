@@ -38,8 +38,8 @@ cst-agentic
 
 Use the `src` layout: keep application code in `src/cst_agentic/`, tests in
 `tests/`, and root `main.py` as a thin CLI entry point. The distribution name is
-`cst-agentic`; Python imports remain `cst_agentic`. Install the package with
-`uv sync` using Hatchling's configured package path; do not add `sys.path` or
+`cst-agentic`. Python imports remain `cst_agentic`. Install the package with
+`uv sync` using Hatchling's configured package path. Do not add `sys.path` or
 `PYTHONPATH` workarounds.
 
 ## Engineering Principles
@@ -182,4 +182,4 @@ Shell access can still write files and must respect the same role boundaries.
   summary or PR draft rather than prefixing every document with a branch name.
 - Add docstrings to public APIs and functions with non-obvious behaviour.
 - Explain relevant constraints, side effects and exceptions.
-- Avoid docstrings and comments that merely repeat names or type annotations
+- Avoid docstrings and comments that merely repeat names or type annotations.

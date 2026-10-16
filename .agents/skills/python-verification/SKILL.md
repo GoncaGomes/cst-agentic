@@ -16,8 +16,10 @@ Resolve bundled skill resources from this skill's directory.
 4. Match acceptance criteria to available automated or manual checks.
 5. Identify checks requiring external services or CST.
 
-Follow the project's package manager and execution conventions.
-In this project, use uv run for Python commands.
+Start from the approved Implementation approach and recorded technical
+conclusions. Confirm they still match the repository without repeating broad SDK
+investigation. Follow AGENTS.md's shell, working-directory, credential and
+`uv run` conventions for checks and experiments.
 
 ## Select proportionate checks
 
@@ -33,12 +35,16 @@ In this project, use uv run for Python commands.
 ## Execute and investigate
 
 - Run the selected checks from the appropriate working directory.
+- Inspect each command's failure before running dependent commands. Use a
+  temporary script for complex quoting under the shared environment rules.
 - Record the actual command and outcome.
 - Investigate failures rather than suppressing them or weakening assertions.
 - Distinguish existing failures from regressions using evidence.
 - Report missing tooling or unavailable services explicitly.
 - After corrections, rerun affected checks.
 - Avoid repeating successful checks without a relevant change or concern.
+- After repeated failures of the same method, change the investigation method
+  and record the conclusion. Return material design contradictions to planning.
 
 ## Classify the evidence
 
@@ -58,13 +64,16 @@ Update the assigned task's Implementation evidence section with:
 - Commands executed and relevant working directories.
 - Outcomes and acceptance criteria covered.
 - The verification category used.
+- Completed and active verification, blockers and the next action when resuming.
 
 Update Remaining limitations with:
 - Unverified behaviour and the reason.
 - Unresolved failures or environmental constraints.
 
 Keep detailed logs outside the task unless needed to explain a failure.
-Do not include credentials or sensitive values.
+Never emit credentials through commands, errors or evidence. Check configuration
+using variable names and presence or missing status rather than values.
+Do not run inference, real MCP integration or CST merely to validate instruction-only changes.
 
 ## Handoff
 
@@ -73,4 +82,5 @@ Summarize:
 - What failed or remains unverified.
 - Whether unresolved issues prevent the intended acceptance criteria.
 
-Do not claim independent review or integration.
+Do not claim independent review or integration. Supplied independent review
+outcomes are recorded separately in Review outcome by the coordinating agent.

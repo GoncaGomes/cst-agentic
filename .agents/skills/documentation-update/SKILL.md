@@ -16,6 +16,10 @@ Resolve bundled skill resources from this skill's directory.
 4. Determine which existing documents need updating.
 5. Prefer updating the authoritative document over creating duplicates.
 
+Use the approved task's Implementation approach and confirmed investigation
+conclusions as context. Return material contradictions to planning under
+AGENTS.md rather than silently documenting a replacement design.
+
 ## Update the README
 
 Keep the README focused on:
@@ -58,6 +62,8 @@ or extensive task evidence in the README.
 - Use existing verification evidence when it covers an unchanged example.
 - Ensure documentation does not claim unsupported functionality.
 - Keep documentation and examples free of credentials.
+- Inspect configuration through variable names and presence or missing status.
+  Do not dump configuration or run examples that could emit secret-bearing errors.
 
 ## Handoff
 
@@ -65,6 +71,10 @@ Include in the implementation summary:
 - Documentation files changed.
 - The behaviour or usage change they explain.
 - Examples checked and remaining limitations.
+
+Record the evidence in the assigned task under AGENTS.md's checkpoint rules.
+Independent review belongs in Review outcome and is recorded by its coordinating
+agent from the supplied report, not inferred from documentation checks.
 
 Do not create a separate documentation report by default.
 Do not update PLAN.md or record integration events as part of this procedure.

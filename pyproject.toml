@@ -18,6 +18,9 @@ dependencies = [
     "ruff>=0.17.0",
 ]
 
+[project.scripts]
+cst-agentic = "cst_agentic.cli:main"
+
 [dependency-groups]
 dev = [
     "pytest>=9.1.1",

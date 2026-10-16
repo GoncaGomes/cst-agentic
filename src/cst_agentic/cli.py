@@ -10,9 +10,12 @@ from __future__ import annotations
 import argparse
 import asyncio
 import sys
+from pathlib import Path
 
 from cst_agentic.config import ConfigError, load_connectivity_config
 from cst_agentic.connectivity import run_connectivity_check
+
+ENV_PATH_DEFAULT = Path("./.env")
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -35,7 +38,7 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     verify.add_argument(
         "--env",
-        default=None,
+        default=ENV_PATH_DEFAULT,
         metavar="PATH",
         help="Path to the .env file (default: ./.env in the working directory).",
     )
