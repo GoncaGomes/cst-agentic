@@ -158,6 +158,10 @@ Do not mark a task ready with a placeholder approach or unresolved material desi
 decision. Reconcile material implementation discoveries under the existing approval
 policy. Routine evidence and review outcome updates are not specification approval.
 
+Do not mark a task ready with a placeholder approach or unresolved material design
+decision. Reconcile material implementation discoveries under the existing approval
+policy. Routine evidence and review outcome updates are not specification approval.
+
 ## Handoff
 
 Report:
