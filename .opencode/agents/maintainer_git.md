@@ -13,6 +13,12 @@ permissions:
     resource: "HISTORY.md"
     effect: allow
   - action: shell
+    resource: "git branch *"
+    effect: ask
+  - action: shell
+    resource: "git switch *"
+    effect: ask
+  - action: shell
     resource: "git add *"
     effect: ask
   - action: shell
