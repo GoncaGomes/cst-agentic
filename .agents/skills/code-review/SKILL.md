@@ -11,8 +11,11 @@ Resolve bundled skill resources from this skill's directory.
 ## Establish the review scope
 
 1. Read AGENTS.md and the assigned task.
+   Use the primary's short milestone brief. Do not load the whole roadmap,
+   backlog or implementation chat unless a concrete dependency requires it.
 2. Identify the requested comparison: working changes, a commit or a branch.
-3. Identify the comparison base when reviewing committed changes.
+3. Identify the comparison base, including the current HEAD when reviewing
+   working changes. State which task and paths are covered.
 4. Include relevant staged, unstaged and untracked files when reviewing working changes.
 5. Read available implementation evidence and previous findings.
 6. For re-review, retain the original finding identifiers and triggering scenarios.
@@ -86,7 +89,9 @@ Do not drop a finding because the nearby code changed or a different test passed
 For superseded findings, explain the changed requirement or replacement finding.
 Use new identifiers for newly discovered defects.
 
-Return the report in the conversation.
-Do not edit the task, create report files or modify Git state. The coordinating
-agent records the supplied outcome in Review outcome under AGENTS.md. State only
-the verdict justified by the inspected evidence, without implying integration approval.
+Return the report to the primary in the conversation. Keep it compact, while
+preserving each finding's trigger, evidence and required resolution.
+Do not edit the task, create report files or modify Git state. The primary planner
+records the supplied outcome in Review outcome under AGENTS.md. Do not launch
+implementer or Git roles. State only the verdict justified by the inspected
+evidence, without implying integration approval.

@@ -11,15 +11,18 @@ Resolve bundled skill resources from this skill's directory.
 ## Identify the verification contract
 
 1. Read AGENTS.md and the assigned task.
-2. Inspect pyproject.toml, relevant checks and CI configuration.
+2. Inspect pyproject.toml, relevant checks and CI configuration for this task.
 3. Identify the changed behaviour and affected interfaces.
 4. Match acceptance criteria to available automated or manual checks.
 5. Identify checks requiring external services or CST.
 
-Start from the approved Implementation approach and recorded technical
+Start from the subplanner's approved Implementation approach and recorded technical
 conclusions. Confirm they still match the repository without repeating broad SDK
 investigation. Follow AGENTS.md's shell, working-directory, credential and
 `uv run` conventions for checks and experiments.
+
+Verify one task's outcome at a time. Do not load the whole roadmap or backlog.
+Keep directly related tests and documentation with the implementation commit.
 
 ## Select proportionate checks
 
@@ -77,10 +80,10 @@ Do not run inference, real MCP integration or CST merely to validate instruction
 
 ## Handoff
 
-Summarize:
+Return to the primary with a concise summary:
 - What was verified.
 - What failed or remains unverified.
 - Whether unresolved issues prevent the intended acceptance criteria.
 
-Do not claim independent review or integration. Supplied independent review
-outcomes are recorded separately in Review outcome by the coordinating agent.
+Do not launch reviewer or claim independent review or integration. The primary
+dispatches review and records its actual report separately in Review outcome.
