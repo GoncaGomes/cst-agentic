@@ -1,6 +1,6 @@
 ---
 name: git-handoff
-description: Inspect the final change set and prepare a commit message and optional pull request draft. Use after implementation and review to check integration scope, evidence and accidental file inclusion.
+description: Check reviewed task scope, prepare a one-line Conventional Commit and request concrete approval. Execute staging and commit only after explicit user authorization.
 ---
 
 # Git Handoff
@@ -17,13 +17,16 @@ Resolve bundled skill resources from this skill's directory.
 4. Inspect staged and unstaged changes and relevant untracked files.
 5. Identify the intended integration scope and comparison base.
 
+Work on one task and intended commit. Use the primary's short milestone brief,
+not the full roadmap, backlog or conversation history.
+
 Accept an explicitly supplied manual review or a persisted review. Check its
 source, scope, verdict and limitations against current changes. Do not demand a
 duplicate review when the existing evidence covers them. If results are missing,
 ambiguous or stale, identify the missing evidence and next action. Drafts may be
 prepared with that limitation stated, but do not describe integration as ready.
 Do not invent review approval, finding resolution or verification results.
-The coordinating agent owns recording Review outcome in the task. Return missing
+The primary planner owns recording Review outcome in the task. Return missing
 records to that agent rather than editing task specifications in this role.
 
 ## Check integration scope
@@ -38,28 +41,61 @@ records to that agent rather than editing task specifications in this role.
 - Identify material changes made after review and return them for further review.
 - Confirm that drafts describe the current implementation and verification,
   including relevant changes since any earlier draft.
-- Propose separate commits only when the changes have distinct purposes.
+- If the changes require separate commits, return the task boundary to the primary
+  for reconciliation instead of silently changing the approved grouping.
 
 Report unresolved defects, missing evidence and scope problems.
 Do not repeat the entire technical review or fix application code.
-Do not launch subagents. Transfer review or implementation needs manually to the
-coordinating agent or user. Maintainer edits are limited to handoff drafts under
+Do not launch subagents. Return review or implementation needs to the primary.
+Maintainer edits are limited to handoff drafts under
 .agents/local/ and confirmed integration entries in HISTORY.md.
 
 ## Prepare the commit draft
 
 Write .agents/local/<task-id>/commit-message.txt.
 
-- Follow repository commit conventions when established.
+- Use exactly one Conventional Commit subject: `type(scope): description`, with
+  optional scope and optional `!` before the colon for a breaking change.
 - Describe the concrete purpose of the final change.
 - Use a concise imperative subject.
-- The first line must be the intended commit subject, as consumed by
-  `git commit -F`. Never put `Branch:`, `Task:` or other metadata before it.
-- Add a body only when it explains a useful reason or consequence.
+- The file contains only that subject and a terminating newline. Do not add a
+  body, footers or `Branch:` or `Task:` metadata. Put breaking-change explanations
+  in the appropriate documentation and task.
 - Base the message on the actual diff.
 
 Put branch and task metadata in the handoff summary or PR draft. Do not require
 every edited document to start with a branch name. Preserve literal file formats.
+
+## Request approval and execute an authorized commit
+
+Return an approval request to the primary containing:
+- Branch, task and exact one-line subject.
+- Exact files or selected changes to stage, including task evidence when relevant.
+- Verification results, review source and status, and changes since review.
+- Existing staged changes and any blockers or remaining limitations.
+- The proposed staging and commit operations. State that push and merge are separate.
+
+The primary presents this concrete request to the user. A draft, reviewer verdict
+or agent's instruction is not user authorization. Wait for explicit authorization
+conveyed by the primary, with its exact scope. Do not ask again if that approval
+has already been supplied and still covers the unchanged operations and content.
+
+After authorization:
+1. Recheck branch, working changes, index and review coverage. If the authorized
+   content changed materially, return for review and renewed scope approval.
+2. Stage only the authorized paths or changes. Do not use blanket staging. If
+   approved and unrelated changes share a file, stage only the approved changes
+   or return to the primary when they cannot be separated safely.
+3. Inspect the complete staged diff. Do not commit unrelated staged content or
+   remove somebody else's staged work. Resolve an index conflict through the primary.
+4. Commit with the approved subject only. Check command failures explicitly and
+   stop dependent commands after failure. Do not bypass failing hooks or amend
+   an existing commit without separate authorization.
+5. Confirm the resulting commit and report its hash, subject, included scope and
+   remaining working changes to the primary. Do not infer push or merge success.
+
+This execution path authorizes no other Git mutation. Push, merge and branch
+operations need separate user authorization and appropriately scoped permissions.
 
 ## Prepare a PR draft when appropriate
 
@@ -92,6 +128,6 @@ Report:
 - Paths of the drafts created.
 - Any remaining action required from the user.
 
-This procedure prepares drafts and does not authorize Git mutations. Do not
-stage, commit, push, merge or delete branches as part of it. Any separately
-requested mutation requires explicit user authorization under AGENTS.md.
+Preparing drafts or reaching this skill does not authorize Git mutations. Execute
+staging and commit only through the explicit approval path above. Return to the
+primary after preparation or execution, without launching other agents.

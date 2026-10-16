@@ -1,6 +1,6 @@
 ---
 name: plan-keeper
-description: Create, update or reconcile PLAN.md when establishing project direction, resuming work, recording confirmed progress or preparing the next development step. Use for project state and milestones, not detailed task specification.
+description: Maintain a concise PLAN.md of branch milestones and their main contracts. Use for project direction and evidenced progress, not commit-level task specifications.
 ---
 
 # Plan Keeper
@@ -11,7 +11,7 @@ Resolve bundled skill resources from this skill's directory.
 ## Gather context
 
 1. Read AGENTS.md and the existing PLAN.md, if present.
-2. Read relevant repository documentation and existing tasks, if any.
+2. Read relevant repository documentation and only the tasks needed for current progress.
 3. Inspect repository state and available evidence before changing progress.
 4. Identify contradictions, missing information and outdated assumptions.
 
@@ -28,22 +28,33 @@ material reconciliation in the conversation before writing unless approval for
 that scope is already present. Write PLAN.md only with user approval under
 AGENTS.md. Do not request the same approval again.
 
-Use task-planning to turn an approved milestone into a technically actionable
-task. Keep implementation instructions and investigation conclusions in that
-task rather than expanding the roadmap.
+The primary planner owns this skill. Delegate technical investigation and task
+specifications to subplanner, which uses task-planning. Pass the selected milestone
+contract and relevant references. Keep implementation instructions in tasks.
 
 ## Create or update the plan
 
 Maintain these sections:
 
 - Objective and boundaries.
-- Milestones.
+- Milestones, each representing one coherent branch deliverable.
 - Current work, with task references.
 - Next steps, ordered by dependency and priority.
 - Decisions and blockers.
 - Completed work, with references to detailed evidence.
 
 Preserve useful existing structure rather than rewriting the plan unnecessarily.
+
+For each milestone, record compactly:
+- A stable identifier, title and branch name. A name does not mean a branch exists.
+- The main contract: observable outcome, important scope boundaries, public
+  interfaces or safety constraints when material, and completion checks.
+- Dependencies and links to prepared tasks. Do not elaborate the future backlog.
+- Separate implementation, verification, review and integration states.
+
+Use a short table or a few lines per milestone, whichever is easier to read.
+Choose branch names consistent with repository conventions and user direction.
+Preserve historical branch names. Do not create or rename branches through this skill.
 
 State milestone dependencies and the next actionable step explicitly. Record
 unresolved decisions instead of inventing requirements. A proposed direction
@@ -61,9 +72,14 @@ does not establish implemented or verified capability.
 
 ## Keep the plan compact
 
+- Target about 80 lines or fewer and normally under 700 words. This is a writing
+  target, not a model context setting. Preserve essential contracts when condensing.
 - Link to task files for specifications and implementation evidence.
 - Avoid copying logs, full review reports or detailed command output.
 - Replace completed detail with a concise summary and references.
+- Avoid per-file instructions, commit checklists, repeated decisions and diaries.
+- Put the current task, blocker and next action in a few lines. Read the linked
+  task only when its details matter, especially when briefing a Qwen role.
 - Keep the next actionable step explicit.
 - Apply AGENTS.md's investigation and continuation rules when reconciling resumed work.
 

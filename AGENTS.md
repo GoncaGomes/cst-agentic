@@ -63,21 +63,28 @@ Use the `src` layout: keep application code in `src/cst_agentic/`, tests in
 
 ### Roles and skill ownership
 
-Keep the four development profiles under `.opencode/agents/` and the six skills
+Keep the five development profiles under `.opencode/agents/` and the six skills
 under `.agents/skills/`. Load a relevant skill before performing its procedure.
 Profiles define role boundaries and skills contain the detailed procedures.
 
 | Profile | Responsibility | Required skills when applicable |
 | --- | --- | --- |
-| `planner` | Establish direction, maintain the roadmap, investigate and prepare actionable tasks | `plan-keeper` for roadmaps, `task-planning` for task specifications |
+| `planner` | Primary contact, roadmap owner, task validator and sole dispatcher | `plan-keeper` |
+| `subplanner` | Investigate a milestone and prepare small commit-sized tasks | `task-planning` |
 | `implementer` | Execute the approved approach, document, verify and correct findings | `documentation-update`, `python-verification` |
 | `reviewer` | Inspect actual changes and return an independent, read-only report | `code-review` before every review |
-| `maintainer_git` | Check integration scope and evidence, prepare Git drafts | `git-handoff` before preparing drafts |
+| `maintainer_git` | Check final scope and review coverage, prepare drafts and request commit approval | `git-handoff` |
+
+The planner uses `openai/gpt-6.1-sol` and delegates technical planning to the
+subplanner using the same model. The three execution roles use
+`skynet/qwen3.8-27b`. Only the planner launches subagents. Children return results
+to it instead of launching siblings or nested agents.
 
 The planner can start from the user's objective when `PLAN.md` is missing or
-empty. Keep roadmap direction and progress concise, with task links for technical
-detail. Track implementation, verification, independent review and integration
-as separate states supported by evidence.
+empty. Each milestone represents one coherent branch deliverable and names its
+branch, main contract, dependencies and task links. Keep the roadmap concise,
+normally around 80 lines or fewer, with technical detail in tasks. Track
+implementation, verification, independent review and integration separately.
 
 Write `PLAN.md` and create or revise task specifications only with user approval.
 Approval already supplied in the current conversation is sufficient for its
@@ -85,12 +92,18 @@ stated scope. Do not ask for the same approval again. Routine status,
 implementation evidence, limitations and review outcome updates within an
 approved task do not require separate specification approval.
 
-Every development task needs an `Implementation approach` before it is ready for
-implementation. The planner owns the technical investigation and approach. Base
-it on the actual repository, installed dependencies and confirmed public APIs.
-Resolve design-critical uncertainties before readiness. For an existing task
-missing an adequate approach, return the affected planning work to the planner
-before substantial implementation.
+The subplanner prepares only the next actionable tasks. Each task targets one
+small, coherent, independently verifiable commit with a one-line Conventional
+Commit subject. Include expected created or modified files, acceptance criteria,
+an actionable `Implementation approach` and checks. Keep directly related code,
+tests and documentation together. Split independent outcomes into separate tasks.
+
+The subplanner owns technical investigation based on actual code, installed
+dependencies and confirmed public APIs. Resolve design-critical uncertainty
+before readiness. The primary validates the proposal and presents it to the user
+for approval before implementation. An adequate approach and scope approval are
+both required. Return missing or stale planning to the primary before affected
+implementation. Do not retroactively invent approval for existing tasks.
 
 The implementer checks that the approved approach still fits the repository and
 makes local decisions within it. Reuse recorded technical conclusions rather
@@ -100,7 +113,14 @@ deviations in the task. Material gaps or changes to architecture, dependencies,
 scope or public interfaces return to planning with evidence and follow the same
 approval policy. Continue independent work only where that decision has no effect.
 
-### Investigation and continuation
+### Context, investigation and continuation
+
+Qwen roles work on one task at a time. The primary supplies the task path, a short
+milestone contract, branch and comparison base, necessary references and the
+expected result. Read the current task and relevant code, not the whole roadmap,
+all tasks or raw chat history. Expand context only for a concrete dependency or
+unresolved question. Keep handoffs and evidence concise, with paths and symbols
+instead of copied modules, SDK source or successful command logs.
 
 For planning and implementation, search for symbols before reading large modules
 and inspect the smallest useful code regions. Consolidate confirmed conclusions
@@ -121,29 +141,39 @@ reconcile it with current files. Accumulated token usage is not context-window
 size. Do not invent deployment limits or increase configured limits merely to
 delay compaction.
 
-### Review transfer
+### Dispatch and review transfer
 
-Reviews are explicit handoffs, without an automatic chain of agents. Support
-manual profile selection and reviewer delegation only when the user explicitly
-requests delegation. The reviewer returns its report without editing files.
+After task approval, the planner dispatches implementation, independent review,
+corrections and Git preparation without asking for permission at every handoff.
+Dispatch sequentially in a shared checkout. Do not mix unfinished tasks in one
+review or intended commit. Scope changes follow the planning approval policy.
 
-The coordinating agent, normally the implementer, records the actual supplied
-report in the assigned task's `Review outcome` section. Include the review source,
-reviewed scope, verdict, unresolved findings and relevant limitations. Include
-dates or session references only when supplied. Keep this separate from
-implementation evidence. Never invent approval or strengthen a review verdict.
+The reviewer returns a read-only report to the primary. The primary records the
+actual report in the task's `Review outcome`, including source, reviewed scope and
+base, verdict, finding identifiers and states, and relevant limitations. Include
+dates or session references only when supplied. Never invent or strengthen a
+review verdict. The implementer owns implementation and verification evidence.
 
-In manual sessions, explicitly supply the report to the next session or persist
-it before the next handoff. The maintainer can use a supplied or persisted review
-and must check its coverage of current changes, including changes since review.
-Missing or stale review evidence is a handoff limitation, not inferred approval.
+Return blocking findings to the implementer, then re-review the corrections with
+the original findings. After two unsuccessful correction rounds, the primary
+reassesses the task, findings and approach before dispatching more corrections.
+Escalate material design gaps immediately. The primary adjudicates disagreements
+and examines sensitive changes involving credentials, CST mutations or recovery.
+
+The Git manager checks that the supplied or persisted review covers current
+changes. Missing or stale evidence is a handoff limitation, not approval. Manual
+review reports may be supplied to the primary and recorded without duplicate
+review when their coverage is sufficient. Only explicit user authorization
+permits staging and committing the prepared scope.
 
 ### OpenCode selection and permissions
 
-Project-local `opencode.jsonc` selects `implementer` for new sessions. The four
-profiles remain manually selectable. Existing sessions retain their selected
-agent and may require an explicit switch to `implementer` or the intended role.
-Preserve model selections and provider settings when changing workflow rules.
+Project-local `opencode.jsonc` selects `planner` and GPT-6.1 Sol for new sessions.
+The other four profiles are subagents. Existing sessions retain their selected
+agent and model, so select the planner and its model explicitly when resuming.
+Preserve provider definitions, credentials and model context limits. GPT-6.1 Sol
+tool calling requires a compatible Responses API route. Configuration alone
+does not verify authentication or runtime model routing.
 
 Use OpenCode V2 `permissions` rules with `action`, `resource` and `effect`.
 Edit restrictions are tool restrictions, not a complete filesystem sandbox.
@@ -165,6 +195,11 @@ Shell access can still write files and must respect the same role boundaries.
 
 - Do not stage, commit, push, merge, or delete branches
   without explicit authorization.
+- Only `maintainer_git` performs authorized staging and commits in the delegated
+  workflow. Before approval, present the branch, one-line Conventional Commit
+  subject, exact changes, checks and review status through the primary. Approval
+  covers that concrete scope. Push, merge and branch operations require their
+  own authorization. Never stage unrelated work or use a blanket add operation.
 - Do not overwrite unrelated uncommitted changes.
 - Do not modify secrets or credentials.
 - Preparing drafts does not authorize Git mutations. Update `HISTORY.md` only

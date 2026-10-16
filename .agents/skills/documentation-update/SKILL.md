@@ -11,7 +11,7 @@ Resolve bundled skill resources from this skill's directory.
 ## Identify affected documentation
 
 1. Read AGENTS.md and the assigned task.
-2. Inspect the implementation changes and existing documentation.
+2. Inspect the current task's implementation changes and affected documentation.
 3. Identify changes to usage, configuration, interfaces or project structure.
 4. Determine which existing documents need updating.
 5. Prefer updating the authoritative document over creating duplicates.
@@ -19,6 +19,10 @@ Resolve bundled skill resources from this skill's directory.
 Use the approved task's Implementation approach and confirmed investigation
 conclusions as context. Return material contradictions to planning under
 AGENTS.md rather than silently documenting a replacement design.
+
+Keep documentation for the current observable outcome in the same task and
+intended commit. Do not pull unrelated documentation cleanup into it. Use the
+primary's milestone brief instead of loading the whole roadmap or backlog.
 
 ## Update the README
 
@@ -73,8 +77,8 @@ Include in the implementation summary:
 - Examples checked and remaining limitations.
 
 Record the evidence in the assigned task under AGENTS.md's checkpoint rules.
-Independent review belongs in Review outcome and is recorded by its coordinating
-agent from the supplied report, not inferred from documentation checks.
+Independent review belongs in Review outcome and is recorded by the primary
+planner from the supplied report, not inferred from documentation checks.
 
 Do not create a separate documentation report by default.
 Do not update PLAN.md or record integration events as part of this procedure.
