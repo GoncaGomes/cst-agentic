@@ -115,7 +115,7 @@ def _require(
 
 
 def _default_work_dir() -> Path:
-    return Path(tempfile.gettempdir()) / "opencode" / "cst-agentic" / "work"
+    return Path(tempfile.gettempdir()) / "cst-agentic" / "work"
 
 
 def load_connectivity_config(
