@@ -1,3 +1,10 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/cst_agentic"]
+
 [project]
 name = "cst-agentic"
 version = "0.1.0"
@@ -5,5 +12,31 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "mcp>=2.3.0",
+    "openai-agents>=0.24.0",
+    "python-dotenv>=1.2.4",
     "ruff>=0.17.0",
 ]
+
+[project.scripts]
+cst-agentic = "cst_agentic.cli:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["cst_agentic", "fakes"]
