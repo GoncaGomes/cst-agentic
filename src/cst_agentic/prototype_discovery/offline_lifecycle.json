@@ -1,0 +1,109 @@
+[
+  {
+    "mode": "remove_old_then_call_old",
+    "events": [
+      {
+        "request_visible": [
+          "cst_connection_status",
+          "cst_create_brick",
+          "cst_create_cone",
+          "cst_create_cylinder",
+          "cst_create_sphere",
+          "cst_create_wire",
+          "discover_tools"
+        ],
+        "history_tool_results": 0
+      },
+      {
+        "invoked": "discover_tools",
+        "result": {
+          "status": "activated_next_request",
+          "active_groups": [
+            "parameters"
+          ],
+          "active_names": [
+            "cst_connection_status",
+            "cst_get_parameter",
+            "cst_list_parameters",
+            "cst_set_parameter",
+            "discover_tools"
+          ],
+          "visible_count": 5
+        }
+      },
+      {
+        "invoked": "cst_create_cylinder",
+        "result": {
+          "status": "ok",
+          "solid": "Body:Rod",
+          "native_effect_verified": false,
+          "mock": true
+        }
+      },
+      {
+        "request_visible": [
+          "cst_connection_status",
+          "cst_get_parameter",
+          "cst_list_parameters",
+          "cst_set_parameter",
+          "discover_tools"
+        ],
+        "history_tool_results": 2
+      }
+    ],
+    "final": "DONE",
+    "objects": [
+      "Body:Rod"
+    ],
+    "network_requests": 0
+  },
+  {
+    "mode": "add_new_and_call_too_early",
+    "events": [
+      {
+        "request_visible": [
+          "cst_connection_status",
+          "cst_get_parameter",
+          "cst_list_parameters",
+          "cst_set_parameter",
+          "discover_tools"
+        ],
+        "history_tool_results": 0
+      },
+      {
+        "invoked": "discover_tools",
+        "result": {
+          "status": "activated_next_request",
+          "active_groups": [
+            "geometry_basic"
+          ],
+          "active_names": [
+            "cst_connection_status",
+            "cst_create_brick",
+            "cst_create_cone",
+            "cst_create_cylinder",
+            "cst_create_sphere",
+            "cst_create_wire",
+            "discover_tools"
+          ],
+          "visible_count": 7
+        }
+      },
+      {
+        "request_visible": [
+          "cst_connection_status",
+          "cst_create_brick",
+          "cst_create_cone",
+          "cst_create_cylinder",
+          "cst_create_sphere",
+          "cst_create_wire",
+          "discover_tools"
+        ],
+        "history_tool_results": 2
+      }
+    ],
+    "final": "DONE",
+    "objects": [],
+    "network_requests": 0
+  }
+]

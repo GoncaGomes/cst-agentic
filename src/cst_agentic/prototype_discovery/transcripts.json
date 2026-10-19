@@ -1,0 +1,531 @@
+{
+  "budget": 48,
+  "requests_used": 8,
+  "records": [
+    {
+      "variant": "proposal",
+      "scenario": "clarification",
+      "prompt": "Mock fixture facts (synthetic, not native readbacks): intended project\nC:/mock/discovery.cst is already explicitly selected and held in an owned mock\ninstance. A fixture-owned independent identity/unit check established this target\nand mm/GHz/ns; these are supplied test facts, not implemented MCP capabilities.\nProject is unsolved and empty except when the scenario states otherwise.\nCreate a cylinder.",
+      "setup": {},
+      "max_turns": 3,
+      "events": [
+        {
+          "kind": "request",
+          "request": 1,
+          "visible": [
+            "discover_tools",
+            "cst_connection_status"
+          ],
+          "active_groups": [],
+          "matched_history_pairs": 0,
+          "latency_s": 14.453,
+          "http_status": 200
+        },
+        {
+          "kind": "assistant",
+          "text": "I'll prepare the geometry toolset for this, then confirm the cylinder's specifics before creating it.\n\n",
+          "tool_calls": [
+            {
+              "name": "discover_tools",
+              "arguments": "{\"groups\":[\"geometry_basic\"]}"
+            }
+          ],
+          "finish_reason": "tool_calls",
+          "usage": {
+            "completion_tokens": 868,
+            "prompt_tokens": 1465,
+            "total_tokens": 2333,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "discover_tools",
+          "arguments": {
+            "groups": [
+              "geometry_basic"
+            ]
+          },
+          "result": {
+            "status": "activated_next_request",
+            "active_groups": [
+              "geometry_basic"
+            ],
+            "active_names": [
+              "cst_connection_status",
+              "cst_create_brick",
+              "cst_create_cone",
+              "cst_create_cylinder",
+              "cst_create_sphere",
+              "cst_create_wire",
+              "discover_tools"
+            ],
+            "visible_count": 7
+          },
+          "state": {
+            "project": "C:/mock/discovery.cst",
+            "params": {},
+            "objects": [],
+            "loaded": [],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "geometry_basic"
+            ]
+          }
+        },
+        {
+          "kind": "request",
+          "request": 2,
+          "visible": [
+            "discover_tools",
+            "cst_connection_status",
+            "cst_create_brick",
+            "cst_create_cylinder",
+            "cst_create_cone",
+            "cst_create_sphere",
+            "cst_create_wire"
+          ],
+          "active_groups": [
+            "geometry_basic"
+          ],
+          "matched_history_pairs": 1,
+          "latency_s": 8.828,
+          "http_status": 200
+        },
+        {
+          "kind": "assistant",
+          "text": "The cylinder tool is loaded (mock). Before I create it in `C:/mock/discovery.cst` (units: mm per the fixture facts), please confirm:\n\n1. **Axis** \u2013 x, y, or z?\n2. **Radii** \u2013 outer radius (and inner radius if it's a hollow tube; 0 = solid)\n3. **Axial extent** \u2013 range min / max along the axis (e.g., 0 \u2192 10 mm)\n4. **Center** \u2013 x/y/z center (default is origin if unspecified)\n5. **Material** \u2013 PEC by default; name another if needed\n6. **Name/component** \u2013 e.g., a solid name and component (I can generate incidental names if you prefer)\n\nShare whichever you have; defaults can fill the rest.",
+          "tool_calls": [],
+          "finish_reason": "stop",
+          "usage": {
+            "completion_tokens": 304,
+            "prompt_tokens": 3968,
+            "total_tokens": 4272,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          }
+        }
+      ],
+      "final_output": "The cylinder tool is loaded (mock). Before I create it in `C:/mock/discovery.cst` (units: mm per the fixture facts), please confirm:\n\n1. **Axis** \u2013 x, y, or z?\n2. **Radii** \u2013 outer radius (and inner radius if it's a hollow tube; 0 = solid)\n3. **Axial extent** \u2013 range min / max along the axis (e.g., 0 \u2192 10 mm)\n4. **Center** \u2013 x/y/z center (default is origin if unspecified)\n5. **Material** \u2013 PEC by default; name another if needed\n6. **Name/component** \u2013 e.g., a solid name and component (I can generate incidental names if you prefer)\n\nShare whichever you have; defaults can fill the rest.",
+      "status": "returned"
+    },
+    {
+      "variant": "proposal",
+      "scenario": "cylinder",
+      "prompt": "Mock fixture facts (synthetic, not native readbacks): intended project\nC:/mock/discovery.cst is already explicitly selected and held in an owned mock\ninstance. A fixture-owned independent identity/unit check established this target\nand mm/GHz/ns; these are supplied test facts, not implemented MCP capabilities.\nProject is unsolved and empty except when the scenario states otherwise.\nCreate one solid cylinder of radius 5 mm, height 10 mm, base center (0,0,0), along +Z using exact library PEC. Do nothing else.",
+      "setup": {},
+      "max_turns": 6,
+      "events": [
+        {
+          "kind": "request",
+          "request": 3,
+          "visible": [
+            "discover_tools",
+            "cst_connection_status"
+          ],
+          "active_groups": [],
+          "matched_history_pairs": 0,
+          "latency_s": 3.266,
+          "http_status": 200
+        },
+        {
+          "kind": "assistant",
+          "text": "",
+          "tool_calls": [
+            {
+              "name": "discover_tools",
+              "arguments": "{\"groups\":[\"geometry_basic\", \"materials_basic\"]}"
+            }
+          ],
+          "finish_reason": "tool_calls",
+          "usage": {
+            "completion_tokens": 128,
+            "prompt_tokens": 1498,
+            "total_tokens": 1626,
+            "prompt_tokens_details": {
+              "cached_tokens": 1373
+            }
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "discover_tools",
+          "arguments": {
+            "groups": [
+              "geometry_basic",
+              "materials_basic"
+            ]
+          },
+          "result": {
+            "status": "activated_next_request",
+            "active_groups": [
+              "geometry_basic",
+              "materials_basic"
+            ],
+            "active_names": [
+              "cst_assign_material",
+              "cst_connection_status",
+              "cst_create_brick",
+              "cst_create_cone",
+              "cst_create_cylinder",
+              "cst_create_lossy_metal",
+              "cst_create_material",
+              "cst_create_sphere",
+              "cst_create_wire",
+              "cst_get_material_info",
+              "cst_list_materials",
+              "cst_load_material",
+              "discover_tools"
+            ],
+            "visible_count": 13
+          },
+          "state": {
+            "project": "C:/mock/discovery.cst",
+            "params": {},
+            "objects": [],
+            "loaded": [],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "geometry_basic",
+              "materials_basic"
+            ]
+          }
+        },
+        {
+          "kind": "request",
+          "request": 4,
+          "visible": [
+            "discover_tools",
+            "cst_connection_status",
+            "cst_create_brick",
+            "cst_create_cylinder",
+            "cst_create_cone",
+            "cst_create_sphere",
+            "cst_create_wire",
+            "cst_create_material",
+            "cst_create_lossy_metal",
+            "cst_load_material",
+            "cst_list_materials",
+            "cst_assign_material",
+            "cst_get_material_info"
+          ],
+          "active_groups": [
+            "geometry_basic",
+            "materials_basic"
+          ],
+          "matched_history_pairs": 1,
+          "latency_s": 5.891,
+          "http_status": 200
+        },
+        {
+          "kind": "assistant",
+          "text": "",
+          "tool_calls": [
+            {
+              "name": "cst_create_cylinder",
+              "arguments": "{\"component\":\"Geometry\",\"name\":\"Cylinder_5mm_R_10mm_H\",\"axis\":\"z\",\"outer_radius\":5,\"range_min\":0,\"range_max\":10,\"material\":\"PEC\"}"
+            }
+          ],
+          "finish_reason": "tool_calls",
+          "usage": {
+            "completion_tokens": 231,
+            "prompt_tokens": 5096,
+            "total_tokens": 5327,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "cst_create_cylinder",
+          "arguments": {
+            "component": "Geometry",
+            "name": "Cylinder_5mm_R_10mm_H",
+            "axis": "z",
+            "outer_radius": 5,
+            "range_min": 0,
+            "range_max": 10,
+            "material": "PEC"
+          },
+          "result": {
+            "status": "error",
+            "code": "material_not_loaded",
+            "mock": true
+          },
+          "state": {
+            "project": "C:/mock/discovery.cst",
+            "params": {},
+            "objects": [],
+            "loaded": [],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "geometry_basic",
+              "materials_basic"
+            ]
+          }
+        },
+        {
+          "kind": "request",
+          "request": 5,
+          "visible": [
+            "discover_tools",
+            "cst_connection_status",
+            "cst_create_brick",
+            "cst_create_cylinder",
+            "cst_create_cone",
+            "cst_create_sphere",
+            "cst_create_wire",
+            "cst_create_material",
+            "cst_create_lossy_metal",
+            "cst_load_material",
+            "cst_list_materials",
+            "cst_assign_material",
+            "cst_get_material_info"
+          ],
+          "active_groups": [
+            "geometry_basic",
+            "materials_basic"
+          ],
+          "matched_history_pairs": 2,
+          "latency_s": 3.359,
+          "http_status": 200
+        },
+        {
+          "kind": "assistant",
+          "text": "The mock reports `PEC` isn't loaded in this session, so I'll load it from the native library first.\n\n",
+          "tool_calls": [
+            {
+              "name": "cst_load_material",
+              "arguments": "{\"name\":\"PEC\",\"library_name\":\"PEC\"}"
+            }
+          ],
+          "finish_reason": "tool_calls",
+          "usage": {
+            "completion_tokens": 151,
+            "prompt_tokens": 5246,
+            "total_tokens": 5397,
+            "prompt_tokens_details": {
+              "cached_tokens": 5092
+            }
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "cst_load_material",
+          "arguments": {
+            "name": "PEC",
+            "library_name": "PEC"
+          },
+          "result": {
+            "status": "ok",
+            "name": "PEC",
+            "library_name": "PEC",
+            "native_properties_verified": false,
+            "mock": true
+          },
+          "state": {
+            "project": "C:/mock/discovery.cst",
+            "params": {},
+            "objects": [],
+            "loaded": [
+              "PEC"
+            ],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "geometry_basic",
+              "materials_basic"
+            ]
+          }
+        },
+        {
+          "kind": "request",
+          "request": 6,
+          "visible": [
+            "discover_tools",
+            "cst_connection_status",
+            "cst_create_brick",
+            "cst_create_cylinder",
+            "cst_create_cone",
+            "cst_create_sphere",
+            "cst_create_wire",
+            "cst_create_material",
+            "cst_create_lossy_metal",
+            "cst_load_material",
+            "cst_list_materials",
+            "cst_assign_material",
+            "cst_get_material_info"
+          ],
+          "active_groups": [
+            "geometry_basic",
+            "materials_basic"
+          ],
+          "matched_history_pairs": 3,
+          "latency_s": 4.14,
+          "http_status": 200
+        },
+        {
+          "kind": "assistant",
+          "text": "PEC loaded from the library (mock). Retrying the solid creation:\n\n",
+          "tool_calls": [
+            {
+              "name": "cst_create_cylinder",
+              "arguments": "{\"axis\":\"z\",\"component\":\"Geometry\",\"outer_radius\":5,\"range_max\":10,\"range_min\":0,\"name\":\"Cylinder_R5_H10\"}"
+            }
+          ],
+          "finish_reason": "tool_calls",
+          "usage": {
+            "completion_tokens": 134,
+            "prompt_tokens": 5359,
+            "total_tokens": 5493,
+            "prompt_tokens_details": {
+              "cached_tokens": 5242
+            }
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "cst_create_cylinder",
+          "arguments": {
+            "axis": "z",
+            "component": "Geometry",
+            "outer_radius": 5,
+            "range_max": 10,
+            "range_min": 0,
+            "name": "Cylinder_R5_H10"
+          },
+          "result": {
+            "status": "ok",
+            "solid": "Geometry:Cylinder_R5_H10",
+            "native_effect_verified": false,
+            "mock": true
+          },
+          "state": {
+            "project": "C:/mock/discovery.cst",
+            "params": {},
+            "objects": [
+              "Geometry:Cylinder_R5_H10"
+            ],
+            "loaded": [
+              "PEC"
+            ],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "geometry_basic",
+              "materials_basic"
+            ]
+          }
+        },
+        {
+          "kind": "request",
+          "request": 7,
+          "visible": [
+            "discover_tools",
+            "cst_connection_status",
+            "cst_create_brick",
+            "cst_create_cylinder",
+            "cst_create_cone",
+            "cst_create_sphere",
+            "cst_create_wire",
+            "cst_create_material",
+            "cst_create_lossy_metal",
+            "cst_load_material",
+            "cst_list_materials",
+            "cst_assign_material",
+            "cst_get_material_info"
+          ],
+          "active_groups": [
+            "geometry_basic",
+            "materials_basic"
+          ],
+          "matched_history_pairs": 4,
+          "latency_s": 3.812,
+          "http_status": 200
+        },
+        {
+          "kind": "assistant",
+          "text": "Created. Assigning PEC explicitly to confirm the exact material:\n\n",
+          "tool_calls": [
+            {
+              "name": "cst_assign_material",
+              "arguments": "{\"solid\":\"Geometry:Cylinder_R5_H10\",\"material\":\"PEC\"}"
+            }
+          ],
+          "finish_reason": "tool_calls",
+          "usage": {
+            "completion_tokens": 218,
+            "prompt_tokens": 5520,
+            "total_tokens": 5738,
+            "prompt_tokens_details": {
+              "cached_tokens": 5355
+            }
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "cst_assign_material",
+          "arguments": {
+            "solid": "Geometry:Cylinder_R5_H10",
+            "material": "PEC"
+          },
+          "result": {
+            "status": "blocked",
+            "reason": "mock_handler_not_implemented",
+            "mock": true
+          },
+          "state": {
+            "project": "C:/mock/discovery.cst",
+            "params": {},
+            "objects": [
+              "Geometry:Cylinder_R5_H10"
+            ],
+            "loaded": [
+              "PEC"
+            ],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "geometry_basic",
+              "materials_basic"
+            ]
+          }
+        },
+        {
+          "kind": "request",
+          "request": 8,
+          "visible": [
+            "discover_tools",
+            "cst_connection_status",
+            "cst_create_brick",
+            "cst_create_cylinder",
+            "cst_create_cone",
+            "cst_create_sphere",
+            "cst_create_wire",
+            "cst_create_material",
+            "cst_create_lossy_metal",
+            "cst_load_material",
+            "cst_list_materials",
+            "cst_assign_material",
+            "cst_get_material_info"
+          ],
+          "active_groups": [
+            "geometry_basic",
+            "materials_basic"
+          ],
+          "matched_history_pairs": 5,
+          "error_type": "ReadTimeout"
+        }
+      ],
+      "status": "bounded_stop",
+      "error_type": "APITimeoutError"
+    }
+  ]
+}
