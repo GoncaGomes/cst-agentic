@@ -188,7 +188,7 @@ Shell access can still write files and must respect the same role boundaries.
   Do not dump environment variables or credential-bearing configuration.
 - `.gitignore`, masking output later and restricting one tool do not protect all
   access paths. Apply these rules to every tool, shell and delegated operation.
-- Do not read `.env`, authentication databases or raw chat logs for workflow
+- NEVER read `.env`, authentication databases or raw chat logs for workflow
   configuration tasks. Credential rotation is separate work.
 
 ## Repository Operations

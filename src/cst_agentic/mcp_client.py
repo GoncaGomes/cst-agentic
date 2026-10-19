@@ -2,14 +2,24 @@
 
 This module owns the MCP subprocess lifecycle: it starts the configured
 executable with a sanitized environment, performs the MCP ``initialize``
-handshake, discovers tools following pagination, records every ``tools/call``,
-and always tears the subprocess down (bounded, and safe under cancellation).
+handshake, discovers tools following pagination, serializes every
+``tools/call`` per client instance, records one :class:`McpAttempt` per
+admitted invocation, and always tears the subprocess down (bounded, and safe
+under cancellation).
 
 Every request to the server is bounded by ``request_timeout_s``: each
-``tools/list`` page and each ``tools/call`` must complete within it. A timeout
-raises :class:`McpError`/:class:`McpCallError` with a diagnostic instead of
-hanging, so a server that initializes and then stalls cannot keep the caller
-alive indefinitely.
+``tools/list`` page and each ``tools/call`` (queueing plus SDK execution) must
+complete within it. A timeout raises :class:`McpError`/:class:`McpCallError`
+with a diagnostic instead of hanging, so a server that initializes and then
+stalls cannot keep the caller alive indefinitely.
+
+A ``tools/call`` may reach the server before a local failure is observed: a
+timeout, a transport or SDK-validation error, and caller cancellation can all
+follow delivery, and a missing usable response cannot prove that CST performed
+no operation. Such an attempt is recorded ``uncertain`` and the client then
+permanently refuses further tool dispatches, because replaying or continuing
+could duplicate an operation whose effects cannot be ruled out. Constructing
+a new client does not reconcile the previous one.
 """
 
 from __future__ import annotations
@@ -17,6 +27,8 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import math
+import time
 from collections.abc import Mapping
 from contextlib import suppress
 from dataclasses import dataclass, field
@@ -24,12 +36,38 @@ from pathlib import Path
 from typing import Any
 
 from mcp import ClientSession, StdioServerParameters
+from mcp.client.extension import UnexpectedClaimedResult
 from mcp.client.stdio import stdio_client
+from pydantic import ValidationError as PydanticValidationError
 
 logger = logging.getLogger(__name__)
 
 # Safety bound so a misbehaving server cannot loop pagination forever.
 _MAX_DISCOVERED_TOOLS = 10_000
+
+# States of an :class:`McpAttempt` record; pending until finalized, then one
+# of the three terminal outcomes.
+ATTEMPT_PENDING = "pending"
+ATTEMPT_NOT_DISPATCHED = "not_dispatched"
+ATTEMPT_RECEIVED = "received"
+ATTEMPT_UNCERTAIN = "uncertain"
+
+# Bounded diagnostic categories carried by attempt records. These are stable
+# labels only: never raw exception text, configuration values, or secrets.
+DIAG_ACCEPTED = "accepted"
+DIAG_QUEUED_TIMEOUT = "queued_timeout"
+DIAG_QUEUED_CANCELLED = "queued_cancelled"
+DIAG_BLOCKED_UNCERTAIN = "blocked_uncertain"
+DIAG_NOT_READY = "not_ready"
+DIAG_TIMEOUT = "timeout"
+DIAG_TRANSPORT_FAILURE = "transport_failure"
+DIAG_SDK_VALIDATION_FAILURE = "sdk_validation_failure"
+DIAG_CANCELLED_AFTER_DISPATCH = "cancelled_after_dispatch"
+DIAG_RECEIVED = "received"
+
+# SDK failures that reject an otherwise well-formed transport response because
+# its shape or structured content does not validate.
+_SDK_VALIDATION_ERRORS = (PydanticValidationError, UnexpectedClaimedResult)
 
 
 class McpError(Exception):
@@ -56,13 +94,85 @@ class McpToolCall:
 
 
 @dataclass
+class McpAttempt:
+    """One admitted ``call_tool`` invocation, kept in admission order.
+
+    The record is appended when the invocation is admitted and, for the
+    handled outcomes (a returned response, or a timeout, transport/SDK
+    validation failure, or cancellation), is finalized exactly once,
+    synchronously, before the invocation returns or raises. Unhandled
+    process-exit exceptions are not caught by the client and may leave the
+    record :data:`ATTEMPT_PENDING`.
+
+    ``arguments`` is a frozen copy taken before the first await. The
+    top-level mapping and every nested mapping or sequence are detached from
+    the caller, so later mutation of the caller's arguments (at any depth)
+    cannot alter the admitted values or the values actually sent. JSON
+    scalars are immutable and pass through as-is. Values that are not
+    JSON-compatible are retained by reference. ``started_monotonic`` and
+    ``ended_monotonic`` are ``time.monotonic()`` readings.
+
+    ``state`` is :data:`ATTEMPT_PENDING` until finalized, then a terminal
+    outcome: ``not_dispatched`` (no request reached the SDK), ``received``
+    (a response was returned), or ``uncertain`` (the request may have reached
+    the server and no usable response was observed). A ``received`` outcome
+    is not proof that CST executed the operation successfully or that partial
+    effects are absent. ``diagnostic`` is a stable bounded category, never a
+    raw exception message.
+    """
+
+    name: str
+    arguments: dict[str, Any]
+    started_monotonic: float
+    state: str = ATTEMPT_PENDING
+    diagnostic: str = DIAG_ACCEPTED
+    dispatched: bool = False
+    ended_monotonic: float | None = None
+    result: McpToolCall | None = None
+
+    def finalize(
+        self,
+        state: str,
+        diagnostic: str,
+        now: float,
+        result: McpToolCall | None = None,
+    ) -> None:
+        """Move the record to a terminal outcome.
+
+        The client calls this exactly once for every handled outcome (a
+        returned response, or a timeout, transport/SDK-validation failure,
+        or cancellation). Unhandled process-exit exceptions bypass it and
+        leave the record pending.
+        """
+        self.state = state
+        self.diagnostic = diagnostic
+        self.ended_monotonic = now
+        if result is not None:
+            self.result = result
+
+
+@dataclass
 class CstMcpClient:
     """Async context manager that drives one MCP stdio session.
 
     Attributes populated after ``__aenter__``:
         server_name, server_version: identity reported by ``initialize``.
         instructions: optional server instructions (may be ``None``).
-        calls: every ``tools/call`` issued through this client, in order.
+        calls: every ``tools/call`` that returned a response, in order.
+        attempts: every admitted ``call_tool`` invocation, in admission
+            order, each finalized to a terminal outcome for handled
+            completions (see :class:`McpAttempt`).
+
+    ``tools/call`` dispatch is serialized: at most one call is active per
+    client, and concurrent callers queue until the shared
+    ``request_timeout_s`` deadline (measured from each invocation's entry,
+    covering queueing plus SDK execution) expires. Once any attempt ends
+    uncertain, every later dispatch on this instance is blocked before it
+    reaches the SDK.
+
+    Raises:
+        ValueError: from construction (and before every dispatch) when
+            ``request_timeout_s`` is not a finite positive number.
     """
 
     executable: Path
@@ -76,10 +186,18 @@ class CstMcpClient:
     server_version: str | None = None
     instructions: str | None = None
     calls: list[McpToolCall] = field(default_factory=list)
+    attempts: list[McpAttempt] = field(default_factory=list)
 
     _stdio_cm: Any = field(default=None, init=False, repr=False)
     _session_cm: Any = field(default=None, init=False, repr=False)
     _session: Any = field(default=None, init=False, repr=False)
+    _call_lock: Any = field(default_factory=asyncio.Lock, init=False, repr=False)
+    _uncertain: bool = field(default=False, init=False, repr=False)
+
+    def __post_init__(self) -> None:
+        # A non-finite or non-positive bound cannot bound anything; reject it
+        # before any dispatch can occur.
+        self._check_request_timeout()
 
     async def __aenter__(self) -> CstMcpClient:
         params = StdioServerParameters(
@@ -156,37 +274,152 @@ class CstMcpClient:
                 return names
 
     async def call_tool(self, name: str, arguments: Mapping[str, Any] | None) -> McpToolCall:
-        """Issue one ``tools/call`` and record the decoded result.
+        """Issue one serialized ``tools/call`` and record the attempt.
+
+        At most one ``tools/call`` is active per client. Concurrent callers
+        queue on an instance lock; the shared ``request_timeout_s`` deadline
+        starts at this invocation's entry and covers both queueing and SDK
+        execution, so a queued caller cannot wait indefinitely. Every
+        admitted invocation appends an :class:`McpAttempt` to ``attempts``
+        before any SDK work; only a returned response is appended to
+        ``calls``, preserving its response-only meaning. The recorded and
+        dispatched arguments are a frozen copy taken before the first await,
+        so later mutation of the caller's mapping (at any depth) cannot alter
+        them.
 
         Raises:
+            ValueError: when ``request_timeout_s`` is not a finite positive
+                number. Rejected before dispatch; no attempt is recorded.
             McpCallError: when the request cannot be completed (transport
-                failure, timeout, or no response within ``request_timeout_s``).
+                failure, timeout, or no response within ``request_timeout_s``),
+                or when no active MCP session exists. In the session case the
+                attempt is recorded ``not_ready`` and the client is not
+                poisoned, so later calls with a live session still work.
                 A tool that returns a payload error does NOT raise; it is
                 recorded with ``is_error=True`` so callers can distinguish
                 transport failure from an unsuccessful tool result.
-        """
-        args = dict(arguments or {})
-        try:
-            result = await asyncio.wait_for(
-                self._session.call_tool(name, arguments=args),
-                timeout=self.request_timeout_s,
-            )
-        except TimeoutError:
-            raise McpCallError(
-                f"tools/call {name!r} timed out after {self.request_timeout_s:g}s."
-            ) from None
-        except Exception as exc:
-            raise McpCallError(f"tools/call {name!r} failed: {_describe(exc)}") from exc
 
-        record = McpToolCall(
+        After SDK entry, a timeout, a transport or SDK-validation failure,
+        and caller cancellation all leave the outcome uncertain (the request
+        may already have reached the server): the attempt is recorded
+        ``uncertain`` and every later dispatch on this instance is blocked
+        before it reaches the SDK. Caller cancellation always propagates.
+        """
+        self._check_request_timeout()
+        started = time.monotonic()
+        deadline = started + self.request_timeout_s
+        attempt = McpAttempt(
             name=name,
-            arguments=args,
-            is_error=bool(getattr(result, "is_error", False)),
-            text=_first_text(result),
-            payload=_decode_payload(result),
+            arguments=_freeze_arguments(arguments),
+            started_monotonic=started,
         )
-        self.calls.append(record)
-        return record
+        self.attempts.append(attempt)
+        lock_acquired = False
+        try:
+            try:
+                lock_acquired = await self._acquire_call_lock(deadline)
+            except asyncio.CancelledError:
+                attempt.finalize(ATTEMPT_NOT_DISPATCHED, DIAG_QUEUED_CANCELLED, time.monotonic())
+                raise
+            if not lock_acquired:
+                attempt.finalize(ATTEMPT_NOT_DISPATCHED, DIAG_QUEUED_TIMEOUT, time.monotonic())
+                raise McpCallError(
+                    f"tools/call {name!r} was not dispatched: the request budget "
+                    "expired before the call could start."
+                ) from None
+
+            if self._uncertain:
+                attempt.finalize(ATTEMPT_NOT_DISPATCHED, DIAG_BLOCKED_UNCERTAIN, time.monotonic())
+                raise McpCallError(
+                    f"tools/call {name!r} was not dispatched: an earlier attempt on "
+                    "this client ended uncertain, so further dispatches are blocked."
+                ) from None
+
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                # Queueing consumed the whole budget; do not enter the SDK.
+                attempt.finalize(ATTEMPT_NOT_DISPATCHED, DIAG_QUEUED_TIMEOUT, time.monotonic())
+                raise McpCallError(
+                    f"tools/call {name!r} was not dispatched: the request budget "
+                    "expired before the call could start."
+                ) from None
+
+            if self._session is None:
+                # No active session: the SDK could not be entered, so the
+                # outcome is not uncertain and the client is not poisoned.
+                attempt.finalize(ATTEMPT_NOT_DISPATCHED, DIAG_NOT_READY, time.monotonic())
+                raise McpCallError(
+                    f"tools/call {name!r} was not dispatched: no active MCP session."
+                ) from None
+
+            attempt.dispatched = True
+            try:
+                result = await asyncio.wait_for(
+                    self._session.call_tool(name, arguments=attempt.arguments),
+                    timeout=remaining,
+                )
+            except asyncio.CancelledError:
+                self._uncertain = True
+                attempt.finalize(ATTEMPT_UNCERTAIN, DIAG_CANCELLED_AFTER_DISPATCH, time.monotonic())
+                raise
+            except TimeoutError:
+                self._uncertain = True
+                attempt.finalize(ATTEMPT_UNCERTAIN, DIAG_TIMEOUT, time.monotonic())
+                # Bounded message: identifies the timeout without echoing the
+                # configured bound.
+                raise McpCallError(
+                    f"tools/call {name!r} timed out: no response within the request budget."
+                ) from None
+            except Exception as exc:
+                self._uncertain = True
+                category = _diagnose_sdk_failure(exc)
+                attempt.finalize(ATTEMPT_UNCERTAIN, category, time.monotonic())
+                # Only the bounded category is surfaced; the original
+                # exception (which may carry sensitive content) is neither
+                # described nor chained.
+                raise McpCallError(f"tools/call {name!r} failed: {category}") from None
+
+            record = McpToolCall(
+                name=name,
+                arguments=attempt.arguments,
+                is_error=bool(getattr(result, "is_error", False)),
+                text=_first_text(result),
+                payload=_decode_payload(result),
+            )
+            attempt.finalize(ATTEMPT_RECEIVED, DIAG_RECEIVED, time.monotonic(), result=record)
+            self.calls.append(record)
+            return record
+        finally:
+            if lock_acquired:
+                self._call_lock.release()
+
+    async def _acquire_call_lock(self, deadline: float) -> bool:
+        """Acquire the per-client dispatch lock within the shared deadline.
+
+        Returns ``False`` when the remaining budget is already exhausted, so
+        the caller records a not-dispatched attempt instead of entering the
+        SDK. Propagates ``asyncio.CancelledError`` when the caller is
+        cancelled while queued.
+        """
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            return False
+        try:
+            await asyncio.wait_for(self._call_lock.acquire(), timeout=remaining)
+        except TimeoutError:
+            return False
+        return True
+
+    def _check_request_timeout(self) -> None:
+        """Reject a request bound that cannot bound a request.
+
+        Raises:
+            ValueError: when ``request_timeout_s`` is not a finite positive
+                number. The message never echoes the configured value.
+        """
+        bound = self.request_timeout_s
+        if not isinstance(bound, (int, float)) or not math.isfinite(bound) or bound <= 0:
+            raise ValueError("request_timeout_s must be a finite positive number.")
 
     async def _aclose(self) -> None:
         if self._session_cm is not None:
@@ -204,6 +437,39 @@ class CstMcpClient:
                     timeout=self.shutdown_timeout_s,
                 )
             self._stdio_cm = None
+
+
+def _freeze_arguments(arguments: Mapping[str, Any] | None) -> dict[str, Any]:
+    """Detach an admitted arguments mapping before the first await.
+
+    The top-level mapping and every nested mapping or sequence are copied, so
+    later caller mutation of the arguments (at any depth) cannot alter the
+    admitted values or the values actually sent to the server. JSON scalars
+    are immutable and pass through as-is. Values that are not
+    JSON-compatible are retained by reference.
+    """
+    return _freeze_value(dict(arguments or {}))
+
+
+def _freeze_value(value: Any) -> Any:
+    if isinstance(value, Mapping):
+        return {key: _freeze_value(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_freeze_value(item) for item in value]
+    return value
+
+
+def _diagnose_sdk_failure(exc: BaseException) -> str:
+    """Map a post-dispatch SDK failure to a stable bounded diagnostic.
+
+    Response-shape or structured-content validation failures are reported as
+    ``sdk_validation_failure``; everything else (transport, protocol, or
+    server-reported errors) is ``transport_failure``. The category never
+    includes the exception text.
+    """
+    if isinstance(exc, _SDK_VALIDATION_ERRORS):
+        return DIAG_SDK_VALIDATION_FAILURE
+    return DIAG_TRANSPORT_FAILURE
 
 
 def _describe(exc: BaseException) -> str:

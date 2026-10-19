@@ -80,21 +80,53 @@ effects. It:
 The model is configured with provider defaults; no explicit reasoning or thinking
 parameters are sent, so no claim is made about internal reasoning mode. OpenAI trace
 export is disabled for the check. Bounds: 6 agent turns, 120 s model request timeout,
-60 s MCP startup timeout, 30 s per MCP request (each `tools/list` page and each
-`tools/call`), and 15 s MCP shutdown timeout. A timed-out MCP request fails the check
-with a diagnostic rather than hanging.
+60 s MCP startup timeout, 30 s per MCP request (each `tools/list` page, and each
+`tools/call` including its time queued behind a concurrent call), and 15 s MCP shutdown
+timeout. A timed-out MCP request fails the check with a diagnostic rather than hanging.
 
 On success the command prints a diagnostic summary (server identity, discovered tools,
 recorded model and MCP tool calls, status payload, final answer, per-check results) and
 exits 0. On failure it prints the same summary with the failing checks and error and
 exits 1. Credentials never appear in the output.
 
+### Call serialization and attempt records
+
+The MCP client serializes `tools/call` dispatch per client instance: at most one call
+is active at a time, and concurrent callers queue until the configured per-request
+budget expires. The budget starts at each call's entry and covers queueing plus SDK
+execution, so a queued caller cannot wait indefinitely. Every admitted call produces an
+attempt record in `CstMcpClient.attempts`: the tool name, a frozen copy of the
+arguments taken before the first await (the top-level mapping and every nested mapping
+or sequence are detached, so later caller mutation at any depth cannot alter the
+admitted values or the values actually sent), monotonic start and end times, whether
+dispatch started, a terminal outcome, and the returned call record when one exists.
+Only returned responses are appended to `CstMcpClient.calls`, so its response-only
+meaning is unchanged.
+
+Terminal outcomes are `received` (a response was returned; this is not proof that CST
+executed the operation successfully or that partial effects are absent), `not_dispatched`
+(the request never reached the SDK: the caller queued past its budget or was cancelled
+in the queue, the client was already blocked, or no active MCP session existed; the
+session case is not uncertainty and does not block the client), and `uncertain` (a
+timeout, transport or SDK-validation failure, or caller cancellation after dispatch; the
+request may already have reached the server). Any uncertain attempt permanently blocks
+further tool
+dispatches on that client, including callers already queued, and no replay occurs.
+Closing or replacing the client does not prove an uncertain operation stopped, and
+constructing a new client is not reconciliation. Attempt diagnostics are bounded
+categories only: never raw exception messages, configuration values, or secrets. The
+`McpCallError` for a transport or SDK-validation failure carries only that bounded
+category, never the text of the original SDK exception. The timeout error identifies
+the timeout without echoing the configured bound, and the not-dispatched errors
+(queued past the budget, cancelled in the queue, already blocked, or no active
+session) carry equally bounded messages.
+
 ### Verification
 
 Offline tests (no network, no real MCP subprocess, no CST) cover configuration loading
 and precedence, provider request construction, MCP child environment settings, paginated
-discovery, tool restriction, response handling, resource cleanup, and representative
-failures:
+discovery, tool restriction, call serialization and attempt records, response handling,
+resource cleanup, and representative failures:
 
 ```powershell
 uv run pytest
