@@ -74,7 +74,6 @@ before silently freezing coordinates. No simulation or solver configuration.
 """
 
 SCENARIOS = [
-    ("proposal", "clarification", 3, "Create a cylinder.", {}),
     (
         "proposal",
         "cylinder",
@@ -86,13 +85,11 @@ SCENARIOS = [
     (
         "focused",
         "cylinder",
-        6,
+        5,
         "Create one solid cylinder of radius 5 mm, height 10 mm, base center (0,0,0), "
         "along +Z using exact library PEC. Do nothing else.",
         {},
     ),
-    ("proposal", "construction", 8, BUILD, {}),
-    ("focused", "construction", 8, BUILD, {}),
     (
         "proposal",
         "existing_edit",
@@ -108,7 +105,7 @@ SCENARIOS = [
     (
         "proposal",
         "unsupported_edit",
-        3,
+        2,
         "Change the height of existing nonparametric Body:Rod from 10 to 12 mm, "
         "preserving its identity. Fixture inspection confirms no dimension parameter "
         "exists. Do not replace or scale the solid, and do not run.",
@@ -127,7 +124,7 @@ SCENARIOS = [
     (
         "proposal",
         "missing_tool",
-        3,
+        2,
         "Activate geometry_basic, then report availability. This synthetic server "
         "catalogue lacks cst_create_cylinder. If activation fails, do not substitute "
         "another geometry family or retry discovery. Do not create anything.",
@@ -143,6 +140,24 @@ SCENARIOS = [
         {"loaded": ["PEC"], "uncertain_on": "cst_create_cylinder"},
     ),
 ]
+
+# Exercise safety/discovery edge cases before the longest construction cases.
+SCENARIOS.sort(
+    key=lambda case: {
+        "over_budget": 0,
+        "missing_tool": 1,
+        "uncertain_mutation": 2,
+        "unsupported_edit": 3,
+        "cylinder": 4,
+        "existing_edit": 5,
+    }[case[1]]
+)
+SCENARIOS.extend(
+    [
+        ("proposal", "construction", 6, BUILD, {}),
+        ("focused", "construction", 6, BUILD, {}),
+    ]
+)
 
 
 def groups_for(variant):
@@ -234,6 +249,52 @@ def mock_call(state, name, args):
             "name": args["name"],
             "library_name": args["library_name"],
             "native_properties_verified": False,
+            "mock": True,
+        }
+    if name == "cst_assign_material":
+        if args["solid"] not in state["objects"]:
+            return {"status": "error", "code": "unknown_solid", "mock": True}
+        if args["material"] not in state["loaded"]:
+            return {"status": "error", "code": "material_not_loaded", "mock": True}
+        return {
+            "status": "ok",
+            "solid": args["solid"],
+            "material": args["material"],
+            "native_properties_verified": False,
+            "mock": True,
+        }
+    if name == "cst_list_materials":
+        return {
+            "status": "ok",
+            "materials": ["PEC", "Rogers RT-duroid 5870 (loss free)"],
+            "source": "synthetic_bundled_database",
+            "mock": True,
+        }
+    if name == "cst_get_material_info":
+        return {
+            "status": "ok",
+            "source": "synthetic_bundled_database",
+            "project_properties_verified": False,
+            "mock": True,
+        }
+    if name == "cst_add_discrete_port":
+        return {
+            "status": "ok",
+            "arguments": args,
+            "parametric_dependencies_preserved": False,
+            "mock": True,
+        }
+    if name in {"cst_get_solver_info", "cst_get_mesh_info"}:
+        return {
+            "status": "ok",
+            "fixture_setup": "Previously verified fixture setup unchanged",
+            "native_readback": False,
+            "mock": True,
+        }
+    if name == "cst_read_project_log":
+        return {
+            "status": "ok",
+            "text": "Synthetic solver activity ended; no numerical validation.",
             "mock": True,
         }
     if name == "cst_list_parameters":
@@ -343,7 +404,7 @@ async def main():
 
     def save():
         payload = {"budget": BUDGET, "requests_used": used["requests"], "records": records}
-        (HERE / "transcripts.json").write_text(
+        (HERE / "continued_transcripts.json").write_text(
             json.dumps(safe(payload), indent=2) + "\n", encoding="utf-8"
         )
 

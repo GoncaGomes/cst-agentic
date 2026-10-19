@@ -4,8 +4,9 @@ Question: can the configured institutional Qwen endpoint make useful, trustworth
 progress with small, explicitly selected tool groups?
 
 **Partial prototype, not production. No CST/server was launched or attached.**
-Only two proposal-style scenarios started. The first returned clarification;
-the second stopped on an endpoint timeout. No comparison verdict is available.
+Two initial scenarios reached the model, followed by an endpoint timeout. The
+human-authorized restart received HTTP 429 on its first request. No comparison
+verdict is available. `REPORT.md` is current; `FINDINGS.md` retains initial detail.
 
 ## Review without installing anything
 
@@ -17,7 +18,7 @@ Double-click `review.html`. It is self-contained and makes no network calls.
   usage and mock results. These are evidence of model/schema behavior only.
 - `offline_lifecycle.json` separately demonstrates two SDK batch edge cases with
   a local mock HTTP transport. It is **not endpoint evidence**.
-- See `FINDINGS.md` for observations, limitations and pending human feedback.
+- See `REPORT.md` for observations, limitations and pending human feedback.
 
 ## Artifact contents
 
@@ -27,6 +28,8 @@ Double-click `review.html`. It is self-contained and makes no network calls.
 - `extract_schemas.py`: evaluates only reviewed declarations/helpers/enums;
   does not import upstream CST code or run handlers.
 - `transcripts.json`: credential-scrubbed synthetic conversations and mock states.
+- `continued_transcripts.json`: separately preserved HTTP-429 restart.
+- `measurements.json`: observations derived from both evidence files.
 - `make_review.py`: embeds evidence in the offline HTML.
 - `offline_lifecycle.py`: deterministic local SDK demonstration.
 
@@ -54,10 +57,12 @@ or production interfaces were added.
 ## Live execution is not automatically authorized
 
 The human approved **48 new HTTP requests for the originating session**. Exactly
-eight were dispatched, retries were disabled, and execution stopped on timeout.
-The original ledger is outside the branch; remaining capacity is not a standing
-authorization for arbitrary future runs. Agree continuation, repair mock coverage,
-preserve old evidence, and retain a cumulative ledger before any further run.
+nine were dispatched: eight initially, then one after explicit restart approval.
+Execution stopped on timeout and, on restart, HTTP 429; no retry was made. The
+ledger is outside the branch; unused capacity is not a standing authorization
+for arbitrary future runs. Agree continuation and preserve the cumulative ledger.
+The current harness writes `continued_transcripts.json`; choose a fresh evidence
+destination before another run rather than overwriting the retained restart.
 
 The live invocation shape is documented only for reproducibility:
 

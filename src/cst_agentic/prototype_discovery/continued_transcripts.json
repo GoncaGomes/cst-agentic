@@ -1,0 +1,30 @@
+{
+  "budget": 48,
+  "requests_used": 9,
+  "records": [
+    {
+      "variant": "proposal",
+      "scenario": "over_budget",
+      "prompt": "Mock fixture facts (synthetic, not native readbacks): intended project\nC:/mock/discovery.cst is already explicitly selected and held in an owned mock\ninstance. A fixture-owned independent identity/unit check established this target\nand mm/GHz/ns; these are supplied test facts, not implemented MCP capabilities.\nProject is unsolved and empty except when the scenario states otherwise.\nDiscovery-mechanism trial only: first request the complete union of project_context, parameters, materials_basic and geometry_basic. If rejected, switch to project_context plus parameters and report the rejection and active selection. Do not execute any CST operation.",
+      "setup": {},
+      "max_turns": 3,
+      "events": [
+        {
+          "kind": "request",
+          "request": 9,
+          "visible": [
+            "discover_tools",
+            "cst_connection_status"
+          ],
+          "active_groups": [],
+          "matched_history_pairs": 0,
+          "latency_s": 0.218,
+          "http_status": 429,
+          "error_type": "RuntimeError"
+        }
+      ],
+      "status": "bounded_stop",
+      "error_type": "RuntimeError"
+    }
+  ]
+}

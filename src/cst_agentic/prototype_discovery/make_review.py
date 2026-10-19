@@ -7,6 +7,13 @@ from trial import SCHEMAS, groups_for
 
 HERE = Path(__file__).parent
 transcripts = json.loads((HERE / "transcripts.json").read_text(encoding="utf-8"))
+for record in transcripts["records"]:
+    record["run"] = "initial"
+continuation = HERE / "continued_transcripts.json"
+if continuation.exists():
+    continued = json.loads(continuation.read_text(encoding="utf-8"))
+    transcripts["requests_used"] = continued["requests_used"]
+    transcripts["records"].extend(dict(record, run="continued") for record in continued["records"])
 data = {
     "groups": {variant: groups_for(variant) for variant in ("proposal", "focused")},
     "trials": transcripts,
@@ -110,7 +117,7 @@ for(const walk of walks)button(walk.name,()=>{
 let selected=0,position=0;
 function review(){
  const t=data.trials.records[selected],panel=document.getElementById('conversation');panel.replaceChildren();
- document.getElementById('trialinfo').textContent=`${t.variant} / ${t.scenario}: ${t.status}; ${t.events.filter(e=>e.kind==='request').length} actual HTTP requests. All CST operations mocked.`;
+ document.getElementById('trialinfo').textContent=`${t.run} / ${t.variant} / ${t.scenario}: ${t.status}; ${t.events.filter(e=>e.kind==='request').length} actual HTTP requests. All CST operations mocked.`;
  const p=document.createElement('pre');p.textContent='USER\n'+t.prompt;panel.append(p);
  let latest='No mock operation yet.';
  for(const e of t.events.slice(0,position)){
@@ -121,7 +128,7 @@ function review(){
  }
  document.getElementById('observed').textContent=latest;
 }
-data.trials.records.forEach((t,i)=>button(t.variant+' · '+t.scenario,()=>{selected=i;position=0;review();},document.getElementById('trialtabs')));
+data.trials.records.forEach((t,i)=>button(t.run+' · '+t.variant+' · '+t.scenario,()=>{selected=i;position=0;review();},document.getElementById('trialtabs')));
 document.getElementById('restart').onclick=()=>{position=0;review();};
 document.getElementById('next').onclick=()=>{position=Math.min(position+1,data.trials.records[selected].events.length);review();};
 document.getElementById('all').onclick=()=>{position=data.trials.records[selected].events.length;review();};

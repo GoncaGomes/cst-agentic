@@ -1,0 +1,152 @@
+[
+  {
+    "run": "initial",
+    "variant": "proposal",
+    "scenario": "clarification",
+    "status": "returned",
+    "requests": 2,
+    "successful_responses": 2,
+    "prompt_tokens": 5433,
+    "completion_tokens": 1172,
+    "max_visible": 7,
+    "latency_s": 23.281,
+    "discovery": [
+      {
+        "status": "activated_next_request",
+        "active_groups": [
+          "geometry_basic"
+        ],
+        "active_names": [
+          "cst_connection_status",
+          "cst_create_brick",
+          "cst_create_cone",
+          "cst_create_cylinder",
+          "cst_create_sphere",
+          "cst_create_wire",
+          "discover_tools"
+        ],
+        "visible_count": 7
+      }
+    ],
+    "tools": [],
+    "final_output": "The cylinder tool is loaded (mock). Before I create it in `C:/mock/discovery.cst` (units: mm per the fixture facts), please confirm:\n\n1. **Axis** \u2013 x, y, or z?\n2. **Radii** \u2013 outer radius (and inner radius if it's a hollow tube; 0 = solid)\n3. **Axial extent** \u2013 range min / max along the axis (e.g., 0 \u2192 10 mm)\n4. **Center** \u2013 x/y/z center (default is origin if unspecified)\n5. **Material** \u2013 PEC by default; name another if needed\n6. **Name/component** \u2013 e.g., a solid name and component (I can generate incidental names if you prefer)\n\nShare whichever you have; defaults can fill the rest.",
+    "error_type": null
+  },
+  {
+    "run": "initial",
+    "variant": "proposal",
+    "scenario": "cylinder",
+    "status": "bounded_stop",
+    "requests": 6,
+    "successful_responses": 5,
+    "prompt_tokens": 22719,
+    "completion_tokens": 862,
+    "max_visible": 13,
+    "latency_s": 20.468,
+    "discovery": [
+      {
+        "status": "activated_next_request",
+        "active_groups": [
+          "geometry_basic",
+          "materials_basic"
+        ],
+        "active_names": [
+          "cst_assign_material",
+          "cst_connection_status",
+          "cst_create_brick",
+          "cst_create_cone",
+          "cst_create_cylinder",
+          "cst_create_lossy_metal",
+          "cst_create_material",
+          "cst_create_sphere",
+          "cst_create_wire",
+          "cst_get_material_info",
+          "cst_list_materials",
+          "cst_load_material",
+          "discover_tools"
+        ],
+        "visible_count": 13
+      }
+    ],
+    "tools": [
+      {
+        "name": "cst_create_cylinder",
+        "arguments": {
+          "component": "Geometry",
+          "name": "Cylinder_5mm_R_10mm_H",
+          "axis": "z",
+          "outer_radius": 5,
+          "range_min": 0,
+          "range_max": 10,
+          "material": "PEC"
+        },
+        "result": {
+          "status": "error",
+          "code": "material_not_loaded",
+          "mock": true
+        }
+      },
+      {
+        "name": "cst_load_material",
+        "arguments": {
+          "name": "PEC",
+          "library_name": "PEC"
+        },
+        "result": {
+          "status": "ok",
+          "name": "PEC",
+          "library_name": "PEC",
+          "native_properties_verified": false,
+          "mock": true
+        }
+      },
+      {
+        "name": "cst_create_cylinder",
+        "arguments": {
+          "axis": "z",
+          "component": "Geometry",
+          "outer_radius": 5,
+          "range_max": 10,
+          "range_min": 0,
+          "name": "Cylinder_R5_H10"
+        },
+        "result": {
+          "status": "ok",
+          "solid": "Geometry:Cylinder_R5_H10",
+          "native_effect_verified": false,
+          "mock": true
+        }
+      },
+      {
+        "name": "cst_assign_material",
+        "arguments": {
+          "solid": "Geometry:Cylinder_R5_H10",
+          "material": "PEC"
+        },
+        "result": {
+          "status": "blocked",
+          "reason": "mock_handler_not_implemented",
+          "mock": true
+        }
+      }
+    ],
+    "final_output": null,
+    "error_type": "APITimeoutError"
+  },
+  {
+    "run": "continued",
+    "variant": "proposal",
+    "scenario": "over_budget",
+    "status": "bounded_stop",
+    "requests": 1,
+    "successful_responses": 0,
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "max_visible": 2,
+    "latency_s": 0.218,
+    "discovery": [],
+    "tools": [],
+    "final_output": null,
+    "error_type": "RuntimeError"
+  }
+]
