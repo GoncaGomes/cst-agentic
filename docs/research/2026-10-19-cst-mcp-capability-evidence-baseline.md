@@ -1,6 +1,6 @@
 # CST MCP capability and evidence baseline
 
-Date: 2026-10-19. Research for [ticket 7](https://github.com/GoncaGomes/cst-agentic/issues/7), under [map 4](https://github.com/GoncaGomes/cst-agentic/issues/4).
+Date: 2026-10-19. Research for [Establish the CST MCP capability and evidence baseline](https://github.com/GoncaGomes/cst-agentic/issues/7), under [Wayfinding: specify the first usable CST Controller](https://github.com/GoncaGomes/cst-agentic/issues/4).
 
 ## Findings that constrain the first Controller
 
