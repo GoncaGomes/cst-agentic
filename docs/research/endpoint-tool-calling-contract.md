@@ -1,6 +1,8 @@
 # Institutional endpoint tool-calling contract
 
-Research date: 2026-10-19. Decision ticket: [#6][ticket]. Planning map: [#4][map].
+Research date: 2026-10-19.
+Decision ticket: [Establish the institutional endpoint tool-calling contract][ticket].
+Planning map: [Wayfinding: specify the first usable CST Controller][map].
 
 ## Finding
 
