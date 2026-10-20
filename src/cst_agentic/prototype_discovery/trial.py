@@ -375,9 +375,13 @@ async def main():
     parser.add_argument("--live", action="store_true")
     parser.add_argument("--config-root", type=Path, required=True)
     parser.add_argument("--budget-ledger", type=Path, required=True)
+    parser.add_argument("--evidence-file", type=Path, required=True)
     args = parser.parse_args()
     if not args.live:
         print("Live execution requires --live and fresh human authorization.")
+        return 1
+    if args.evidence_file.exists() or not args.budget_ledger.is_file():
+        print("Refusing to overwrite evidence or start without the existing cumulative ledger.")
         return 1
     values = dotenv_values(args.config_root / ".env")
 
@@ -404,7 +408,7 @@ async def main():
 
     def save():
         payload = {"budget": BUDGET, "requests_used": used["requests"], "records": records}
-        (HERE / "continued_transcripts.json").write_text(
+        args.evidence_file.write_text(
             json.dumps(safe(payload), indent=2) + "\n", encoding="utf-8"
         )
 

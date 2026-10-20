@@ -5,7 +5,11 @@ from pathlib import Path
 
 HERE = Path(__file__).parent
 rows = []
-for filename in ("transcripts.json", "continued_transcripts.json"):
+for filename, label in (
+    ("transcripts.json", "initial"),
+    ("continued_transcripts.json", "continued"),
+    ("retry_2026_10_20_transcripts.json", "2026-10-20 retry"),
+):
     path = HERE / filename
     if not path.exists():
         continue
@@ -19,7 +23,7 @@ for filename in ("transcripts.json", "continued_transcripts.json"):
         completion = sum(e.get("usage", {}).get("completion_tokens", 0) for e in assistant)
         rows.append(
             {
-                "run": "initial" if filename == "transcripts.json" else "continued",
+                "run": label,
                 "variant": record["variant"],
                 "scenario": record["scenario"],
                 "status": record.get("status", "not_recorded"),

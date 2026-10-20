@@ -4,9 +4,10 @@ Question: can the configured institutional Qwen endpoint make useful, trustworth
 progress with small, explicitly selected tool groups?
 
 **Partial prototype, not production. No CST/server was launched or attached.**
-Two initial scenarios reached the model, followed by an endpoint timeout. The
-human-authorized restart received HTTP 429 on its first request. No comparison
-verdict is available. `REPORT.md` is current; `FINDINGS.md` retains initial detail.
+The 2026-10-20 retry received 36 successful responses without 429s/timeouts, but
+exposed behavioral weaknesses and incomplete scenarios. **45 / 48 requests used.**
+`REPORT_2026_10_20.md` is current. `REPORT.md` and `FINDINGS.md` retain the earlier
+rate-limited and initial-run findings; no final grouping/role verdict is adopted.
 
 ## Review without installing anything
 
@@ -18,7 +19,7 @@ Double-click `review.html`. It is self-contained and makes no network calls.
   usage and mock results. These are evidence of model/schema behavior only.
 - `offline_lifecycle.json` separately demonstrates two SDK batch edge cases with
   a local mock HTTP transport. It is **not endpoint evidence**.
-- See `REPORT.md` for observations, limitations and pending human feedback.
+- See `REPORT_2026_10_20.md` for observations, limitations and pending human feedback.
 
 ## Artifact contents
 
@@ -29,6 +30,7 @@ Double-click `review.html`. It is self-contained and makes no network calls.
   does not import upstream CST code or run handlers.
 - `transcripts.json`: credential-scrubbed synthetic conversations and mock states.
 - `continued_transcripts.json`: separately preserved HTTP-429 restart.
+- `retry_2026_10_20_transcripts.json`: subsequent 36-response retry.
 - `measurements.json`: observations derived from both evidence files.
 - `make_review.py`: embeds evidence in the offline HTML.
 - `offline_lifecycle.py`: deterministic local SDK demonstration.
@@ -57,17 +59,17 @@ or production interfaces were added.
 ## Live execution is not automatically authorized
 
 The human approved **48 new HTTP requests for the originating session**. Exactly
-nine were dispatched: eight initially, then one after explicit restart approval.
-Execution stopped on timeout and, on restart, HTTP 429; no retry was made. The
-ledger is outside the branch; unused capacity is not a standing authorization
-for arbitrary future runs. Agree continuation and preserve the cumulative ledger.
-The current harness writes `continued_transcripts.json`; choose a fresh evidence
-destination before another run rather than overwriting the retained restart.
+45 were dispatched: eight initially, one on the first authorized restart, then
+36 on the explicitly authorized 2026-10-20 retry. There were no automatic retries.
+The ledger is outside the branch; the three unused requests are not a standing
+authorization for arbitrary future runs. Agree continuation and preserve the
+cumulative ledger. The harness requires an explicit, nonexisting `--evidence-file`
+and an existing budget ledger; it refuses to overwrite retained run evidence.
 
 The live invocation shape is documented only for reproducibility:
 
 ```powershell
-uv run --no-sync python <prototype-directory>/trial.py --live --config-root <configured-repo> --budget-ledger <session-ledger.json>
+uv run --no-sync python <prototype-directory>/trial.py --live --config-root <configured-repo> --budget-ledger <session-ledger.json> --evidence-file <new-evidence.json>
 ```
 
 Credentials are resolved with the application's file-before-environment precedence;

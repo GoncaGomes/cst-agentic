@@ -9,11 +9,15 @@ HERE = Path(__file__).parent
 transcripts = json.loads((HERE / "transcripts.json").read_text(encoding="utf-8"))
 for record in transcripts["records"]:
     record["run"] = "initial"
-continuation = HERE / "continued_transcripts.json"
-if continuation.exists():
-    continued = json.loads(continuation.read_text(encoding="utf-8"))
-    transcripts["requests_used"] = continued["requests_used"]
-    transcripts["records"].extend(dict(record, run="continued") for record in continued["records"])
+for filename, label in (
+    ("continued_transcripts.json", "continued"),
+    ("retry_2026_10_20_transcripts.json", "2026-10-20 retry"),
+):
+    continuation = HERE / filename
+    if continuation.exists():
+        continued = json.loads(continuation.read_text(encoding="utf-8"))
+        transcripts["requests_used"] = continued["requests_used"]
+        transcripts["records"].extend(dict(record, run=label) for record in continued["records"])
 data = {
     "groups": {variant: groups_for(variant) for variant in ("proposal", "focused")},
     "trials": transcripts,
