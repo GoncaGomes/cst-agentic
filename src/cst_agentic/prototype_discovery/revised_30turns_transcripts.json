@@ -1,0 +1,763 @@
+{
+  "revision": "task-planning-30-turns",
+  "budget": 200,
+  "requests_used": 12,
+  "records": [
+    {
+      "variant": "proposal",
+      "scenario": "over_budget",
+      "prompt": "Mock fixture facts (synthetic, not native readbacks): intended project\nC:/mock/discovery.cst is already explicitly selected and held in an owned mock\ninstance. A fixture-owned independent identity/unit check established this target\nand mm/GHz/ns; these are supplied test facts, not implemented MCP capabilities.\nProject is unsolved and empty except when the scenario states otherwise.\nDiscovery-mechanism trial only: first request the complete union of project_context, parameters, materials_basic and geometry_basic. If rejected, switch to project_context plus parameters and report the rejection and active selection. Do not execute any CST operation.",
+      "setup": {},
+      "max_turns": 30,
+      "instructions": "You are a CST-aware conversational engineering assistant in a THROWAWAY\ntrial. ALL CST tools are MOCKS; say 'mock' in outcome summaries. Never claim native\nexecution or physics validation. Interpret engineering requests, offer useful\nchoices as questions, and execute complete authorized instructions without\napproval of every call. Ask together for missing engineering choices; do not\ninvent dimensions, units, material properties, selected project or dependencies.\nAn incidental nonconflicting name may be generated. Load requested materials from\nthe native library first; if unavailable ask for specifications, do not substitute.\nNever run a simulation unless explicitly requested. Do not add setup to standalone\ngeometry requests. Existing parameterized edits should reuse actual parameters;\ncreation is NOT arbitrary solid editing. Do not use VBA or rebuild as a workaround\nwithout agreement. Result deletion and scope expansion require explicit consent.\nDo not save unless requested. Parameter get/list schemas overpromise: actual\nresponses contain evaluated values, NOT stored expressions. Numeric-only port\ninputs do not preserve parameter dependencies. Project paths in MCP are cached;\nunit and target evidence here comes ONLY from explicitly identified mock fixture\nfacts, not from invented native unit/identity APIs. Bundled material queries do\nnot inspect project properties. Solver/mesh annotations have stale history\nrationale; do not use hints as authorization or execution evidence.\nUse discover_tools to REPLACE the complete group selection for the next model\nrequest; discovery itself performs no CST operations. Empty groups reset to\nstartup. Rejected selections preserve the previous set. Only tools visible in the\nrequest that produced a call may execute in that batch. Calls requiring newly\ndiscovered schemas must wait for the next request; avoid discovery mixed with\nmutations. Use meaningful small selections, not everything. Explain concrete\nblockers without repetitive discovery. Brief intent is sufficient before action.\nAfter transport uncertainty ALL CST dispatch is blocked, including status and\nstop. Do not retry or reconnect; explain unknown outcome and pause. Reconnection\ndoes not reconcile. Acknowledged server errors are distinct from lost responses.\nNever equate idle with successful completion. 'Stop task' means no further task\nsteps, not implicit solver stop. Be concise; separate proposals from observations.\nSplit the work into tasks. For each task, use suitable tools already available;\nif no suitable tool is known or available, discover the relevant group from the\ntable below and inspect its actual tool schemas before acting. Discovery activates\ntools on the next INTERNAL model request within this same user task, not the next\nuser message: continue within existing authorization without asking for another 'go'.\n\nTool group table \u2014 tool_group (quantity): description\nsession_project (8): Manage CST sessions and the lifecycle of working projects.\nproject_context (4): Inspect the active project, inspect its tree, save changes, and export structure views while working in another capability.\nparameters (3): Create, inspect, and change design parameters without loading sweeps or optimizers.\nmaterials_basic (6): Define ordinary dielectric and metallic materials, load native library entries, and assign materials.\ngeometry_basic (5): Build common solid primitives and wires for substrates, conductors, probes, dipoles, and simple supports.\ngeometry_profiles (8): Build profile-based and less frequent shapes without loading their schemas during ordinary brick/cylinder work.\nsolid_operations (8): Combine solids and translate, rotate, mirror, scale, or copy geometry where the native tool supports it.\nsimulation_domain (4): Configure the frequency band, boundary conditions, background, and compatible symmetry.\nports_basic (5): Create common waveguide/discrete ports and lumped elements, inspect ports, and remove a specified port.\nsolver_time_domain (2): Configure the time-domain solver and inspect the solver configuration.\nsolver_frequency_domain (2): Configure the frequency-domain solver and inspect the solver configuration.\nmesh_basic (5): Configure the solver-compatible mesh, density, local refinement, and supported adaptation.\nfield_monitors (1): Define the field monitors needed by the intended analysis before a solve.\nsimulation_run (4): Start a solve asynchronously, inspect progress, wait for bounded periods, or stop a run.\ndiagnostics (3): Read project logs, check a described setup, or explicitly invalidate existing results when required by a change.\ndialog_recovery (3): Recover from a known modal-dialog obstruction and manage the optional broad dialog watcher.\nreference (2): Read the installed official CST documentation when a tool contract or CST operation is unfamiliar.\ncad_io (2): Import existing CAD geometry or export model geometry.\nconnectors (1): Add the specific supported parametric edge-launch SMA connector when its assumptions match the model.\nCounts exclude startup functions; groups can overlap. The host deduplicates the combined selection and enforces the 18-visible-function cap.\n",
+      "events": [
+        {
+          "kind": "request",
+          "request": 1,
+          "visible": [
+            "discover_tools",
+            "cst_connection_status"
+          ],
+          "active_groups": [],
+          "matched_history_pairs": 0,
+          "latency_s": 2.281,
+          "http_status": 200
+        },
+        {
+          "kind": "assistant",
+          "text": "",
+          "tool_calls": [
+            {
+              "name": "discover_tools",
+              "arguments": "{\"groups\":[\"project_context\", \"parameters\", \"materials_basic\", \"geometry_basic\"]}"
+            }
+          ],
+          "finish_reason": "tool_calls",
+          "usage": {
+            "completion_tokens": 113,
+            "prompt_tokens": 2049,
+            "total_tokens": 2162,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "discover_tools",
+          "arguments": {
+            "groups": [
+              "project_context",
+              "parameters",
+              "materials_basic",
+              "geometry_basic"
+            ]
+          },
+          "result": {
+            "status": "rejected",
+            "reason": "over_budget",
+            "missing": [],
+            "proposed_count": 20,
+            "limit": 18,
+            "active_groups": [],
+            "active_names": [
+              "cst_connection_status",
+              "discover_tools"
+            ]
+          },
+          "state": {
+            "project": "C:/mock/discovery.cst",
+            "params": {},
+            "objects": [],
+            "loaded": [],
+            "running": false,
+            "poisoned": false,
+            "active": []
+          }
+        },
+        {
+          "kind": "request",
+          "request": 2,
+          "visible": [
+            "discover_tools",
+            "cst_connection_status"
+          ],
+          "active_groups": [],
+          "matched_history_pairs": 1,
+          "latency_s": 1.938,
+          "http_status": 200
+        },
+        {
+          "kind": "assistant",
+          "text": "**Rejection report:**\n- First request: union of `project_context`, `parameters`, `materials_basic`, `geometry_basic` \u2192 **rejected** as `over_budget` (proposed 20 functions vs. 18-function limit).\n- Active selection after rejection: unchanged from startup \u2014 only `cst_connection_status` and `discover_tools` (no capability groups active).\n\n**Fallback selection (mock):** switching to `project_context` + `parameters` per the trial plan.\n\n",
+          "tool_calls": [
+            {
+              "name": "discover_tools",
+              "arguments": "{\"groups\":[\"project_context\", \"parameters\"]}"
+            }
+          ],
+          "finish_reason": "tool_calls",
+          "usage": {
+            "completion_tokens": 194,
+            "prompt_tokens": 2159,
+            "total_tokens": 2353,
+            "prompt_tokens_details": {
+              "cached_tokens": 2045
+            }
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "discover_tools",
+          "arguments": {
+            "groups": [
+              "project_context",
+              "parameters"
+            ]
+          },
+          "result": {
+            "status": "activated_next_request",
+            "active_groups": [
+              "project_context",
+              "parameters"
+            ],
+            "active_names": [
+              "cst_connection_status",
+              "cst_export_structure_views",
+              "cst_get_parameter",
+              "cst_list_parameters",
+              "cst_project_info",
+              "cst_project_tree",
+              "cst_save_project",
+              "cst_set_parameter",
+              "discover_tools"
+            ],
+            "visible_count": 9
+          },
+          "state": {
+            "project": "C:/mock/discovery.cst",
+            "params": {},
+            "objects": [],
+            "loaded": [],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "project_context",
+              "parameters"
+            ]
+          }
+        },
+        {
+          "kind": "request",
+          "request": 3,
+          "visible": [
+            "discover_tools",
+            "cst_save_project",
+            "cst_project_info",
+            "cst_project_tree",
+            "cst_connection_status",
+            "cst_set_parameter",
+            "cst_get_parameter",
+            "cst_list_parameters",
+            "cst_export_structure_views"
+          ],
+          "active_groups": [
+            "project_context",
+            "parameters"
+          ],
+          "matched_history_pairs": 2,
+          "latency_s": 3.641,
+          "http_status": 200
+        },
+        {
+          "kind": "assistant",
+          "text": "**Fallback activated (mock):**\n- Active groups: `project_context`, `parameters`\n- Visible functions (9): `cst_project_info`, `cst_project_tree`, `cst_save_project`, `cst_export_structure_views`, `cst_list_parameters`, `cst_get_parameter`, `cst_set_parameter`, plus startup `cst_connection_status` and `discover_tools`.\n\n**Trial outcome summary (mock):**\n1. Complete 4-group union (project_context + parameters + materials_basic + geometry_basic) was rejected as `over_budget` (20 proposed vs 18 limit).\n2. Fallback (project_context + parameters) was accepted and will take effect on the next request.\n3. No CST operations were executed, per the trial instruction \u2014 this was discovery-mechanism validation only. No native execution or physics validation occurred.",
+          "tool_calls": [],
+          "finish_reason": "stop",
+          "usage": {
+            "completion_tokens": 211,
+            "prompt_tokens": 3334,
+            "total_tokens": 3545,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          }
+        }
+      ],
+      "final_output": "**Fallback activated (mock):**\n- Active groups: `project_context`, `parameters`\n- Visible functions (9): `cst_project_info`, `cst_project_tree`, `cst_save_project`, `cst_export_structure_views`, `cst_list_parameters`, `cst_get_parameter`, `cst_set_parameter`, plus startup `cst_connection_status` and `discover_tools`.\n\n**Trial outcome summary (mock):**\n1. Complete 4-group union (project_context + parameters + materials_basic + geometry_basic) was rejected as `over_budget` (20 proposed vs 18 limit).\n2. Fallback (project_context + parameters) was accepted and will take effect on the next request.\n3. No CST operations were executed, per the trial instruction \u2014 this was discovery-mechanism validation only. No native execution or physics validation occurred.",
+      "status": "returned"
+    },
+    {
+      "variant": "proposal",
+      "scenario": "missing_tool",
+      "prompt": "Mock fixture facts (synthetic, not native readbacks): intended project\nC:/mock/discovery.cst is already explicitly selected and held in an owned mock\ninstance. A fixture-owned independent identity/unit check established this target\nand mm/GHz/ns; these are supplied test facts, not implemented MCP capabilities.\nProject is unsolved and empty except when the scenario states otherwise.\nActivate geometry_basic, then report availability. This synthetic server catalogue lacks cst_create_cylinder. If activation fails, do not substitute another geometry family or retry discovery. Do not create anything.",
+      "setup": {
+        "missing": [
+          "cst_create_cylinder"
+        ]
+      },
+      "max_turns": 30,
+      "instructions": "You are a CST-aware conversational engineering assistant in a THROWAWAY\ntrial. ALL CST tools are MOCKS; say 'mock' in outcome summaries. Never claim native\nexecution or physics validation. Interpret engineering requests, offer useful\nchoices as questions, and execute complete authorized instructions without\napproval of every call. Ask together for missing engineering choices; do not\ninvent dimensions, units, material properties, selected project or dependencies.\nAn incidental nonconflicting name may be generated. Load requested materials from\nthe native library first; if unavailable ask for specifications, do not substitute.\nNever run a simulation unless explicitly requested. Do not add setup to standalone\ngeometry requests. Existing parameterized edits should reuse actual parameters;\ncreation is NOT arbitrary solid editing. Do not use VBA or rebuild as a workaround\nwithout agreement. Result deletion and scope expansion require explicit consent.\nDo not save unless requested. Parameter get/list schemas overpromise: actual\nresponses contain evaluated values, NOT stored expressions. Numeric-only port\ninputs do not preserve parameter dependencies. Project paths in MCP are cached;\nunit and target evidence here comes ONLY from explicitly identified mock fixture\nfacts, not from invented native unit/identity APIs. Bundled material queries do\nnot inspect project properties. Solver/mesh annotations have stale history\nrationale; do not use hints as authorization or execution evidence.\nUse discover_tools to REPLACE the complete group selection for the next model\nrequest; discovery itself performs no CST operations. Empty groups reset to\nstartup. Rejected selections preserve the previous set. Only tools visible in the\nrequest that produced a call may execute in that batch. Calls requiring newly\ndiscovered schemas must wait for the next request; avoid discovery mixed with\nmutations. Use meaningful small selections, not everything. Explain concrete\nblockers without repetitive discovery. Brief intent is sufficient before action.\nAfter transport uncertainty ALL CST dispatch is blocked, including status and\nstop. Do not retry or reconnect; explain unknown outcome and pause. Reconnection\ndoes not reconcile. Acknowledged server errors are distinct from lost responses.\nNever equate idle with successful completion. 'Stop task' means no further task\nsteps, not implicit solver stop. Be concise; separate proposals from observations.\nSplit the work into tasks. For each task, use suitable tools already available;\nif no suitable tool is known or available, discover the relevant group from the\ntable below and inspect its actual tool schemas before acting. Discovery activates\ntools on the next INTERNAL model request within this same user task, not the next\nuser message: continue within existing authorization without asking for another 'go'.\n\nTool group table \u2014 tool_group (quantity): description\nsession_project (8): Manage CST sessions and the lifecycle of working projects.\nproject_context (4): Inspect the active project, inspect its tree, save changes, and export structure views while working in another capability.\nparameters (3): Create, inspect, and change design parameters without loading sweeps or optimizers.\nmaterials_basic (6): Define ordinary dielectric and metallic materials, load native library entries, and assign materials.\ngeometry_basic (5): Build common solid primitives and wires for substrates, conductors, probes, dipoles, and simple supports.\ngeometry_profiles (8): Build profile-based and less frequent shapes without loading their schemas during ordinary brick/cylinder work.\nsolid_operations (8): Combine solids and translate, rotate, mirror, scale, or copy geometry where the native tool supports it.\nsimulation_domain (4): Configure the frequency band, boundary conditions, background, and compatible symmetry.\nports_basic (5): Create common waveguide/discrete ports and lumped elements, inspect ports, and remove a specified port.\nsolver_time_domain (2): Configure the time-domain solver and inspect the solver configuration.\nsolver_frequency_domain (2): Configure the frequency-domain solver and inspect the solver configuration.\nmesh_basic (5): Configure the solver-compatible mesh, density, local refinement, and supported adaptation.\nfield_monitors (1): Define the field monitors needed by the intended analysis before a solve.\nsimulation_run (4): Start a solve asynchronously, inspect progress, wait for bounded periods, or stop a run.\ndiagnostics (3): Read project logs, check a described setup, or explicitly invalidate existing results when required by a change.\ndialog_recovery (3): Recover from a known modal-dialog obstruction and manage the optional broad dialog watcher.\nreference (2): Read the installed official CST documentation when a tool contract or CST operation is unfamiliar.\ncad_io (2): Import existing CAD geometry or export model geometry.\nconnectors (1): Add the specific supported parametric edge-launch SMA connector when its assumptions match the model.\nCounts exclude startup functions; groups can overlap. The host deduplicates the combined selection and enforces the 18-visible-function cap.\n",
+      "events": [
+        {
+          "kind": "request",
+          "request": 4,
+          "visible": [
+            "discover_tools",
+            "cst_connection_status"
+          ],
+          "active_groups": [],
+          "matched_history_pairs": 0,
+          "latency_s": 1.641,
+          "http_status": 200
+        },
+        {
+          "kind": "assistant",
+          "text": "",
+          "tool_calls": [
+            {
+              "name": "discover_tools",
+              "arguments": "{\"groups\":[\"geometry_basic\"]}"
+            }
+          ],
+          "finish_reason": "tool_calls",
+          "usage": {
+            "completion_tokens": 103,
+            "prompt_tokens": 2038,
+            "total_tokens": 2141,
+            "prompt_tokens_details": {
+              "cached_tokens": 1913
+            }
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "discover_tools",
+          "arguments": {
+            "groups": [
+              "geometry_basic"
+            ]
+          },
+          "result": {
+            "status": "rejected",
+            "reason": "missing_tool",
+            "missing": [
+              "cst_create_cylinder"
+            ],
+            "proposed_count": 7,
+            "limit": 18,
+            "active_groups": [],
+            "active_names": [
+              "cst_connection_status",
+              "discover_tools"
+            ]
+          },
+          "state": {
+            "project": "C:/mock/discovery.cst",
+            "params": {},
+            "objects": [],
+            "loaded": [],
+            "running": false,
+            "poisoned": false,
+            "active": []
+          }
+        },
+        {
+          "kind": "request",
+          "request": 5,
+          "visible": [
+            "discover_tools",
+            "cst_connection_status"
+          ],
+          "active_groups": [],
+          "matched_history_pairs": 1,
+          "latency_s": 2.64,
+          "http_status": 200
+        },
+        {
+          "kind": "assistant",
+          "text": "**Outcome (mock):** Activation of `geometry_basic` was **rejected**.\n\n- Reason: the synthetic server catalogue is missing `cst_create_cylinder` (required by that group), so the host preserved the previous selection.\n- Current active tools: only the startup set (`cst_connection_status`, `discover_tools`) \u2014 no geometry tools are available.\n- Per your instruction, I did **not** substitute another geometry family, did **not** retry discovery, and created nothing.\n- Fixture context unchanged: `C:/mock/discovery.csl` selected, empty/unsolved, mm/GHz/ns.\n\nIf you later want to proceed, options would be to fix the mock catalogue (add `cst_create_cylinder`) and reactivate, or explicitly approve a different geometry group \u2014 I'll wait for your call.",
+          "tool_calls": [],
+          "finish_reason": "stop",
+          "usage": {
+            "completion_tokens": 220,
+            "prompt_tokens": 2142,
+            "total_tokens": 2362,
+            "prompt_tokens_details": {
+              "cached_tokens": 2034
+            }
+          }
+        }
+      ],
+      "final_output": "**Outcome (mock):** Activation of `geometry_basic` was **rejected**.\n\n- Reason: the synthetic server catalogue is missing `cst_create_cylinder` (required by that group), so the host preserved the previous selection.\n- Current active tools: only the startup set (`cst_connection_status`, `discover_tools`) \u2014 no geometry tools are available.\n- Per your instruction, I did **not** substitute another geometry family, did **not** retry discovery, and created nothing.\n- Fixture context unchanged: `C:/mock/discovery.csl` selected, empty/unsolved, mm/GHz/ns.\n\nIf you later want to proceed, options would be to fix the mock catalogue (add `cst_create_cylinder`) and reactivate, or explicitly approve a different geometry group \u2014 I'll wait for your call.",
+      "status": "returned"
+    },
+    {
+      "variant": "proposal",
+      "scenario": "uncertain_mutation",
+      "prompt": "Mock fixture facts (synthetic, not native readbacks): intended project\nC:/mock/discovery.cst is already explicitly selected and held in an owned mock\ninstance. A fixture-owned independent identity/unit check established this target\nand mm/GHz/ns; these are supplied test facts, not implemented MCP capabilities.\nProject is unsolved and empty except when the scenario states otherwise.\nCreate one solid cylinder of radius 5 mm, height 10 mm, base center (0,0,0), along +Z using PEC already loaded by this fixture. Do nothing else. A synthetic transport failure may occur: do not infer whether a mutation happened.",
+      "setup": {
+        "loaded": [
+          "PEC"
+        ],
+        "uncertain_on": "cst_create_cylinder"
+      },
+      "max_turns": 30,
+      "instructions": "You are a CST-aware conversational engineering assistant in a THROWAWAY\ntrial. ALL CST tools are MOCKS; say 'mock' in outcome summaries. Never claim native\nexecution or physics validation. Interpret engineering requests, offer useful\nchoices as questions, and execute complete authorized instructions without\napproval of every call. Ask together for missing engineering choices; do not\ninvent dimensions, units, material properties, selected project or dependencies.\nAn incidental nonconflicting name may be generated. Load requested materials from\nthe native library first; if unavailable ask for specifications, do not substitute.\nNever run a simulation unless explicitly requested. Do not add setup to standalone\ngeometry requests. Existing parameterized edits should reuse actual parameters;\ncreation is NOT arbitrary solid editing. Do not use VBA or rebuild as a workaround\nwithout agreement. Result deletion and scope expansion require explicit consent.\nDo not save unless requested. Parameter get/list schemas overpromise: actual\nresponses contain evaluated values, NOT stored expressions. Numeric-only port\ninputs do not preserve parameter dependencies. Project paths in MCP are cached;\nunit and target evidence here comes ONLY from explicitly identified mock fixture\nfacts, not from invented native unit/identity APIs. Bundled material queries do\nnot inspect project properties. Solver/mesh annotations have stale history\nrationale; do not use hints as authorization or execution evidence.\nUse discover_tools to REPLACE the complete group selection for the next model\nrequest; discovery itself performs no CST operations. Empty groups reset to\nstartup. Rejected selections preserve the previous set. Only tools visible in the\nrequest that produced a call may execute in that batch. Calls requiring newly\ndiscovered schemas must wait for the next request; avoid discovery mixed with\nmutations. Use meaningful small selections, not everything. Explain concrete\nblockers without repetitive discovery. Brief intent is sufficient before action.\nAfter transport uncertainty ALL CST dispatch is blocked, including status and\nstop. Do not retry or reconnect; explain unknown outcome and pause. Reconnection\ndoes not reconcile. Acknowledged server errors are distinct from lost responses.\nNever equate idle with successful completion. 'Stop task' means no further task\nsteps, not implicit solver stop. Be concise; separate proposals from observations.\nSplit the work into tasks. For each task, use suitable tools already available;\nif no suitable tool is known or available, discover the relevant group from the\ntable below and inspect its actual tool schemas before acting. Discovery activates\ntools on the next INTERNAL model request within this same user task, not the next\nuser message: continue within existing authorization without asking for another 'go'.\n\nTool group table \u2014 tool_group (quantity): description\nsession_project (8): Manage CST sessions and the lifecycle of working projects.\nproject_context (4): Inspect the active project, inspect its tree, save changes, and export structure views while working in another capability.\nparameters (3): Create, inspect, and change design parameters without loading sweeps or optimizers.\nmaterials_basic (6): Define ordinary dielectric and metallic materials, load native library entries, and assign materials.\ngeometry_basic (5): Build common solid primitives and wires for substrates, conductors, probes, dipoles, and simple supports.\ngeometry_profiles (8): Build profile-based and less frequent shapes without loading their schemas during ordinary brick/cylinder work.\nsolid_operations (8): Combine solids and translate, rotate, mirror, scale, or copy geometry where the native tool supports it.\nsimulation_domain (4): Configure the frequency band, boundary conditions, background, and compatible symmetry.\nports_basic (5): Create common waveguide/discrete ports and lumped elements, inspect ports, and remove a specified port.\nsolver_time_domain (2): Configure the time-domain solver and inspect the solver configuration.\nsolver_frequency_domain (2): Configure the frequency-domain solver and inspect the solver configuration.\nmesh_basic (5): Configure the solver-compatible mesh, density, local refinement, and supported adaptation.\nfield_monitors (1): Define the field monitors needed by the intended analysis before a solve.\nsimulation_run (4): Start a solve asynchronously, inspect progress, wait for bounded periods, or stop a run.\ndiagnostics (3): Read project logs, check a described setup, or explicitly invalidate existing results when required by a change.\ndialog_recovery (3): Recover from a known modal-dialog obstruction and manage the optional broad dialog watcher.\nreference (2): Read the installed official CST documentation when a tool contract or CST operation is unfamiliar.\ncad_io (2): Import existing CAD geometry or export model geometry.\nconnectors (1): Add the specific supported parametric edge-launch SMA connector when its assumptions match the model.\nCounts exclude startup functions; groups can overlap. The host deduplicates the combined selection and enforces the 18-visible-function cap.\n",
+      "events": [
+        {
+          "kind": "request",
+          "request": 6,
+          "visible": [
+            "discover_tools",
+            "cst_connection_status"
+          ],
+          "active_groups": [],
+          "matched_history_pairs": 0,
+          "latency_s": 3.281,
+          "http_status": 200
+        },
+        {
+          "kind": "assistant",
+          "text": "I'll load the geometry tooling needed for this cylinder, then create it.\n\n",
+          "tool_calls": [
+            {
+              "name": "discover_tools",
+              "arguments": "{\"groups\":[\"geometry_basic\"]}"
+            }
+          ],
+          "finish_reason": "tool_calls",
+          "usage": {
+            "completion_tokens": 309,
+            "prompt_tokens": 2056,
+            "total_tokens": 2365,
+            "prompt_tokens_details": {
+              "cached_tokens": 1913
+            }
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "discover_tools",
+          "arguments": {
+            "groups": [
+              "geometry_basic"
+            ]
+          },
+          "result": {
+            "status": "activated_next_request",
+            "active_groups": [
+              "geometry_basic"
+            ],
+            "active_names": [
+              "cst_connection_status",
+              "cst_create_brick",
+              "cst_create_cone",
+              "cst_create_cylinder",
+              "cst_create_sphere",
+              "cst_create_wire",
+              "discover_tools"
+            ],
+            "visible_count": 7
+          },
+          "state": {
+            "project": "C:/mock/discovery.cst",
+            "params": {},
+            "objects": [],
+            "loaded": [
+              "PEC"
+            ],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "geometry_basic"
+            ]
+          }
+        },
+        {
+          "kind": "request",
+          "request": 7,
+          "visible": [
+            "discover_tools",
+            "cst_connection_status",
+            "cst_create_brick",
+            "cst_create_cylinder",
+            "cst_create_cone",
+            "cst_create_sphere",
+            "cst_create_wire"
+          ],
+          "active_groups": [
+            "geometry_basic"
+          ],
+          "matched_history_pairs": 1,
+          "latency_s": 4.516,
+          "http_status": 200
+        },
+        {
+          "kind": "assistant",
+          "text": "",
+          "tool_calls": [
+            {
+              "name": "cst_create_cylinder",
+              "arguments": "{\"component\":\"Geometry\",\"name\":\"Cylinder1\",\"axis\":\"z\",\"outer_radius\":5,\"range_min\":0,\"range_max\":10,\"material\":\"PEC\",\"center_x\":0,\"center_y\":0,\"center_z\":0}"
+            }
+          ],
+          "finish_reason": "tool_calls",
+          "usage": {
+            "completion_tokens": 298,
+            "prompt_tokens": 4555,
+            "total_tokens": 4853,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "cst_create_cylinder",
+          "arguments": {
+            "component": "Geometry",
+            "name": "Cylinder1",
+            "axis": "z",
+            "outer_radius": 5,
+            "range_min": 0,
+            "range_max": 10,
+            "material": "PEC",
+            "center_x": 0,
+            "center_y": 0,
+            "center_z": 0
+          },
+          "result": {
+            "outcome": "uncertain",
+            "transport_response_received": false,
+            "effect": "unknown",
+            "all_CST_dispatch_blocked": true,
+            "note": "Injected client-side trace, NOT a received MCP error.",
+            "mock": true
+          },
+          "state": {
+            "project": "C:/mock/discovery.cst",
+            "params": {},
+            "objects": [],
+            "loaded": [
+              "PEC"
+            ],
+            "running": false,
+            "poisoned": true,
+            "active": [
+              "geometry_basic"
+            ]
+          }
+        },
+        {
+          "kind": "request",
+          "request": 8,
+          "visible": [
+            "discover_tools",
+            "cst_connection_status",
+            "cst_create_brick",
+            "cst_create_cylinder",
+            "cst_create_cone",
+            "cst_create_sphere",
+            "cst_create_wire"
+          ],
+          "active_groups": [
+            "geometry_basic"
+          ],
+          "matched_history_pairs": 2,
+          "latency_s": 3.25,
+          "http_status": 200
+        },
+        {
+          "kind": "assistant",
+          "text": "**Mock result: transport failure \u2014 outcome unknown.**\n\nThe cylinder creation call (PEC solid, r = 5 mm, z = 0 to 10 mm, base center (0,0,0), on `C:/mock/discovery.cst`) was dispatched but no response was received. This is a synthetic injected transport failure, not a server error, so I cannot infer whether the solid was created.\n\nPer protocol I will now **pause all CST dispatch** \u2014 no retries, no status checks, no reconnection or reconciliation \u2014 until you confirm.\n\nYour options:\n1. **Tell me the outcome** (created / not created) once you can verify the model tree, and I'll proceed accordingly.\n2. **Ask me to stop here** \u2014 I take no further action on the project.",
+          "tool_calls": [],
+          "finish_reason": "stop",
+          "usage": {
+            "completion_tokens": 242,
+            "prompt_tokens": 4763,
+            "total_tokens": 5005,
+            "prompt_tokens_details": {
+              "cached_tokens": 4551
+            }
+          }
+        }
+      ],
+      "final_output": "**Mock result: transport failure \u2014 outcome unknown.**\n\nThe cylinder creation call (PEC solid, r = 5 mm, z = 0 to 10 mm, base center (0,0,0), on `C:/mock/discovery.cst`) was dispatched but no response was received. This is a synthetic injected transport failure, not a server error, so I cannot infer whether the solid was created.\n\nPer protocol I will now **pause all CST dispatch** \u2014 no retries, no status checks, no reconnection or reconciliation \u2014 until you confirm.\n\nYour options:\n1. **Tell me the outcome** (created / not created) once you can verify the model tree, and I'll proceed accordingly.\n2. **Ask me to stop here** \u2014 I take no further action on the project.",
+      "status": "returned"
+    },
+    {
+      "variant": "proposal",
+      "scenario": "unsupported_edit",
+      "prompt": "Mock fixture facts (synthetic, not native readbacks): intended project\nC:/mock/discovery.cst is already explicitly selected and held in an owned mock\ninstance. A fixture-owned independent identity/unit check established this target\nand mm/GHz/ns; these are supplied test facts, not implemented MCP capabilities.\nProject is unsolved and empty except when the scenario states otherwise.\nChange the height of existing nonparametric Body:Rod from 10 to 12 mm, preserving its identity. Fixture inspection confirms no dimension parameter exists. Do not replace or scale the solid, and do not run.",
+      "setup": {},
+      "max_turns": 30,
+      "instructions": "You are a CST-aware conversational engineering assistant in a THROWAWAY\ntrial. ALL CST tools are MOCKS; say 'mock' in outcome summaries. Never claim native\nexecution or physics validation. Interpret engineering requests, offer useful\nchoices as questions, and execute complete authorized instructions without\napproval of every call. Ask together for missing engineering choices; do not\ninvent dimensions, units, material properties, selected project or dependencies.\nAn incidental nonconflicting name may be generated. Load requested materials from\nthe native library first; if unavailable ask for specifications, do not substitute.\nNever run a simulation unless explicitly requested. Do not add setup to standalone\ngeometry requests. Existing parameterized edits should reuse actual parameters;\ncreation is NOT arbitrary solid editing. Do not use VBA or rebuild as a workaround\nwithout agreement. Result deletion and scope expansion require explicit consent.\nDo not save unless requested. Parameter get/list schemas overpromise: actual\nresponses contain evaluated values, NOT stored expressions. Numeric-only port\ninputs do not preserve parameter dependencies. Project paths in MCP are cached;\nunit and target evidence here comes ONLY from explicitly identified mock fixture\nfacts, not from invented native unit/identity APIs. Bundled material queries do\nnot inspect project properties. Solver/mesh annotations have stale history\nrationale; do not use hints as authorization or execution evidence.\nUse discover_tools to REPLACE the complete group selection for the next model\nrequest; discovery itself performs no CST operations. Empty groups reset to\nstartup. Rejected selections preserve the previous set. Only tools visible in the\nrequest that produced a call may execute in that batch. Calls requiring newly\ndiscovered schemas must wait for the next request; avoid discovery mixed with\nmutations. Use meaningful small selections, not everything. Explain concrete\nblockers without repetitive discovery. Brief intent is sufficient before action.\nAfter transport uncertainty ALL CST dispatch is blocked, including status and\nstop. Do not retry or reconnect; explain unknown outcome and pause. Reconnection\ndoes not reconcile. Acknowledged server errors are distinct from lost responses.\nNever equate idle with successful completion. 'Stop task' means no further task\nsteps, not implicit solver stop. Be concise; separate proposals from observations.\nSplit the work into tasks. For each task, use suitable tools already available;\nif no suitable tool is known or available, discover the relevant group from the\ntable below and inspect its actual tool schemas before acting. Discovery activates\ntools on the next INTERNAL model request within this same user task, not the next\nuser message: continue within existing authorization without asking for another 'go'.\n\nTool group table \u2014 tool_group (quantity): description\nsession_project (8): Manage CST sessions and the lifecycle of working projects.\nproject_context (4): Inspect the active project, inspect its tree, save changes, and export structure views while working in another capability.\nparameters (3): Create, inspect, and change design parameters without loading sweeps or optimizers.\nmaterials_basic (6): Define ordinary dielectric and metallic materials, load native library entries, and assign materials.\ngeometry_basic (5): Build common solid primitives and wires for substrates, conductors, probes, dipoles, and simple supports.\ngeometry_profiles (8): Build profile-based and less frequent shapes without loading their schemas during ordinary brick/cylinder work.\nsolid_operations (8): Combine solids and translate, rotate, mirror, scale, or copy geometry where the native tool supports it.\nsimulation_domain (4): Configure the frequency band, boundary conditions, background, and compatible symmetry.\nports_basic (5): Create common waveguide/discrete ports and lumped elements, inspect ports, and remove a specified port.\nsolver_time_domain (2): Configure the time-domain solver and inspect the solver configuration.\nsolver_frequency_domain (2): Configure the frequency-domain solver and inspect the solver configuration.\nmesh_basic (5): Configure the solver-compatible mesh, density, local refinement, and supported adaptation.\nfield_monitors (1): Define the field monitors needed by the intended analysis before a solve.\nsimulation_run (4): Start a solve asynchronously, inspect progress, wait for bounded periods, or stop a run.\ndiagnostics (3): Read project logs, check a described setup, or explicitly invalidate existing results when required by a change.\ndialog_recovery (3): Recover from a known modal-dialog obstruction and manage the optional broad dialog watcher.\nreference (2): Read the installed official CST documentation when a tool contract or CST operation is unfamiliar.\ncad_io (2): Import existing CAD geometry or export model geometry.\nconnectors (1): Add the specific supported parametric edge-launch SMA connector when its assumptions match the model.\nCounts exclude startup functions; groups can overlap. The host deduplicates the combined selection and enforces the 18-visible-function cap.\n",
+      "events": [
+        {
+          "kind": "request",
+          "request": 9,
+          "visible": [
+            "discover_tools",
+            "cst_connection_status"
+          ],
+          "active_groups": [],
+          "matched_history_pairs": 0,
+          "latency_s": 7.312,
+          "http_status": 200
+        },
+        {
+          "kind": "assistant",
+          "text": "",
+          "tool_calls": [
+            {
+              "name": "discover_tools",
+              "arguments": "{\"groups\":[\"project_context\", \"geometry_basic\", \"geometry_profiles\"]}"
+            }
+          ],
+          "finish_reason": "tool_calls",
+          "usage": {
+            "completion_tokens": 633,
+            "prompt_tokens": 2047,
+            "total_tokens": 2680,
+            "prompt_tokens_details": {
+              "cached_tokens": 1913
+            }
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "discover_tools",
+          "arguments": {
+            "groups": [
+              "project_context",
+              "geometry_basic",
+              "geometry_profiles"
+            ]
+          },
+          "result": {
+            "status": "rejected",
+            "reason": "over_budget",
+            "missing": [],
+            "proposed_count": 19,
+            "limit": 18,
+            "active_groups": [],
+            "active_names": [
+              "cst_connection_status",
+              "discover_tools"
+            ]
+          },
+          "state": {
+            "project": "C:/mock/discovery.cst",
+            "params": {},
+            "objects": [],
+            "loaded": [],
+            "running": false,
+            "poisoned": false,
+            "active": []
+          }
+        },
+        {
+          "kind": "request",
+          "request": 10,
+          "visible": [
+            "discover_tools",
+            "cst_connection_status"
+          ],
+          "active_groups": [],
+          "matched_history_pairs": 1,
+          "latency_s": 1.312,
+          "http_status": 200
+        },
+        {
+          "kind": "assistant",
+          "text": "",
+          "tool_calls": [
+            {
+              "name": "discover_tools",
+              "arguments": "{\"groups\":[\"project_context\", \"geometry_profiles\"]}"
+            }
+          ],
+          "finish_reason": "tool_calls",
+          "usage": {
+            "completion_tokens": 103,
+            "prompt_tokens": 2154,
+            "total_tokens": 2257,
+            "prompt_tokens_details": {
+              "cached_tokens": 2043
+            }
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "discover_tools",
+          "arguments": {
+            "groups": [
+              "project_context",
+              "geometry_profiles"
+            ]
+          },
+          "result": {
+            "status": "activated_next_request",
+            "active_groups": [
+              "project_context",
+              "geometry_profiles"
+            ],
+            "active_names": [
+              "cst_connection_status",
+              "cst_create_analytical_curve",
+              "cst_create_ecylinder",
+              "cst_create_extrude",
+              "cst_create_face_from_curves",
+              "cst_create_loft",
+              "cst_create_polygon3d",
+              "cst_create_polygon_extrude",
+              "cst_create_torus",
+              "cst_export_structure_views",
+              "cst_project_info",
+              "cst_project_tree",
+              "cst_save_project",
+              "discover_tools"
+            ],
+            "visible_count": 14
+          },
+          "state": {
+            "project": "C:/mock/discovery.cst",
+            "params": {},
+            "objects": [],
+            "loaded": [],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "project_context",
+              "geometry_profiles"
+            ]
+          }
+        },
+        {
+          "kind": "request",
+          "request": 11,
+          "visible": [
+            "discover_tools",
+            "cst_save_project",
+            "cst_project_info",
+            "cst_project_tree",
+            "cst_connection_status",
+            "cst_create_torus",
+            "cst_create_extrude",
+            "cst_create_loft",
+            "cst_create_polygon3d",
+            "cst_create_analytical_curve",
+            "cst_create_face_from_curves",
+            "cst_create_ecylinder",
+            "cst_create_polygon_extrude",
+            "cst_export_structure_views"
+          ],
+          "active_groups": [
+            "project_context",
+            "geometry_profiles"
+          ],
+          "matched_history_pairs": 2,
+          "latency_s": 12.188,
+          "http_status": 200
+        },
+        {
+          "kind": "assistant",
+          "text": "",
+          "tool_calls": [
+            {
+              "name": "discover_tools",
+              "arguments": "{\"groups\":[\"solid_operations\"]}"
+            }
+          ],
+          "finish_reason": "tool_calls",
+          "usage": {
+            "completion_tokens": 751,
+            "prompt_tokens": 6671,
+            "total_tokens": 7422,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "discover_tools",
+          "arguments": {
+            "groups": [
+              "solid_operations"
+            ]
+          },
+          "result": {
+            "status": "activated_next_request",
+            "active_groups": [
+              "solid_operations"
+            ],
+            "active_names": [
+              "cst_boolean_add",
+              "cst_boolean_insert",
+              "cst_boolean_intersect",
+              "cst_boolean_subtract",
+              "cst_connection_status",
+              "cst_transform_mirror",
+              "cst_transform_rotate",
+              "cst_transform_scale",
+              "cst_transform_translate",
+              "discover_tools"
+            ],
+            "visible_count": 10
+          },
+          "state": {
+            "project": "C:/mock/discovery.cst",
+            "params": {},
+            "objects": [],
+            "loaded": [],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "solid_operations"
+            ]
+          }
+        },
+        {
+          "kind": "request",
+          "request": 12,
+          "visible": [
+            "discover_tools",
+            "cst_connection_status",
+            "cst_boolean_add",
+            "cst_boolean_subtract",
+            "cst_boolean_intersect",
+            "cst_boolean_insert",
+            "cst_transform_translate",
+            "cst_transform_rotate",
+            "cst_transform_mirror",
+            "cst_transform_scale"
+          ],
+          "active_groups": [
+            "solid_operations"
+          ],
+          "matched_history_pairs": 3,
+          "latency_s": 37.063,
+          "http_status": 200
+        },
+        {
+          "kind": "assistant",
+          "text": "",
+          "tool_calls": [],
+          "finish_reason": "length",
+          "usage": {
+            "completion_tokens": 3072,
+            "prompt_tokens": 3902,
+            "total_tokens": 6974,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          }
+        }
+      ],
+      "status": "bounded_stop",
+      "error_type": "ModelBehaviorError"
+    }
+  ]
+}

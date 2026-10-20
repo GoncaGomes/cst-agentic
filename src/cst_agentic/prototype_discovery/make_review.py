@@ -18,10 +18,22 @@ for filename, label in (
         continued = json.loads(continuation.read_text(encoding="utf-8"))
         transcripts["requests_used"] = continued["requests_used"]
         transcripts["records"].extend(dict(record, run=label) for record in continued["records"])
+budgets = {"original": {"budget": transcripts["budget"], "requests_used": transcripts["requests_used"]}}
+for filename in (
+    "revised_30turns_transcripts.json",
+    "revised_30turns_remaining_transcripts.json",
+    "revised_30turns_final_transcripts.json",
+):
+    revised_path = HERE / filename
+    if revised_path.exists():
+        revised = json.loads(revised_path.read_text(encoding="utf-8"))
+        budgets["revised"] = {key: revised[key] for key in ("budget", "requests_used")}
+        transcripts["records"].extend(dict(record, run="revised 30-turn") for record in revised["records"])
 data = {
     "groups": {variant: groups_for(variant) for variant in ("proposal", "focused")},
     "trials": transcripts,
     "schema_basis": SCHEMAS["basis"],
+    "budgets": budgets,
 }
 template = r"""<!doctype html>
 <html lang="en"><meta charset="utf-8"><title>THROWAWAY · CST discovery trial</title>
@@ -39,6 +51,7 @@ label{display:block}small{color:#526679}dt{font-weight:600}dd{margin:0 0 10px;ov
 between model turns is understandable and useful. The transcript section contains actual institutional
 model responses to synthetic scenarios. All CST results are mocked; no project was changed and no native
 execution was validated. Free play is a deterministic illustration, not a new endpoint call.</p>
+<p id="budgets"></p>
 <section><h2>Explore the selection rules</h2>
 <label>Configuration <select id="variant"><option value="proposal">Proposal-style</option><option value="focused">Inspection-first</option></select></label>
 <div class="grid"><div><h3>Desired capability groups</h3><div id="groups"></div></div>
@@ -123,6 +136,7 @@ function review(){
  const t=data.trials.records[selected],panel=document.getElementById('conversation');panel.replaceChildren();
  document.getElementById('trialinfo').textContent=`${t.run} / ${t.variant} / ${t.scenario}: ${t.status}; ${t.events.filter(e=>e.kind==='request').length} actual HTTP requests. All CST operations mocked.`;
  const p=document.createElement('pre');p.textContent='USER\n'+t.prompt;panel.append(p);
+ if(t.instructions){const details=document.createElement('details'),summary=document.createElement('summary'),pre=document.createElement('pre');summary.textContent='System instructions and tool-group table';pre.textContent=t.instructions;details.append(summary,pre);panel.append(details);}
  let latest='No mock operation yet.';
  for(const e of t.events.slice(0,position)){
   const title=document.createElement('h3'),pre=document.createElement('pre');
@@ -137,6 +151,7 @@ document.getElementById('restart').onclick=()=>{position=0;review();};
 document.getElementById('next').onclick=()=>{position=Math.min(position+1,data.trials.records[selected].events.length);review();};
 document.getElementById('all').onclick=()=>{position=data.trials.records[selected].events.length;review();};
 document.getElementById('basis').textContent=data.schema_basis+' The free-play reducer illustrates timing; observed transcripts are the endpoint evidence. No future rerun is authorized by this file.';
+document.getElementById('budgets').textContent=Object.entries(data.budgets).map(([name,b])=>name+': '+b.requests_used+' / '+b.budget+' HTTP requests').join(' · ');
 groupInputs();render();review();
 </script></html>"""
 (HERE / "review.html").write_text(

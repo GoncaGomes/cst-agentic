@@ -4,6 +4,8 @@
     "variant": "proposal",
     "scenario": "clarification",
     "status": "returned",
+    "max_turns": 3,
+    "run_budget": 48,
     "requests": 2,
     "successful_responses": 2,
     "prompt_tokens": 5433,
@@ -37,6 +39,8 @@
     "variant": "proposal",
     "scenario": "cylinder",
     "status": "bounded_stop",
+    "max_turns": 6,
+    "run_budget": 48,
     "requests": 6,
     "successful_responses": 5,
     "prompt_tokens": 22719,
@@ -138,6 +142,8 @@
     "variant": "proposal",
     "scenario": "over_budget",
     "status": "bounded_stop",
+    "max_turns": 3,
+    "run_budget": 48,
     "requests": 1,
     "successful_responses": 0,
     "prompt_tokens": 0,
@@ -154,6 +160,8 @@
     "variant": "proposal",
     "scenario": "over_budget",
     "status": "returned",
+    "max_turns": 3,
+    "run_budget": 48,
     "requests": 3,
     "successful_responses": 3,
     "prompt_tokens": 5835,
@@ -202,6 +210,8 @@
     "variant": "proposal",
     "scenario": "missing_tool",
     "status": "returned",
+    "max_turns": 2,
+    "run_budget": 48,
     "requests": 2,
     "successful_responses": 2,
     "prompt_tokens": 3100,
@@ -233,6 +243,8 @@
     "variant": "proposal",
     "scenario": "uncertain_mutation",
     "status": "returned",
+    "max_turns": 4,
+    "run_budget": 48,
     "requests": 2,
     "successful_responses": 2,
     "prompt_tokens": 6630,
@@ -273,6 +285,8 @@
     "variant": "proposal",
     "scenario": "unsupported_edit",
     "status": "bounded_stop",
+    "max_turns": 2,
+    "run_budget": 48,
     "requests": 2,
     "successful_responses": 2,
     "prompt_tokens": 3240,
@@ -335,6 +349,8 @@
     "variant": "proposal",
     "scenario": "cylinder",
     "status": "returned",
+    "max_turns": 6,
+    "run_budget": 48,
     "requests": 5,
     "successful_responses": 5,
     "prompt_tokens": 22627,
@@ -424,6 +440,8 @@
     "variant": "focused",
     "scenario": "cylinder",
     "status": "bounded_stop",
+    "max_turns": 5,
+    "run_budget": 48,
     "requests": 5,
     "successful_responses": 5,
     "prompt_tokens": 19632,
@@ -525,6 +543,8 @@
     "variant": "proposal",
     "scenario": "existing_edit",
     "status": "returned",
+    "max_turns": 6,
+    "run_budget": 48,
     "requests": 5,
     "successful_responses": 5,
     "prompt_tokens": 16010,
@@ -609,6 +629,8 @@
     "variant": "proposal",
     "scenario": "construction",
     "status": "bounded_stop",
+    "max_turns": 6,
+    "run_budget": 48,
     "requests": 6,
     "successful_responses": 6,
     "prompt_tokens": 23299,
@@ -768,6 +790,8 @@
     "variant": "focused",
     "scenario": "construction",
     "status": "bounded_stop",
+    "max_turns": 6,
+    "run_budget": 48,
     "requests": 6,
     "successful_responses": 6,
     "prompt_tokens": 18411,
@@ -975,5 +999,538 @@
     ],
     "final_output": null,
     "error_type": "MaxTurnsExceeded"
+  },
+  {
+    "run": "revised 30-turn",
+    "variant": "proposal",
+    "scenario": "over_budget",
+    "status": "returned",
+    "max_turns": 30,
+    "run_budget": 200,
+    "requests": 3,
+    "successful_responses": 3,
+    "prompt_tokens": 7542,
+    "completion_tokens": 518,
+    "max_visible": 9,
+    "latency_s": 7.86,
+    "discovery": [
+      {
+        "status": "rejected",
+        "reason": "over_budget",
+        "missing": [],
+        "proposed_count": 20,
+        "limit": 18,
+        "active_groups": [],
+        "active_names": [
+          "cst_connection_status",
+          "discover_tools"
+        ]
+      },
+      {
+        "status": "activated_next_request",
+        "active_groups": [
+          "project_context",
+          "parameters"
+        ],
+        "active_names": [
+          "cst_connection_status",
+          "cst_export_structure_views",
+          "cst_get_parameter",
+          "cst_list_parameters",
+          "cst_project_info",
+          "cst_project_tree",
+          "cst_save_project",
+          "cst_set_parameter",
+          "discover_tools"
+        ],
+        "visible_count": 9
+      }
+    ],
+    "tools": [],
+    "final_output": "**Fallback activated (mock):**\n- Active groups: `project_context`, `parameters`\n- Visible functions (9): `cst_project_info`, `cst_project_tree`, `cst_save_project`, `cst_export_structure_views`, `cst_list_parameters`, `cst_get_parameter`, `cst_set_parameter`, plus startup `cst_connection_status` and `discover_tools`.\n\n**Trial outcome summary (mock):**\n1. Complete 4-group union (project_context + parameters + materials_basic + geometry_basic) was rejected as `over_budget` (20 proposed vs 18 limit).\n2. Fallback (project_context + parameters) was accepted and will take effect on the next request.\n3. No CST operations were executed, per the trial instruction \u2014 this was discovery-mechanism validation only. No native execution or physics validation occurred.",
+    "error_type": null
+  },
+  {
+    "run": "revised 30-turn",
+    "variant": "proposal",
+    "scenario": "missing_tool",
+    "status": "returned",
+    "max_turns": 30,
+    "run_budget": 200,
+    "requests": 2,
+    "successful_responses": 2,
+    "prompt_tokens": 4180,
+    "completion_tokens": 323,
+    "max_visible": 2,
+    "latency_s": 4.281,
+    "discovery": [
+      {
+        "status": "rejected",
+        "reason": "missing_tool",
+        "missing": [
+          "cst_create_cylinder"
+        ],
+        "proposed_count": 7,
+        "limit": 18,
+        "active_groups": [],
+        "active_names": [
+          "cst_connection_status",
+          "discover_tools"
+        ]
+      }
+    ],
+    "tools": [],
+    "final_output": "**Outcome (mock):** Activation of `geometry_basic` was **rejected**.\n\n- Reason: the synthetic server catalogue is missing `cst_create_cylinder` (required by that group), so the host preserved the previous selection.\n- Current active tools: only the startup set (`cst_connection_status`, `discover_tools`) \u2014 no geometry tools are available.\n- Per your instruction, I did **not** substitute another geometry family, did **not** retry discovery, and created nothing.\n- Fixture context unchanged: `C:/mock/discovery.csl` selected, empty/unsolved, mm/GHz/ns.\n\nIf you later want to proceed, options would be to fix the mock catalogue (add `cst_create_cylinder`) and reactivate, or explicitly approve a different geometry group \u2014 I'll wait for your call.",
+    "error_type": null
+  },
+  {
+    "run": "revised 30-turn",
+    "variant": "proposal",
+    "scenario": "uncertain_mutation",
+    "status": "returned",
+    "max_turns": 30,
+    "run_budget": 200,
+    "requests": 3,
+    "successful_responses": 3,
+    "prompt_tokens": 11374,
+    "completion_tokens": 849,
+    "max_visible": 7,
+    "latency_s": 11.047,
+    "discovery": [
+      {
+        "status": "activated_next_request",
+        "active_groups": [
+          "geometry_basic"
+        ],
+        "active_names": [
+          "cst_connection_status",
+          "cst_create_brick",
+          "cst_create_cone",
+          "cst_create_cylinder",
+          "cst_create_sphere",
+          "cst_create_wire",
+          "discover_tools"
+        ],
+        "visible_count": 7
+      }
+    ],
+    "tools": [
+      {
+        "name": "cst_create_cylinder",
+        "arguments": {
+          "component": "Geometry",
+          "name": "Cylinder1",
+          "axis": "z",
+          "outer_radius": 5,
+          "range_min": 0,
+          "range_max": 10,
+          "material": "PEC",
+          "center_x": 0,
+          "center_y": 0,
+          "center_z": 0
+        },
+        "result": {
+          "outcome": "uncertain",
+          "transport_response_received": false,
+          "effect": "unknown",
+          "all_CST_dispatch_blocked": true,
+          "note": "Injected client-side trace, NOT a received MCP error.",
+          "mock": true
+        }
+      }
+    ],
+    "final_output": "**Mock result: transport failure \u2014 outcome unknown.**\n\nThe cylinder creation call (PEC solid, r = 5 mm, z = 0 to 10 mm, base center (0,0,0), on `C:/mock/discovery.cst`) was dispatched but no response was received. This is a synthetic injected transport failure, not a server error, so I cannot infer whether the solid was created.\n\nPer protocol I will now **pause all CST dispatch** \u2014 no retries, no status checks, no reconnection or reconciliation \u2014 until you confirm.\n\nYour options:\n1. **Tell me the outcome** (created / not created) once you can verify the model tree, and I'll proceed accordingly.\n2. **Ask me to stop here** \u2014 I take no further action on the project.",
+    "error_type": null
+  },
+  {
+    "run": "revised 30-turn",
+    "variant": "proposal",
+    "scenario": "unsupported_edit",
+    "status": "bounded_stop",
+    "max_turns": 30,
+    "run_budget": 200,
+    "requests": 4,
+    "successful_responses": 4,
+    "prompt_tokens": 14774,
+    "completion_tokens": 4559,
+    "max_visible": 14,
+    "latency_s": 57.875,
+    "discovery": [
+      {
+        "status": "rejected",
+        "reason": "over_budget",
+        "missing": [],
+        "proposed_count": 19,
+        "limit": 18,
+        "active_groups": [],
+        "active_names": [
+          "cst_connection_status",
+          "discover_tools"
+        ]
+      },
+      {
+        "status": "activated_next_request",
+        "active_groups": [
+          "project_context",
+          "geometry_profiles"
+        ],
+        "active_names": [
+          "cst_connection_status",
+          "cst_create_analytical_curve",
+          "cst_create_ecylinder",
+          "cst_create_extrude",
+          "cst_create_face_from_curves",
+          "cst_create_loft",
+          "cst_create_polygon3d",
+          "cst_create_polygon_extrude",
+          "cst_create_torus",
+          "cst_export_structure_views",
+          "cst_project_info",
+          "cst_project_tree",
+          "cst_save_project",
+          "discover_tools"
+        ],
+        "visible_count": 14
+      },
+      {
+        "status": "activated_next_request",
+        "active_groups": [
+          "solid_operations"
+        ],
+        "active_names": [
+          "cst_boolean_add",
+          "cst_boolean_insert",
+          "cst_boolean_intersect",
+          "cst_boolean_subtract",
+          "cst_connection_status",
+          "cst_transform_mirror",
+          "cst_transform_rotate",
+          "cst_transform_scale",
+          "cst_transform_translate",
+          "discover_tools"
+        ],
+        "visible_count": 10
+      }
+    ],
+    "tools": [],
+    "final_output": null,
+    "error_type": "ModelBehaviorError"
+  },
+  {
+    "run": "revised 30-turn remaining",
+    "variant": "proposal",
+    "scenario": "cylinder",
+    "status": "returned",
+    "max_turns": 30,
+    "run_budget": 200,
+    "requests": 5,
+    "successful_responses": 5,
+    "prompt_tokens": 25506,
+    "completion_tokens": 730,
+    "max_visible": 13,
+    "latency_s": 12.095,
+    "discovery": [
+      {
+        "status": "activated_next_request",
+        "active_groups": [
+          "geometry_basic",
+          "materials_basic"
+        ],
+        "active_names": [
+          "cst_assign_material",
+          "cst_connection_status",
+          "cst_create_brick",
+          "cst_create_cone",
+          "cst_create_cylinder",
+          "cst_create_lossy_metal",
+          "cst_create_material",
+          "cst_create_sphere",
+          "cst_create_wire",
+          "cst_get_material_info",
+          "cst_list_materials",
+          "cst_load_material",
+          "discover_tools"
+        ],
+        "visible_count": 13
+      }
+    ],
+    "tools": [
+      {
+        "name": "cst_create_cylinder",
+        "arguments": {
+          "component": "Antenna",
+          "name": "SolidCylinder",
+          "axis": "z",
+          "outer_radius": 5,
+          "range_min": 0,
+          "range_max": 10,
+          "inner_radius": 0,
+          "material": "PEC"
+        },
+        "result": {
+          "status": "error",
+          "code": "material_not_loaded",
+          "mock": true
+        }
+      },
+      {
+        "name": "cst_load_material",
+        "arguments": {
+          "name": "PEC",
+          "library_name": "PEC"
+        },
+        "result": {
+          "status": "ok",
+          "name": "PEC",
+          "library_name": "PEC",
+          "native_properties_verified": false,
+          "mock": true
+        }
+      },
+      {
+        "name": "cst_create_cylinder",
+        "arguments": {
+          "component": "Antenna",
+          "name": "SolidCylinder",
+          "axis": "z",
+          "outer_radius": 5,
+          "range_min": 0,
+          "range_max": 10,
+          "inner_radius": 0,
+          "material": "PEC"
+        },
+        "result": {
+          "status": "ok",
+          "solid": "Antenna:SolidCylinder",
+          "native_effect_verified": false,
+          "mock": true
+        }
+      }
+    ],
+    "final_output": "Done. Created in the mock instance (C:/mock/discovery.cst):\n\n- **Solid**: `Antenna:SolidCylinder` \u2014 cylinder, radius 5 mm, Z from 0 to 10 mm (base center at origin), material PEC (library entry loaded first; all steps reported mock `ok`, no native verification).\n\nNothing else was added.",
+    "error_type": null
+  },
+  {
+    "run": "revised 30-turn remaining",
+    "variant": "focused",
+    "scenario": "cylinder",
+    "status": "returned",
+    "max_turns": 30,
+    "run_budget": 200,
+    "requests": 4,
+    "successful_responses": 4,
+    "prompt_tokens": 17225,
+    "completion_tokens": 1736,
+    "max_visible": 10,
+    "latency_s": 22.329,
+    "discovery": [
+      {
+        "status": "activated_next_request",
+        "active_groups": [
+          "materials_basic",
+          "geometry_basic"
+        ],
+        "active_names": [
+          "cst_connection_status",
+          "cst_create_brick",
+          "cst_create_cone",
+          "cst_create_cylinder",
+          "cst_create_sphere",
+          "cst_create_wire",
+          "cst_list_materials",
+          "cst_load_material",
+          "cst_project_info",
+          "discover_tools"
+        ],
+        "visible_count": 10
+      }
+    ],
+    "tools": [
+      {
+        "name": "cst_load_material",
+        "arguments": {
+          "name": "PEC",
+          "library_name": "PEC"
+        },
+        "result": {
+          "status": "ok",
+          "name": "PEC",
+          "library_name": "PEC",
+          "native_properties_verified": false,
+          "mock": true
+        }
+      },
+      {
+        "name": "cst_create_cylinder",
+        "arguments": {
+          "component": "Cylinder",
+          "name": "Cylinder_PEC",
+          "axis": "z",
+          "outer_radius": 5,
+          "range_min": 0,
+          "range_max": 10,
+          "material": "PEC"
+        },
+        "result": {
+          "status": "ok",
+          "solid": "Cylinder:Cylinder_PEC",
+          "native_effect_verified": false,
+          "mock": true
+        }
+      }
+    ],
+    "final_output": "Done (mock run \u2014 no native execution or physics validation):\n\n- **Material**: Loaded `PEC` from the native library under the name `PEC` (mock; properties not natively verified).\n- **Solid**: `Cylinder:Cylinder_PEC` \u2014 cylinder, radius 5 mm, height 10 mm (z = 0 \u2192 10 mm), base center (0,0,0), axis +Z, material PEC, in the held project `C:/mock/discovery.cst` (mm units per fixture facts).\n\nNothing else was added \u2014 no domain, ports, solver, or mesh configuration.",
+    "error_type": null
+  },
+  {
+    "run": "revised 30-turn remaining",
+    "variant": "proposal",
+    "scenario": "existing_edit",
+    "status": "returned",
+    "max_turns": 30,
+    "run_budget": 200,
+    "requests": 7,
+    "successful_responses": 7,
+    "prompt_tokens": 28642,
+    "completion_tokens": 1992,
+    "max_visible": 12,
+    "latency_s": 26.985,
+    "discovery": [
+      {
+        "status": "activated_next_request",
+        "active_groups": [
+          "parameters",
+          "diagnostics",
+          "simulation_run"
+        ],
+        "active_names": [
+          "cst_check_model_setup",
+          "cst_connection_status",
+          "cst_delete_results",
+          "cst_get_parameter",
+          "cst_get_simulation_status",
+          "cst_list_parameters",
+          "cst_read_project_log",
+          "cst_run_simulation_async",
+          "cst_set_parameter",
+          "cst_stop_simulation",
+          "cst_wait_for_simulation",
+          "discover_tools"
+        ],
+        "visible_count": 12
+      }
+    ],
+    "tools": [
+      {
+        "name": "cst_connection_status",
+        "arguments": {},
+        "result": {
+          "status": "ok",
+          "mode": "connected",
+          "project_open": true,
+          "project_path": "C:/mock/discovery.cst",
+          "path_evidence": "cached_session_path",
+          "running": false,
+          "mock": true
+        }
+      },
+      {
+        "name": "cst_list_parameters",
+        "arguments": {},
+        "result": {
+          "status": "ok",
+          "result": "patch_l = 29",
+          "mock": true
+        }
+      },
+      {
+        "name": "cst_set_parameter",
+        "arguments": {
+          "name": "patch_l",
+          "value": 30,
+          "description": "Patch length (mm) \u2014 edited from 29 to 30 per user request; results deleted with explicit consent",
+          "delete_results": true,
+          "rebuild": true
+        },
+        "result": {
+          "status": "ok",
+          "name": "patch_l",
+          "value": 30,
+          "parameters_changed": true,
+          "mock": true
+        }
+      },
+      {
+        "name": "cst_run_simulation_async",
+        "arguments": {},
+        "result": {
+          "status": "started",
+          "running": true,
+          "mock": true
+        }
+      },
+      {
+        "name": "cst_wait_for_simulation",
+        "arguments": {
+          "max_wait_s": 55
+        },
+        "result": {
+          "status": "finished",
+          "confirmed": true,
+          "solve_observed": true,
+          "running": false,
+          "elapsed_s": 0.1,
+          "warning": "Synthetic activity transition only, no numerical validation.",
+          "mock": true
+        }
+      },
+      {
+        "name": "cst_get_simulation_status",
+        "arguments": {},
+        "result": {
+          "status": "ok",
+          "running": false,
+          "mock": true
+        }
+      }
+    ],
+    "final_output": "All four tasks complete (mock environment \u2014 no native execution or numerical validation; the finish transition is synthetic):\n\n1. **Parameter edit** \u2014 reused the existing `patch_l` parameter (verified at 29 before the edit) and set it to 30 mm; model rebuilt via parameter evaluation only, no solids reconstructed. All other design inputs and the solver setup left untouched.\n2. **Results invalidation** \u2014 existing simulation results deleted first, per your explicit consent (no dialog risk).\n3. **Asynchronous solve** \u2014 started with the currently configured solver.\n4. **Bounded-wait monitoring** \u2014 `cst_wait_for_simulation` reported `finished` with `confirmed: true` and `solve_observed: true` (the launched solve was seen running); a follow-up status read shows the solver idle.\n\nCaveats: mock readback only \u2014 no field data, S-parameters, or physical convergence checks were or can be produced here, and solver idleness is not by itself numerical validation. Project left unsaved, as instructed.",
+    "error_type": null
+  },
+  {
+    "run": "revised 30-turn remaining",
+    "variant": "proposal",
+    "scenario": "construction",
+    "status": "bounded_stop",
+    "max_turns": 30,
+    "run_budget": 200,
+    "requests": 1,
+    "successful_responses": 1,
+    "prompt_tokens": 2276,
+    "completion_tokens": 3072,
+    "max_visible": 2,
+    "latency_s": 33.516,
+    "discovery": [],
+    "tools": [],
+    "final_output": null,
+    "error_type": "ModelBehaviorError"
+  },
+  {
+    "run": "revised 30-turn final",
+    "variant": "focused",
+    "scenario": "construction",
+    "status": "bounded_stop",
+    "max_turns": 30,
+    "run_budget": 200,
+    "requests": 1,
+    "successful_responses": 1,
+    "prompt_tokens": 2306,
+    "completion_tokens": 3072,
+    "max_visible": 3,
+    "latency_s": 32.5,
+    "discovery": [],
+    "tools": [],
+    "final_output": null,
+    "error_type": "ModelBehaviorError"
   }
 ]

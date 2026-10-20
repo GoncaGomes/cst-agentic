@@ -1,0 +1,47 @@
+{
+  "revision": "task-planning-30-turns",
+  "scenario_start_index": 8,
+  "budget": 200,
+  "requests_used": 30,
+  "records": [
+    {
+      "variant": "focused",
+      "scenario": "construction",
+      "prompt": "Mock fixture facts (synthetic, not native readbacks): intended project\nC:/mock/discovery.cst is already explicitly selected and held in an owned mock\ninstance. A fixture-owned independent identity/unit check established this target\nand mm/GHz/ns; these are supplied test facts, not implemented MCP capabilities.\nProject is unsolved and empty except when the scenario states otherwise.\nCreate a NEW mock MWS project at C:/mock/patch.cst in the already owned\nconnected mock instance; do not replace the selected project's file. Fixture setup\nestablishes mm/GHz/ns for the new project independently (no unit-tool capability\nis being claimed). Build the model only, do not save or run. Set named parameters:\nboard_w=60, board_l=60, substrate_h=1.6, patch_w=38, patch_l=29, metal_t=0.035,\nfeed_x=0, feed_y=-8. Use exact library PEC and Rogers RT-duroid 5870 (loss free).\nSubstrate: X +/-board_w/2, Y +/-board_l/2, Z 0 to substrate_h. Ground: same X/Y,\nZ -metal_t to 0. Patch: X +/-patch_w/2, Y +/-patch_l/2, Z substrate_h to\nsubstrate_h+metal_t. Centered in X/Y. One ideal 50-ohm discrete port at\n(feed_x, feed_y), Z 0 to substrate_h; no connector. Preserve supported named\nexpressions. If the port cannot retain parameter dependencies, ask for a revision\nbefore silently freezing coordinates. No simulation or solver configuration.\n",
+      "setup": {},
+      "max_turns": 30,
+      "instructions": "You are a CST-aware conversational engineering assistant in a THROWAWAY\ntrial. ALL CST tools are MOCKS; say 'mock' in outcome summaries. Never claim native\nexecution or physics validation. Interpret engineering requests, offer useful\nchoices as questions, and execute complete authorized instructions without\napproval of every call. Ask together for missing engineering choices; do not\ninvent dimensions, units, material properties, selected project or dependencies.\nAn incidental nonconflicting name may be generated. Load requested materials from\nthe native library first; if unavailable ask for specifications, do not substitute.\nNever run a simulation unless explicitly requested. Do not add setup to standalone\ngeometry requests. Existing parameterized edits should reuse actual parameters;\ncreation is NOT arbitrary solid editing. Do not use VBA or rebuild as a workaround\nwithout agreement. Result deletion and scope expansion require explicit consent.\nDo not save unless requested. Parameter get/list schemas overpromise: actual\nresponses contain evaluated values, NOT stored expressions. Numeric-only port\ninputs do not preserve parameter dependencies. Project paths in MCP are cached;\nunit and target evidence here comes ONLY from explicitly identified mock fixture\nfacts, not from invented native unit/identity APIs. Bundled material queries do\nnot inspect project properties. Solver/mesh annotations have stale history\nrationale; do not use hints as authorization or execution evidence.\nUse discover_tools to REPLACE the complete group selection for the next model\nrequest; discovery itself performs no CST operations. Empty groups reset to\nstartup. Rejected selections preserve the previous set. Only tools visible in the\nrequest that produced a call may execute in that batch. Calls requiring newly\ndiscovered schemas must wait for the next request; avoid discovery mixed with\nmutations. Use meaningful small selections, not everything. Explain concrete\nblockers without repetitive discovery. Brief intent is sufficient before action.\nAfter transport uncertainty ALL CST dispatch is blocked, including status and\nstop. Do not retry or reconnect; explain unknown outcome and pause. Reconnection\ndoes not reconcile. Acknowledged server errors are distinct from lost responses.\nNever equate idle with successful completion. 'Stop task' means no further task\nsteps, not implicit solver stop. Be concise; separate proposals from observations.\nSplit the work into tasks. For each task, use suitable tools already available;\nif no suitable tool is known or available, discover the relevant group from the\ntable below and inspect its actual tool schemas before acting. Discovery activates\ntools on the next INTERNAL model request within this same user task, not the next\nuser message: continue within existing authorization without asking for another 'go'.\n\nTool group table \u2014 tool_group (quantity): description\nsession_project (8): Manage CST sessions and the lifecycle of working projects.\nproject_context (1): Inspect current project tree (read context only).\nparameters (3): Create, inspect, and change design parameters without loading sweeps or optimizers.\nmaterials_basic (2): Load exact native material library entries; search bundled names (not project properties).\ngeometry_basic (5): Build common solid primitives and wires for substrates, conductors, probes, dipoles, and simple supports.\ngeometry_profiles (8): Build profile-based and less frequent shapes without loading their schemas during ordinary brick/cylinder work.\nsolid_operations (8): Combine solids and translate, rotate, mirror, scale, or copy geometry where the native tool supports it.\nsimulation_domain (4): Configure the frequency band, boundary conditions, background, and compatible symmetry.\nports_basic (5): Create common waveguide/discrete ports and lumped elements, inspect ports, and remove a specified port.\nsolver_time_domain (2): Configure the time-domain solver and inspect the solver configuration.\nsolver_frequency_domain (2): Configure the frequency-domain solver and inspect the solver configuration.\nmesh_basic (5): Configure the solver-compatible mesh, density, local refinement, and supported adaptation.\nfield_monitors (1): Define the field monitors needed by the intended analysis before a solve.\nsimulation_run (4): Start a solve asynchronously, inspect progress, wait for bounded periods, or stop a run.\ndiagnostics (3): Read project logs, check a described setup, or explicitly invalidate existing results when required by a change.\ndialog_recovery (3): Recover from a known modal-dialog obstruction and manage the optional broad dialog watcher.\nreference (2): Read the installed official CST documentation when a tool contract or CST operation is unfamiliar.\ncad_io (2): Import existing CAD geometry or export model geometry.\nconnectors (1): Add the specific supported parametric edge-launch SMA connector when its assumptions match the model.\nCounts exclude startup functions; groups can overlap. The host deduplicates the combined selection and enforces the 18-visible-function cap.\n",
+      "events": [
+        {
+          "kind": "request",
+          "request": 30,
+          "visible": [
+            "discover_tools",
+            "cst_project_info",
+            "cst_connection_status"
+          ],
+          "active_groups": [],
+          "matched_history_pairs": 0,
+          "latency_s": 32.5,
+          "http_status": 200
+        },
+        {
+          "kind": "assistant",
+          "text": "",
+          "tool_calls": [],
+          "finish_reason": "length",
+          "usage": {
+            "completion_tokens": 3072,
+            "prompt_tokens": 2306,
+            "total_tokens": 5378,
+            "prompt_tokens_details": {
+              "cached_tokens": 1943
+            }
+          }
+        }
+      ],
+      "status": "bounded_stop",
+      "error_type": "ModelBehaviorError"
+    }
+  ]
+}

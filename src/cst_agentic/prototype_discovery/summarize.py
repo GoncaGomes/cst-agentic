@@ -9,6 +9,9 @@ for filename, label in (
     ("transcripts.json", "initial"),
     ("continued_transcripts.json", "continued"),
     ("retry_2026_10_20_transcripts.json", "2026-10-20 retry"),
+    ("revised_30turns_transcripts.json", "revised 30-turn"),
+    ("revised_30turns_remaining_transcripts.json", "revised 30-turn remaining"),
+    ("revised_30turns_final_transcripts.json", "revised 30-turn final"),
 ):
     path = HERE / filename
     if not path.exists():
@@ -27,6 +30,8 @@ for filename, label in (
                 "variant": record["variant"],
                 "scenario": record["scenario"],
                 "status": record.get("status", "not_recorded"),
+                "max_turns": record["max_turns"],
+                "run_budget": payload["budget"],
                 "requests": len(requests),
                 "successful_responses": len(assistant),
                 "prompt_tokens": prompt,

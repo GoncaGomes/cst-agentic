@@ -17,7 +17,7 @@ from pathlib import Path
 HERE = Path(__file__).parent
 SCHEMAS = json.loads((HERE / "schemas.json").read_text(encoding="utf-8"))
 LIMIT = 18
-BUDGET = 48
+BUDGET = 200
 
 INSTRUCTIONS = """You are a CST-aware conversational engineering assistant in a THROWAWAY
 trial. ALL CST tools are MOCKS; say 'mock' in outcome summaries. Never claim native
@@ -50,6 +50,11 @@ stop. Do not retry or reconnect; explain unknown outcome and pause. Reconnection
 does not reconcile. Acknowledged server errors are distinct from lost responses.
 Never equate idle with successful completion. 'Stop task' means no further task
 steps, not implicit solver stop. Be concise; separate proposals from observations.
+Split the work into tasks. For each task, use suitable tools already available;
+if no suitable tool is known or available, discover the relevant group from the
+table below and inspect its actual tool schemas before acting. Discovery activates
+tools on the next INTERNAL model request within this same user task, not the next
+user message: continue within existing authorization without asking for another 'go'.
 """
 
 CONTEXT = """Mock fixture facts (synthetic, not native readbacks): intended project
@@ -77,7 +82,7 @@ SCENARIOS = [
     (
         "proposal",
         "cylinder",
-        6,
+        30,
         "Create one solid cylinder of radius 5 mm, height 10 mm, base center (0,0,0), "
         "along +Z using exact library PEC. Do nothing else.",
         {},
@@ -85,7 +90,7 @@ SCENARIOS = [
     (
         "focused",
         "cylinder",
-        5,
+        30,
         "Create one solid cylinder of radius 5 mm, height 10 mm, base center (0,0,0), "
         "along +Z using exact library PEC. Do nothing else.",
         {},
@@ -93,7 +98,7 @@ SCENARIOS = [
     (
         "proposal",
         "existing_edit",
-        6,
+        30,
         "In the selected parameterized patch project, change existing patch_l from 29 "
         "to 30 mm, keep all other design inputs and verified solver setup, and rerun "
         "asynchronously and monitor with bounded waits. This fixture's external readback "
@@ -105,7 +110,7 @@ SCENARIOS = [
     (
         "proposal",
         "unsupported_edit",
-        2,
+        30,
         "Change the height of existing nonparametric Body:Rod from 10 to 12 mm, "
         "preserving its identity. Fixture inspection confirms no dimension parameter "
         "exists. Do not replace or scale the solid, and do not run.",
@@ -114,7 +119,7 @@ SCENARIOS = [
     (
         "proposal",
         "over_budget",
-        3,
+        30,
         "Discovery-mechanism trial only: first request the complete union of "
         "project_context, parameters, materials_basic and geometry_basic. If rejected, "
         "switch to project_context plus parameters and report the rejection and active "
@@ -124,7 +129,7 @@ SCENARIOS = [
     (
         "proposal",
         "missing_tool",
-        2,
+        30,
         "Activate geometry_basic, then report availability. This synthetic server "
         "catalogue lacks cst_create_cylinder. If activation fails, do not substitute "
         "another geometry family or retry discovery. Do not create anything.",
@@ -133,7 +138,7 @@ SCENARIOS = [
     (
         "proposal",
         "uncertain_mutation",
-        4,
+        30,
         "Create one solid cylinder of radius 5 mm, height 10 mm, base center (0,0,0), "
         "along +Z using PEC already loaded by this fixture. Do nothing else. "
         "A synthetic transport failure may occur: do not infer whether a mutation happened.",
@@ -154,8 +159,8 @@ SCENARIOS.sort(
 )
 SCENARIOS.extend(
     [
-        ("proposal", "construction", 6, BUILD, {}),
-        ("focused", "construction", 6, BUILD, {}),
+        ("proposal", "construction", 30, BUILD, {}),
+        ("focused", "construction", 30, BUILD, {}),
     ]
 )
 
@@ -175,6 +180,22 @@ def groups_for(variant):
             "names": ["cst_load_material", "cst_list_materials"],
         }
     return groups
+
+
+def instructions_for(variant):
+    rows = []
+    for group, definition in groups_for(variant).items():
+        purpose = definition["purpose"]
+        if group == "session_project":
+            purpose = "Manage CST sessions and the lifecycle of working projects."
+        rows.append(f"{group} ({len(definition['names'])}): {purpose}")
+    return (
+        INSTRUCTIONS
+        + "\nTool group table — tool_group (quantity): description\n"
+        + "\n".join(rows)
+        + "\nCounts exclude startup functions; groups can overlap. The host deduplicates "
+        "the combined selection and enforces the 18-visible-function cap.\n"
+    )
 
 
 def visible(state):
@@ -376,12 +397,16 @@ async def main():
     parser.add_argument("--config-root", type=Path, required=True)
     parser.add_argument("--budget-ledger", type=Path, required=True)
     parser.add_argument("--evidence-file", type=Path, required=True)
+    parser.add_argument("--start-index", type=int, default=0)
     args = parser.parse_args()
     if not args.live:
         print("Live execution requires --live and fresh human authorization.")
         return 1
     if args.evidence_file.exists() or not args.budget_ledger.is_file():
         print("Refusing to overwrite evidence or start without the existing cumulative ledger.")
+        return 1
+    if not 0 <= args.start_index < len(SCENARIOS):
+        print("Invalid scenario start index.")
         return 1
     values = dotenv_values(args.config_root / ".env")
 
@@ -407,7 +432,13 @@ async def main():
     origin = httpx2.URL(configured["SKYNET_BASE_URL"])
 
     def save():
-        payload = {"budget": BUDGET, "requests_used": used["requests"], "records": records}
+        payload = {
+            "revision": "task-planning-30-turns",
+            "scenario_start_index": args.start_index,
+            "budget": BUDGET,
+            "requests_used": used["requests"],
+            "records": records,
+        }
         args.evidence_file.write_text(
             json.dumps(safe(payload), indent=2) + "\n", encoding="utf-8"
         )
@@ -571,7 +602,7 @@ async def main():
         return result
 
     try:
-        for variant, scenario, max_turns, prompt, setup in SCENARIOS:
+        for variant, scenario, max_turns, prompt, setup in SCENARIOS[args.start_index:]:
             if used["requests"] >= BUDGET:
                 break
             state.clear()
@@ -597,13 +628,14 @@ async def main():
                 "prompt": CONTEXT + prompt,
                 "setup": setup,
                 "max_turns": max_turns,
+                "instructions": instructions_for(variant),
                 "events": state["events"],
             }
             records.append(record)
             agent = Agent(
                 name="throwaway-cst-discovery",
                 model=model,
-                instructions=INSTRUCTIONS,
+                instructions=record["instructions"],
                 tools=tools(),
                 model_settings=ModelSettings(
                     tool_choice="auto", parallel_tool_calls=True, max_tokens=3072, timeout=100

@@ -4,10 +4,11 @@ Question: can the configured institutional Qwen endpoint make useful, trustworth
 progress with small, explicitly selected tool groups?
 
 **Partial prototype, not production. No CST/server was launched or attached.**
-The 2026-10-20 retry received 36 successful responses without 429s/timeouts, but
-exposed behavioral weaknesses and incomplete scenarios. **45 / 48 requests used.**
-`REPORT_2026_10_20.md` is current. `REPORT.md` and `FINDINGS.md` retain the earlier
-rate-limited and initial-run findings; no final grouping/role verdict is adopted.
+The revised task-guidance/table run attempted all nine scenarios: **30 / 200 new
+requests used**, all HTTP 200. Some behavior improved, but three cases exhausted
+the unchanged per-reply output-token cap. `REPORT_REVISED_30_TURNS.md` is current.
+Earlier reports/evidence remain historical; original budget usage stays **45 / 48**.
+No final grouping/role verdict is adopted.
 
 ## Review without installing anything
 
@@ -19,7 +20,7 @@ Double-click `review.html`. It is self-contained and makes no network calls.
   usage and mock results. These are evidence of model/schema behavior only.
 - `offline_lifecycle.json` separately demonstrates two SDK batch edge cases with
   a local mock HTTP transport. It is **not endpoint evidence**.
-- See `REPORT_2026_10_20.md` for observations, limitations and pending human feedback.
+- See `REPORT_REVISED_30_TURNS.md` for observations, limitations and pending human feedback.
 
 ## Artifact contents
 
@@ -31,6 +32,8 @@ Double-click `review.html`. It is self-contained and makes no network calls.
 - `transcripts.json`: credential-scrubbed synthetic conversations and mock states.
 - `continued_transcripts.json`: separately preserved HTTP-429 restart.
 - `retry_2026_10_20_transcripts.json`: subsequent 36-response retry.
+- `revised_30turns*_transcripts.json`: three preserved parts of the revised run,
+  sharing one fresh 200-request ledger. Exact system instructions included.
 - `measurements.json`: observations derived from both evidence files.
 - `make_review.py`: embeds evidence in the offline HTML.
 - `offline_lifecycle.py`: deterministic local SDK demonstration.
@@ -58,13 +61,14 @@ or production interfaces were added.
 
 ## Live execution is not automatically authorized
 
-The human approved **48 new HTTP requests for the originating session**. Exactly
-45 were dispatched: eight initially, one on the first authorized restart, then
-36 on the explicitly authorized 2026-10-20 retry. There were no automatic retries.
-The ledger is outside the branch; the three unused requests are not a standing
-authorization for arbitrary future runs. Agree continuation and preserve the
-cumulative ledger. The harness requires an explicit, nonexisting `--evidence-file`
-and an existing budget ledger; it refuses to overwrite retained run evidence.
+Two separately approved allowances: original **45/48**, revised **30/200**. The
+revised run uses max_turns=30 and task/table instructions; other model/tool/mock
+settings remain unchanged. No automatic failed-scenario retries occurred.
+Ledgers live outside the branch. Unused capacity is not standing authorization
+for arbitrary future runs. Agree continuation and preserve the appropriate ledger.
+The harness requires an explicit, nonexisting `--evidence-file` and an existing
+budget ledger; it refuses to overwrite evidence. Optional `--start-index` starts
+at a later independent scenario, not a replay of a failed conversation.
 
 The live invocation shape is documented only for reproducibility:
 
