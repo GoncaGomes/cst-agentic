@@ -12,6 +12,7 @@ for filename, label in (
     ("revised_30turns_transcripts.json", "revised 30-turn"),
     ("revised_30turns_remaining_transcripts.json", "revised 30-turn remaining"),
     ("revised_30turns_final_transcripts.json", "revised 30-turn final"),
+    ("no_reply_cap_transcripts.json", "no reply-token cap"),
 ):
     path = HERE / filename
     if not path.exists():
@@ -32,6 +33,7 @@ for filename, label in (
                 "status": record.get("status", "not_recorded"),
                 "max_turns": record["max_turns"],
                 "run_budget": payload["budget"],
+                "reply_token_cap": payload.get("reply_token_cap", 3072),
                 "requests": len(requests),
                 "successful_responses": len(assistant),
                 "prompt_tokens": prompt,

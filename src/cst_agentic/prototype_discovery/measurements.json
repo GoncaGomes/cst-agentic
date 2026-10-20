@@ -6,6 +6,7 @@
     "status": "returned",
     "max_turns": 3,
     "run_budget": 48,
+    "reply_token_cap": 3072,
     "requests": 2,
     "successful_responses": 2,
     "prompt_tokens": 5433,
@@ -41,6 +42,7 @@
     "status": "bounded_stop",
     "max_turns": 6,
     "run_budget": 48,
+    "reply_token_cap": 3072,
     "requests": 6,
     "successful_responses": 5,
     "prompt_tokens": 22719,
@@ -144,6 +146,7 @@
     "status": "bounded_stop",
     "max_turns": 3,
     "run_budget": 48,
+    "reply_token_cap": 3072,
     "requests": 1,
     "successful_responses": 0,
     "prompt_tokens": 0,
@@ -162,6 +165,7 @@
     "status": "returned",
     "max_turns": 3,
     "run_budget": 48,
+    "reply_token_cap": 3072,
     "requests": 3,
     "successful_responses": 3,
     "prompt_tokens": 5835,
@@ -212,6 +216,7 @@
     "status": "returned",
     "max_turns": 2,
     "run_budget": 48,
+    "reply_token_cap": 3072,
     "requests": 2,
     "successful_responses": 2,
     "prompt_tokens": 3100,
@@ -245,6 +250,7 @@
     "status": "returned",
     "max_turns": 4,
     "run_budget": 48,
+    "reply_token_cap": 3072,
     "requests": 2,
     "successful_responses": 2,
     "prompt_tokens": 6630,
@@ -287,6 +293,7 @@
     "status": "bounded_stop",
     "max_turns": 2,
     "run_budget": 48,
+    "reply_token_cap": 3072,
     "requests": 2,
     "successful_responses": 2,
     "prompt_tokens": 3240,
@@ -351,6 +358,7 @@
     "status": "returned",
     "max_turns": 6,
     "run_budget": 48,
+    "reply_token_cap": 3072,
     "requests": 5,
     "successful_responses": 5,
     "prompt_tokens": 22627,
@@ -442,6 +450,7 @@
     "status": "bounded_stop",
     "max_turns": 5,
     "run_budget": 48,
+    "reply_token_cap": 3072,
     "requests": 5,
     "successful_responses": 5,
     "prompt_tokens": 19632,
@@ -545,6 +554,7 @@
     "status": "returned",
     "max_turns": 6,
     "run_budget": 48,
+    "reply_token_cap": 3072,
     "requests": 5,
     "successful_responses": 5,
     "prompt_tokens": 16010,
@@ -631,6 +641,7 @@
     "status": "bounded_stop",
     "max_turns": 6,
     "run_budget": 48,
+    "reply_token_cap": 3072,
     "requests": 6,
     "successful_responses": 6,
     "prompt_tokens": 23299,
@@ -792,6 +803,7 @@
     "status": "bounded_stop",
     "max_turns": 6,
     "run_budget": 48,
+    "reply_token_cap": 3072,
     "requests": 6,
     "successful_responses": 6,
     "prompt_tokens": 18411,
@@ -1007,6 +1019,7 @@
     "status": "returned",
     "max_turns": 30,
     "run_budget": 200,
+    "reply_token_cap": 3072,
     "requests": 3,
     "successful_responses": 3,
     "prompt_tokens": 7542,
@@ -1057,6 +1070,7 @@
     "status": "returned",
     "max_turns": 30,
     "run_budget": 200,
+    "reply_token_cap": 3072,
     "requests": 2,
     "successful_responses": 2,
     "prompt_tokens": 4180,
@@ -1090,6 +1104,7 @@
     "status": "returned",
     "max_turns": 30,
     "run_budget": 200,
+    "reply_token_cap": 3072,
     "requests": 3,
     "successful_responses": 3,
     "prompt_tokens": 11374,
@@ -1149,6 +1164,7 @@
     "status": "bounded_stop",
     "max_turns": 30,
     "run_budget": 200,
+    "reply_token_cap": 3072,
     "requests": 4,
     "successful_responses": 4,
     "prompt_tokens": 14774,
@@ -1223,6 +1239,7 @@
     "status": "returned",
     "max_turns": 30,
     "run_budget": 200,
+    "reply_token_cap": 3072,
     "requests": 5,
     "successful_responses": 5,
     "prompt_tokens": 25506,
@@ -1317,6 +1334,7 @@
     "status": "returned",
     "max_turns": 30,
     "run_budget": 200,
+    "reply_token_cap": 3072,
     "requests": 4,
     "successful_responses": 4,
     "prompt_tokens": 17225,
@@ -1389,6 +1407,7 @@
     "status": "returned",
     "max_turns": 30,
     "run_budget": 200,
+    "reply_token_cap": 3072,
     "requests": 7,
     "successful_responses": 7,
     "prompt_tokens": 28642,
@@ -1504,6 +1523,7 @@
     "status": "bounded_stop",
     "max_turns": 30,
     "run_budget": 200,
+    "reply_token_cap": 3072,
     "requests": 1,
     "successful_responses": 1,
     "prompt_tokens": 2276,
@@ -1522,6 +1542,7 @@
     "status": "bounded_stop",
     "max_turns": 30,
     "run_budget": 200,
+    "reply_token_cap": 3072,
     "requests": 1,
     "successful_responses": 1,
     "prompt_tokens": 2306,
@@ -1532,5 +1553,790 @@
     "tools": [],
     "final_output": null,
     "error_type": "ModelBehaviorError"
+  },
+  {
+    "run": "no reply-token cap",
+    "variant": "proposal",
+    "scenario": "unsupported_edit",
+    "status": "returned",
+    "max_turns": 30,
+    "run_budget": 200,
+    "reply_token_cap": null,
+    "requests": 2,
+    "successful_responses": 2,
+    "prompt_tokens": 10533,
+    "completion_tokens": 10166,
+    "max_visible": 15,
+    "latency_s": 120.844,
+    "discovery": [
+      {
+        "status": "activated_next_request",
+        "active_groups": [
+          "geometry_basic",
+          "geometry_profiles"
+        ],
+        "active_names": [
+          "cst_connection_status",
+          "cst_create_analytical_curve",
+          "cst_create_brick",
+          "cst_create_cone",
+          "cst_create_cylinder",
+          "cst_create_ecylinder",
+          "cst_create_extrude",
+          "cst_create_face_from_curves",
+          "cst_create_loft",
+          "cst_create_polygon3d",
+          "cst_create_polygon_extrude",
+          "cst_create_sphere",
+          "cst_create_torus",
+          "cst_create_wire",
+          "discover_tools"
+        ],
+        "visible_count": 15
+      }
+    ],
+    "tools": [],
+    "final_output": "**Outcome (mock \u2014 no CST operations were dispatched beyond tool-schema discovery; project unchanged, nothing run):**\n\nI inspected the available geometry tool schemas to check for an in-place edit path. Findings:\n\n1. **No parameters to reuse** \u2014 fixture inspection confirms Body:Rod is nonparametric, so there is no stored dimension expression to change.\n2. **No in-place dimension-edit tool exists** in this toolset. The geometry tools are creation-only (brick, cylinder, cone, sphere, extrude, loft, \u2026), and the only solid-modification primitives the toolset offers (solid_operations group) are boolean combine, translate, rotate, mirror, scale, and copy.\n3. **Your constraints rule out every available path:**\n   - **Scale** \u2014 explicitly forbidden (and the obvious Z-only shortcut).\n   - **Replace** (delete + recreate under the same name) \u2014 explicitly forbidden; would also break identity preservation.\n   - **Translate/rotate/mirror/copy** \u2014 cannot alter height or would create a duplicate.\n   - **Boolean union** of a matching 2 mm segment \u2014 the only remaining in-place-looking option, but it (a) converts the Rod from a primitive shape into a boolean/combine result in its shape history, and (b) requires the Rod's exact radius, axis, and position, which I don't have and won't invent.\n\nSo, under \"no replace, no scale, no run, preserve identity,\" **no available tool can perform the 10 \u2192 12 mm change**. I have made no modifications.\n\n**Please pick a path:**\n\n- **A \u2014 Boolean extension:** accept a Union of a 2 mm matching segment onto the existing Rod (name preserved, shape history becomes a boolean result). If you choose A, also tell me the Rod's radius/axis/position \u2014 or authorize a read-only read of the solid's properties from the project tree.\n- **B \u2014 Clean rebuild:** you explicitly consent to delete + recreate under the same name at 12 mm (this contradicts \"do not replace,\" so it needs your explicit sign-off plus the full dimensions).\n- **C \u2014 Native GUI edit:** you change the height directly in CST's shape dialog, which can edit nonparametric solids in place; I can't drive that from here.\n- **D \u2014 Abort:** leave the Rod at 10 mm.\n\nWhich option should I proceed with?",
+    "error_type": null
+  },
+  {
+    "run": "no reply-token cap",
+    "variant": "proposal",
+    "scenario": "construction",
+    "status": "returned",
+    "max_turns": 30,
+    "run_budget": 200,
+    "reply_token_cap": null,
+    "requests": 11,
+    "successful_responses": 11,
+    "prompt_tokens": 62861,
+    "completion_tokens": 5415,
+    "max_visible": 16,
+    "latency_s": 64.919,
+    "discovery": [
+      {
+        "status": "activated_next_request",
+        "active_groups": [
+          "session_project",
+          "parameters"
+        ],
+        "active_names": [
+          "cst_close_project",
+          "cst_connect",
+          "cst_connection_status",
+          "cst_create_project",
+          "cst_disconnect",
+          "cst_get_parameter",
+          "cst_list_parameters",
+          "cst_open_project",
+          "cst_project_info",
+          "cst_project_tree",
+          "cst_save_project",
+          "cst_set_parameter",
+          "discover_tools"
+        ],
+        "visible_count": 13
+      },
+      {
+        "status": "rejected",
+        "reason": "over_budget",
+        "missing": [],
+        "proposed_count": 19,
+        "limit": 18,
+        "active_groups": [
+          "session_project",
+          "parameters"
+        ],
+        "active_names": [
+          "cst_close_project",
+          "cst_connect",
+          "cst_connection_status",
+          "cst_create_project",
+          "cst_disconnect",
+          "cst_get_parameter",
+          "cst_list_parameters",
+          "cst_open_project",
+          "cst_project_info",
+          "cst_project_tree",
+          "cst_save_project",
+          "cst_set_parameter",
+          "discover_tools"
+        ]
+      },
+      {
+        "status": "activated_next_request",
+        "active_groups": [
+          "parameters",
+          "materials_basic"
+        ],
+        "active_names": [
+          "cst_assign_material",
+          "cst_connection_status",
+          "cst_create_lossy_metal",
+          "cst_create_material",
+          "cst_get_material_info",
+          "cst_get_parameter",
+          "cst_list_materials",
+          "cst_list_parameters",
+          "cst_load_material",
+          "cst_set_parameter",
+          "discover_tools"
+        ],
+        "visible_count": 11
+      },
+      {
+        "status": "activated_next_request",
+        "active_groups": [
+          "parameters",
+          "materials_basic",
+          "geometry_basic"
+        ],
+        "active_names": [
+          "cst_assign_material",
+          "cst_connection_status",
+          "cst_create_brick",
+          "cst_create_cone",
+          "cst_create_cylinder",
+          "cst_create_lossy_metal",
+          "cst_create_material",
+          "cst_create_sphere",
+          "cst_create_wire",
+          "cst_get_material_info",
+          "cst_get_parameter",
+          "cst_list_materials",
+          "cst_list_parameters",
+          "cst_load_material",
+          "cst_set_parameter",
+          "discover_tools"
+        ],
+        "visible_count": 16
+      },
+      {
+        "status": "activated_next_request",
+        "active_groups": [
+          "parameters",
+          "materials_basic",
+          "ports_basic"
+        ],
+        "active_names": [
+          "cst_add_discrete_port",
+          "cst_add_lumped_element",
+          "cst_add_waveguide_port",
+          "cst_assign_material",
+          "cst_connection_status",
+          "cst_create_lossy_metal",
+          "cst_create_material",
+          "cst_delete_port",
+          "cst_get_material_info",
+          "cst_get_parameter",
+          "cst_list_materials",
+          "cst_list_parameters",
+          "cst_list_ports",
+          "cst_load_material",
+          "cst_set_parameter",
+          "discover_tools"
+        ],
+        "visible_count": 16
+      }
+    ],
+    "tools": [
+      {
+        "name": "cst_connection_status",
+        "arguments": {},
+        "result": {
+          "status": "ok",
+          "mode": "connected",
+          "project_open": true,
+          "project_path": "C:/mock/discovery.cst",
+          "path_evidence": "cached_session_path",
+          "running": false,
+          "mock": true
+        }
+      },
+      {
+        "name": "cst_create_project",
+        "arguments": {
+          "path": "C:/mock/patch.cst",
+          "project_type": "MWS"
+        },
+        "result": {
+          "status": "ok",
+          "path": "C:/mock/patch.cst",
+          "mock": true
+        }
+      },
+      {
+        "name": "cst_set_parameter",
+        "arguments": {
+          "name": "board_w",
+          "value": 60,
+          "description": "Board width (X extent)"
+        },
+        "result": {
+          "status": "ok",
+          "name": "board_w",
+          "value": 60,
+          "parameters_changed": true,
+          "mock": true
+        }
+      },
+      {
+        "name": "cst_set_parameter",
+        "arguments": {
+          "name": "board_l",
+          "value": 60,
+          "description": "Board length (Y extent)"
+        },
+        "result": {
+          "status": "ok",
+          "name": "board_l",
+          "value": 60,
+          "parameters_changed": true,
+          "mock": true
+        }
+      },
+      {
+        "name": "cst_set_parameter",
+        "arguments": {
+          "name": "substrate_h",
+          "value": 1.6,
+          "description": "Substrate thickness (Z)"
+        },
+        "result": {
+          "status": "ok",
+          "name": "substrate_h",
+          "value": 1.6,
+          "parameters_changed": true,
+          "mock": true
+        }
+      },
+      {
+        "name": "cst_set_parameter",
+        "arguments": {
+          "name": "patch_w",
+          "value": 38,
+          "description": "Patch width (X extent)"
+        },
+        "result": {
+          "status": "ok",
+          "name": "patch_w",
+          "value": 38,
+          "parameters_changed": true,
+          "mock": true
+        }
+      },
+      {
+        "name": "cst_set_parameter",
+        "arguments": {
+          "name": "patch_l",
+          "value": 29,
+          "description": "Patch length (Y extent)"
+        },
+        "result": {
+          "status": "ok",
+          "name": "patch_l",
+          "value": 29,
+          "parameters_changed": true,
+          "mock": true
+        }
+      },
+      {
+        "name": "cst_set_parameter",
+        "arguments": {
+          "name": "metal_t",
+          "value": 0.035,
+          "description": "Metal thickness (Z)"
+        },
+        "result": {
+          "status": "ok",
+          "name": "metal_t",
+          "value": 0.035,
+          "parameters_changed": true,
+          "mock": true
+        }
+      },
+      {
+        "name": "cst_set_parameter",
+        "arguments": {
+          "name": "feed_x",
+          "value": 0,
+          "description": "Discrete port X position"
+        },
+        "result": {
+          "status": "ok",
+          "name": "feed_x",
+          "value": 0,
+          "parameters_changed": true,
+          "mock": true
+        }
+      },
+      {
+        "name": "cst_set_parameter",
+        "arguments": {
+          "name": "feed_y",
+          "value": -8,
+          "description": "Discrete port Y position"
+        },
+        "result": {
+          "status": "ok",
+          "name": "feed_y",
+          "value": -8,
+          "parameters_changed": true,
+          "mock": true
+        }
+      },
+      {
+        "name": "cst_load_material",
+        "arguments": {
+          "name": "PEC",
+          "library_name": "PEC"
+        },
+        "result": {
+          "status": "ok",
+          "name": "PEC",
+          "library_name": "PEC",
+          "native_properties_verified": false,
+          "mock": true
+        }
+      },
+      {
+        "name": "cst_load_material",
+        "arguments": {
+          "name": "Rogers RT-duroid 5870",
+          "library_name": "Rogers RT-duroid 5870"
+        },
+        "result": {
+          "status": "error",
+          "code": "library_material_unavailable",
+          "mock": true
+        }
+      },
+      {
+        "name": "cst_load_material",
+        "arguments": {
+          "library_name": "Rogers RT5870",
+          "name": "Rogers RT5870"
+        },
+        "result": {
+          "status": "error",
+          "code": "library_material_unavailable",
+          "mock": true
+        }
+      },
+      {
+        "name": "cst_load_material",
+        "arguments": {
+          "library_name": "RT5870",
+          "name": "RT5870"
+        },
+        "result": {
+          "status": "error",
+          "code": "library_material_unavailable",
+          "mock": true
+        }
+      },
+      {
+        "name": "cst_get_material_info",
+        "arguments": {
+          "name": "Rogers RT-duroid 5870"
+        },
+        "result": {
+          "status": "ok",
+          "source": "synthetic_bundled_database",
+          "project_properties_verified": false,
+          "mock": true
+        }
+      },
+      {
+        "name": "cst_create_brick",
+        "arguments": {
+          "component": "Antenna",
+          "name": "Substrate",
+          "x_min": "-board_w/2",
+          "x_max": "board_w/2",
+          "y_min": "-board_l/2",
+          "y_max": "board_l/2",
+          "z_min": 0,
+          "z_max": "substrate_h",
+          "material": "Rogers RT-duroid 5870"
+        },
+        "result": {
+          "status": "error",
+          "code": "material_not_loaded",
+          "mock": true
+        }
+      },
+      {
+        "name": "cst_create_brick",
+        "arguments": {
+          "component": "Antenna",
+          "name": "Ground",
+          "x_min": "-board_w/2",
+          "x_max": "board_w/2",
+          "y_min": "-board_l/2",
+          "y_max": "board_l/2",
+          "z_min": "-metal_t",
+          "z_max": 0,
+          "material": "PEC"
+        },
+        "result": {
+          "status": "ok",
+          "solid": "Antenna:Ground",
+          "native_effect_verified": false,
+          "mock": true
+        }
+      },
+      {
+        "name": "cst_create_brick",
+        "arguments": {
+          "component": "Antenna",
+          "name": "Patch",
+          "x_min": "-patch_w/2",
+          "x_max": "patch_w/2",
+          "y_min": "-patch_l/2",
+          "y_max": "patch_l/2",
+          "z_min": "substrate_h",
+          "z_max": "substrate_h+metal_t",
+          "material": "PEC"
+        },
+        "result": {
+          "status": "ok",
+          "solid": "Antenna:Patch",
+          "native_effect_verified": false,
+          "mock": true
+        }
+      }
+    ],
+    "final_output": "Mock session state is now complete except two items. Here's the summary and the two decisions I need from you before finishing.\n\n**Done (mock):**\n- New project `C:/mock/patch.cst` created in the owned mock instance; `C:/mock/discovery.cst` untouched. Units mm/GHz/ns per fixture facts (no unit tool invoked).\n- Parameters set: board_w=60, board_l=60, substrate_h=1.6, patch_w=38, patch_l=29, metal_t=0.035, feed_x=0, feed_y=-8.\n- Materials: **PEC** loaded from the native library (mock).\n- Solids (named expressions preserved in model history, mock):\n  - `Antenna:Ground` \u2014 brick X \u00b1board_w/2, Y \u00b1board_l/2, Z \u2212metal_t\u20260, PEC.\n  - `Antenna:Patch` \u2014 brick X \u00b1patch_w/2, Y \u00b1patch_l/2, Z substrate_h\u2026substrate_h+metal_t, PEC.\n- No solver/mesh configuration, no save, no run.\n\n**Blocked items \u2014 need your call:**\n\n1. **Rogers RT-duroid 5870 unavailable in the native library.** Exact name plus 2 variants failed to load, and the bundled material DB returned no properties (it doesn't inspect the project, so I won't infer \u03b5r from it). Per your instruction I will not substitute or invent values. The **Substrate solid is not created** \u2014 I'll add it (X \u00b1board_w/2, Y \u00b1board_l/2, Z 0\u2026substrate_h) as soon as you provide either the \u03b5r + loss tangent specs to define the material, or a different native library name/path.\n\n2. **The discrete port cannot retain parameter dependencies.** The port tool only accepts numeric coordinates, so `feed_x`/`feed_y`/`substrate_h` cannot be stored as expressions in the port. Per your instruction, I am **not** silently freezing. Choose a revision:\n   - (a) **Authorize freezing**: port at (0, \u22128, 0) \u2192 (0, \u22128, 1.6), 50 \u03a9. The feed_x/feed_y parameters stay for documentation but the port won't follow them; I'd note that in the summary.\n   - (b) **Revise the requirement**: e.g., accept numeric-only port as the standard behavior and drop the parameter-dependency expectation, or specify another excitation approach you'd prefer.\n\nWhich way do you want to go on each?",
+    "error_type": null
+  },
+  {
+    "run": "no reply-token cap",
+    "variant": "focused",
+    "scenario": "construction",
+    "status": "returned",
+    "max_turns": 30,
+    "run_budget": 200,
+    "reply_token_cap": null,
+    "requests": 8,
+    "successful_responses": 8,
+    "prompt_tokens": 43376,
+    "completion_tokens": 7794,
+    "max_visible": 13,
+    "latency_s": 85.795,
+    "discovery": [
+      {
+        "status": "activated_next_request",
+        "active_groups": [
+          "session_project"
+        ],
+        "active_names": [
+          "cst_close_project",
+          "cst_connect",
+          "cst_connection_status",
+          "cst_create_project",
+          "cst_disconnect",
+          "cst_open_project",
+          "cst_project_info",
+          "cst_project_tree",
+          "cst_save_project",
+          "discover_tools"
+        ],
+        "visible_count": 10
+      },
+      {
+        "status": "activated_next_request",
+        "active_groups": [
+          "parameters",
+          "materials_basic",
+          "geometry_basic"
+        ],
+        "active_names": [
+          "cst_connection_status",
+          "cst_create_brick",
+          "cst_create_cone",
+          "cst_create_cylinder",
+          "cst_create_sphere",
+          "cst_create_wire",
+          "cst_get_parameter",
+          "cst_list_materials",
+          "cst_list_parameters",
+          "cst_load_material",
+          "cst_project_info",
+          "cst_set_parameter",
+          "discover_tools"
+        ],
+        "visible_count": 13
+      },
+      {
+        "status": "activated_next_request",
+        "active_groups": [
+          "ports_basic"
+        ],
+        "active_names": [
+          "cst_add_discrete_port",
+          "cst_add_lumped_element",
+          "cst_add_waveguide_port",
+          "cst_connection_status",
+          "cst_delete_port",
+          "cst_list_ports",
+          "cst_project_info",
+          "discover_tools"
+        ],
+        "visible_count": 8
+      }
+    ],
+    "tools": [
+      {
+        "name": "cst_connection_status",
+        "arguments": {},
+        "result": {
+          "status": "ok",
+          "mode": "connected",
+          "project_open": true,
+          "project_path": "C:/mock/discovery.cst",
+          "path_evidence": "cached_session_path",
+          "running": false,
+          "mock": true
+        }
+      },
+      {
+        "name": "cst_create_project",
+        "arguments": {
+          "path": "C:/mock/patch.cst",
+          "project_type": "MWS"
+        },
+        "result": {
+          "status": "ok",
+          "path": "C:/mock/patch.cst",
+          "mock": true
+        }
+      },
+      {
+        "name": "cst_set_parameter",
+        "arguments": {
+          "name": "board_w",
+          "value": 60,
+          "description": "Board width, mm"
+        },
+        "result": {
+          "status": "ok",
+          "name": "board_w",
+          "value": 60,
+          "parameters_changed": true,
+          "mock": true
+        }
+      },
+      {
+        "name": "cst_set_parameter",
+        "arguments": {
+          "name": "board_l",
+          "value": 60,
+          "description": "Board length, mm"
+        },
+        "result": {
+          "status": "ok",
+          "name": "board_l",
+          "value": 60,
+          "parameters_changed": true,
+          "mock": true
+        }
+      },
+      {
+        "name": "cst_set_parameter",
+        "arguments": {
+          "name": "substrate_h",
+          "value": 1.6,
+          "description": "Substrate height, mm"
+        },
+        "result": {
+          "status": "ok",
+          "name": "substrate_h",
+          "value": 1.6,
+          "parameters_changed": true,
+          "mock": true
+        }
+      },
+      {
+        "name": "cst_set_parameter",
+        "arguments": {
+          "name": "patch_w",
+          "value": 38,
+          "description": "Patch width, mm"
+        },
+        "result": {
+          "status": "ok",
+          "name": "patch_w",
+          "value": 38,
+          "parameters_changed": true,
+          "mock": true
+        }
+      },
+      {
+        "name": "cst_set_parameter",
+        "arguments": {
+          "name": "patch_l",
+          "value": 29,
+          "description": "Patch length, mm"
+        },
+        "result": {
+          "status": "ok",
+          "name": "patch_l",
+          "value": 29,
+          "parameters_changed": true,
+          "mock": true
+        }
+      },
+      {
+        "name": "cst_set_parameter",
+        "arguments": {
+          "name": "metal_t",
+          "value": 0.035,
+          "description": "Metal thickness, mm"
+        },
+        "result": {
+          "status": "ok",
+          "name": "metal_t",
+          "value": 0.035,
+          "parameters_changed": true,
+          "mock": true
+        }
+      },
+      {
+        "name": "cst_set_parameter",
+        "arguments": {
+          "name": "feed_x",
+          "value": 0,
+          "description": "Feed X offset, mm"
+        },
+        "result": {
+          "status": "ok",
+          "name": "feed_x",
+          "value": 0,
+          "parameters_changed": true,
+          "mock": true
+        }
+      },
+      {
+        "name": "cst_set_parameter",
+        "arguments": {
+          "name": "feed_y",
+          "value": -8,
+          "description": "Feed Y offset, mm"
+        },
+        "result": {
+          "status": "ok",
+          "name": "feed_y",
+          "value": -8,
+          "parameters_changed": true,
+          "mock": true
+        }
+      },
+      {
+        "name": "cst_list_materials",
+        "arguments": {
+          "category": "substrates"
+        },
+        "result": {
+          "status": "ok",
+          "materials": [
+            "PEC",
+            "Rogers RT-duroid 5870 (loss free)"
+          ],
+          "source": "synthetic_bundled_database",
+          "mock": true
+        }
+      },
+      {
+        "name": "cst_load_material",
+        "arguments": {
+          "name": "PEC",
+          "library_name": "PEC"
+        },
+        "result": {
+          "status": "ok",
+          "name": "PEC",
+          "library_name": "PEC",
+          "native_properties_verified": false,
+          "mock": true
+        }
+      },
+      {
+        "name": "cst_load_material",
+        "arguments": {
+          "name": "Rogers RT-duroid 5870 (loss free)",
+          "library_name": "Rogers RT-duroid 5870 (loss free)"
+        },
+        "result": {
+          "status": "ok",
+          "name": "Rogers RT-duroid 5870 (loss free)",
+          "library_name": "Rogers RT-duroid 5870 (loss free)",
+          "native_properties_verified": false,
+          "mock": true
+        }
+      },
+      {
+        "name": "cst_create_brick",
+        "arguments": {
+          "component": "Microstrip",
+          "name": "Substrate",
+          "x_min": "-board_w/2",
+          "x_max": "board_w/2",
+          "y_min": "-board_l/2",
+          "y_max": "board_l/2",
+          "z_min": 0,
+          "z_max": "substrate_h",
+          "material": "Rogers RT-duroid 5870 (loss free)"
+        },
+        "result": {
+          "status": "ok",
+          "solid": "Microstrip:Substrate",
+          "native_effect_verified": false,
+          "mock": true
+        }
+      },
+      {
+        "name": "cst_create_brick",
+        "arguments": {
+          "component": "Microstrip",
+          "name": "Ground",
+          "x_min": "-board_w/2",
+          "x_max": "board_w/2",
+          "y_min": "-board_l/2",
+          "y_max": "board_l/2",
+          "z_min": "-metal_t",
+          "z_max": 0,
+          "material": "PEC"
+        },
+        "result": {
+          "status": "ok",
+          "solid": "Microstrip:Ground",
+          "native_effect_verified": false,
+          "mock": true
+        }
+      },
+      {
+        "name": "cst_create_brick",
+        "arguments": {
+          "component": "Microstrip",
+          "name": "Patch",
+          "x_min": "-patch_w/2",
+          "x_max": "patch_w/2",
+          "y_min": "-patch_l/2",
+          "y_max": "patch_l/2",
+          "z_min": "substrate_h",
+          "z_max": "substrate_h+metal_t",
+          "material": "PEC"
+        },
+        "result": {
+          "status": "ok",
+          "solid": "Microstrip:Patch",
+          "native_effect_verified": false,
+          "mock": true
+        }
+      }
+    ],
+    "final_output": "The mock build is complete except for the port, which I've paused on per your guard clause.\n\n**Done (mock, no native execution):**\n- Created new MWS project `C:/mock/patch.cst` in the owned connected mock instance; `C:/mock/discovery.cst` remains selected-hold and its file is untouched.\n- Parameters set: board_w=60, board_l=60, substrate_h=1.6, patch_w=38, patch_l=29, metal_t=0.035, feed_x=0, feed_y=\u22128 (mm).\n- Loaded exact library entries: **PEC** and **Rogers RT-duroid 5870 (loss free)** \u2014 no substitution.\n- Solids (centered, named expressions preserved, mock):\n  - `Substrate`: \u00b1board_w/2 \u00d7 \u00b1board_l/2 \u00d7 [0, substrate_h], RT5870 loss-free\n  - `Ground`: \u00b1board_w/2 \u00d7 \u00b1board_l/2 \u00d7 [\u2212metal_t, 0], PEC\n  - `Patch`: \u00b1patch_w/2 \u00d7 \u00b1patch_l/2 \u00d7 [substrate_h, substrate_h+metal_t], PEC\n- No save, no solve, no solver configuration.\n\n**Blocker \u2014 port cannot retain parameter dependencies:**\nThe actual `cst_add_discrete_port` schema takes strictly numeric coordinates (no string/expression fields), so placing it now would silently freeze feed_x=0, feed_y=\u22128 and also z_max=substrate_h=1.6. You asked me to ask before that, so I have not created the port.\n\n**Please pick a revision:**\n1. **Accept frozen coordinates** \u2014 I place the 50 \u03a9 discrete S-parameter port at (0, \u22128, 0) \u2192 (0, \u22128, 1.6) now; it will not track future changes to feed_x/feed_y/substrate_h.\n2. **Keep feed position parametric another way** \u2014 e.g., a small PEC feed gap/strip in the ground at (feed_x, feed_y) built with named expressions (fully parametric geometry), and the port deferred or frozen by your explicit choice.\n3. **Other excitation** \u2014 tell me the alternative you want (e.g., waveguide/CPW port at the board edge), and I'll revise accordingly.\n\nWhich would you like?",
+    "error_type": null
   }
 ]

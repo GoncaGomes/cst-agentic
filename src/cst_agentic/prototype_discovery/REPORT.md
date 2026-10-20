@@ -1,5 +1,8 @@
 # Qwen progressive-discovery trial report
 
+Historical restart report. See [the latest follow-up](REPORT_NO_REPLY_CAP.md).
+Observations and counters below describe this earlier run only.
+
 2026-10-19 · [Try progressive discovery with the configured Qwen model](https://github.com/GoncaGomes/cst-agentic/issues/8)
 
 ## Outcome

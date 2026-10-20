@@ -29,6 +29,13 @@ for filename in (
         revised = json.loads(revised_path.read_text(encoding="utf-8"))
         budgets["revised"] = {key: revised[key] for key in ("budget", "requests_used")}
         transcripts["records"].extend(dict(record, run="revised 30-turn") for record in revised["records"])
+uncapped_path = HERE / "no_reply_cap_transcripts.json"
+if uncapped_path.exists():
+    uncapped = json.loads(uncapped_path.read_text(encoding="utf-8"))
+    budgets["revised"] = {key: uncapped[key] for key in ("budget", "requests_used")}
+    transcripts["records"].extend(
+        dict(record, run="no reply-token cap") for record in uncapped["records"]
+    )
 data = {
     "groups": {variant: groups_for(variant) for variant in ("proposal", "focused")},
     "trials": transcripts,

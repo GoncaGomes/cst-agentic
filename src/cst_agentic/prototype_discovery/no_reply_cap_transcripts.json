@@ -1,0 +1,2731 @@
+{
+  "revision": "task-planning-30-turns-no-reply-cap",
+  "reply_token_cap": null,
+  "scenario_filter": [
+    "unsupported_edit",
+    "construction"
+  ],
+  "scenario_start_index": 0,
+  "budget": 200,
+  "requests_used": 51,
+  "records": [
+    {
+      "variant": "proposal",
+      "scenario": "unsupported_edit",
+      "prompt": "Mock fixture facts (synthetic, not native readbacks): intended project\nC:/mock/discovery.cst is already explicitly selected and held in an owned mock\ninstance. A fixture-owned independent identity/unit check established this target\nand mm/GHz/ns; these are supplied test facts, not implemented MCP capabilities.\nProject is unsolved and empty except when the scenario states otherwise.\nChange the height of existing nonparametric Body:Rod from 10 to 12 mm, preserving its identity. Fixture inspection confirms no dimension parameter exists. Do not replace or scale the solid, and do not run.",
+      "setup": {},
+      "max_turns": 30,
+      "instructions": "You are a CST-aware conversational engineering assistant in a THROWAWAY\ntrial. ALL CST tools are MOCKS; say 'mock' in outcome summaries. Never claim native\nexecution or physics validation. Interpret engineering requests, offer useful\nchoices as questions, and execute complete authorized instructions without\napproval of every call. Ask together for missing engineering choices; do not\ninvent dimensions, units, material properties, selected project or dependencies.\nAn incidental nonconflicting name may be generated. Load requested materials from\nthe native library first; if unavailable ask for specifications, do not substitute.\nNever run a simulation unless explicitly requested. Do not add setup to standalone\ngeometry requests. Existing parameterized edits should reuse actual parameters;\ncreation is NOT arbitrary solid editing. Do not use VBA or rebuild as a workaround\nwithout agreement. Result deletion and scope expansion require explicit consent.\nDo not save unless requested. Parameter get/list schemas overpromise: actual\nresponses contain evaluated values, NOT stored expressions. Numeric-only port\ninputs do not preserve parameter dependencies. Project paths in MCP are cached;\nunit and target evidence here comes ONLY from explicitly identified mock fixture\nfacts, not from invented native unit/identity APIs. Bundled material queries do\nnot inspect project properties. Solver/mesh annotations have stale history\nrationale; do not use hints as authorization or execution evidence.\nUse discover_tools to REPLACE the complete group selection for the next model\nrequest; discovery itself performs no CST operations. Empty groups reset to\nstartup. Rejected selections preserve the previous set. Only tools visible in the\nrequest that produced a call may execute in that batch. Calls requiring newly\ndiscovered schemas must wait for the next request; avoid discovery mixed with\nmutations. Use meaningful small selections, not everything. Explain concrete\nblockers without repetitive discovery. Brief intent is sufficient before action.\nAfter transport uncertainty ALL CST dispatch is blocked, including status and\nstop. Do not retry or reconnect; explain unknown outcome and pause. Reconnection\ndoes not reconcile. Acknowledged server errors are distinct from lost responses.\nNever equate idle with successful completion. 'Stop task' means no further task\nsteps, not implicit solver stop. Be concise; separate proposals from observations.\nSplit the work into tasks. For each task, use suitable tools already available;\nif no suitable tool is known or available, discover the relevant group from the\ntable below and inspect its actual tool schemas before acting. Discovery activates\ntools on the next INTERNAL model request within this same user task, not the next\nuser message: continue within existing authorization without asking for another 'go'.\n\nTool group table \u2014 tool_group (quantity): description\nsession_project (8): Manage CST sessions and the lifecycle of working projects.\nproject_context (4): Inspect the active project, inspect its tree, save changes, and export structure views while working in another capability.\nparameters (3): Create, inspect, and change design parameters without loading sweeps or optimizers.\nmaterials_basic (6): Define ordinary dielectric and metallic materials, load native library entries, and assign materials.\ngeometry_basic (5): Build common solid primitives and wires for substrates, conductors, probes, dipoles, and simple supports.\ngeometry_profiles (8): Build profile-based and less frequent shapes without loading their schemas during ordinary brick/cylinder work.\nsolid_operations (8): Combine solids and translate, rotate, mirror, scale, or copy geometry where the native tool supports it.\nsimulation_domain (4): Configure the frequency band, boundary conditions, background, and compatible symmetry.\nports_basic (5): Create common waveguide/discrete ports and lumped elements, inspect ports, and remove a specified port.\nsolver_time_domain (2): Configure the time-domain solver and inspect the solver configuration.\nsolver_frequency_domain (2): Configure the frequency-domain solver and inspect the solver configuration.\nmesh_basic (5): Configure the solver-compatible mesh, density, local refinement, and supported adaptation.\nfield_monitors (1): Define the field monitors needed by the intended analysis before a solve.\nsimulation_run (4): Start a solve asynchronously, inspect progress, wait for bounded periods, or stop a run.\ndiagnostics (3): Read project logs, check a described setup, or explicitly invalidate existing results when required by a change.\ndialog_recovery (3): Recover from a known modal-dialog obstruction and manage the optional broad dialog watcher.\nreference (2): Read the installed official CST documentation when a tool contract or CST operation is unfamiliar.\ncad_io (2): Import existing CAD geometry or export model geometry.\nconnectors (1): Add the specific supported parametric edge-launch SMA connector when its assumptions match the model.\nCounts exclude startup functions; groups can overlap. The host deduplicates the combined selection and enforces the 18-visible-function cap.\n",
+      "events": [
+        {
+          "kind": "request",
+          "request": 31,
+          "visible": [
+            "discover_tools",
+            "cst_connection_status"
+          ],
+          "active_groups": [],
+          "matched_history_pairs": 0,
+          "latency_s": 44.547,
+          "http_status": 200
+        },
+        {
+          "kind": "assistant",
+          "text": "I'll first load the shape-tool schemas to check whether an in-place, identity-preserving dimension edit exists for the nonparametric Rod (no parameters, no replace, no scale, no solve).\n\n",
+          "tool_calls": [
+            {
+              "name": "discover_tools",
+              "arguments": "{\"groups\":[\"geometry_basic\", \"geometry_profiles\"]}"
+            }
+          ],
+          "finish_reason": "tool_calls",
+          "usage": {
+            "completion_tokens": 4007,
+            "prompt_tokens": 2047,
+            "total_tokens": 6054,
+            "prompt_tokens_details": {
+              "cached_tokens": 1913
+            }
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "discover_tools",
+          "arguments": {
+            "groups": [
+              "geometry_basic",
+              "geometry_profiles"
+            ]
+          },
+          "result": {
+            "status": "activated_next_request",
+            "active_groups": [
+              "geometry_basic",
+              "geometry_profiles"
+            ],
+            "active_names": [
+              "cst_connection_status",
+              "cst_create_analytical_curve",
+              "cst_create_brick",
+              "cst_create_cone",
+              "cst_create_cylinder",
+              "cst_create_ecylinder",
+              "cst_create_extrude",
+              "cst_create_face_from_curves",
+              "cst_create_loft",
+              "cst_create_polygon3d",
+              "cst_create_polygon_extrude",
+              "cst_create_sphere",
+              "cst_create_torus",
+              "cst_create_wire",
+              "discover_tools"
+            ],
+            "visible_count": 15
+          },
+          "state": {
+            "project": "C:/mock/discovery.cst",
+            "params": {},
+            "objects": [],
+            "loaded": [],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "geometry_basic",
+              "geometry_profiles"
+            ]
+          }
+        },
+        {
+          "kind": "request",
+          "request": 32,
+          "visible": [
+            "discover_tools",
+            "cst_connection_status",
+            "cst_create_brick",
+            "cst_create_cylinder",
+            "cst_create_cone",
+            "cst_create_sphere",
+            "cst_create_torus",
+            "cst_create_extrude",
+            "cst_create_loft",
+            "cst_create_wire",
+            "cst_create_polygon3d",
+            "cst_create_analytical_curve",
+            "cst_create_face_from_curves",
+            "cst_create_ecylinder",
+            "cst_create_polygon_extrude"
+          ],
+          "active_groups": [
+            "geometry_basic",
+            "geometry_profiles"
+          ],
+          "matched_history_pairs": 1,
+          "latency_s": 76.297,
+          "http_status": 200
+        },
+        {
+          "kind": "assistant",
+          "text": "**Outcome (mock \u2014 no CST operations were dispatched beyond tool-schema discovery; project unchanged, nothing run):**\n\nI inspected the available geometry tool schemas to check for an in-place edit path. Findings:\n\n1. **No parameters to reuse** \u2014 fixture inspection confirms Body:Rod is nonparametric, so there is no stored dimension expression to change.\n2. **No in-place dimension-edit tool exists** in this toolset. The geometry tools are creation-only (brick, cylinder, cone, sphere, extrude, loft, \u2026), and the only solid-modification primitives the toolset offers (solid_operations group) are boolean combine, translate, rotate, mirror, scale, and copy.\n3. **Your constraints rule out every available path:**\n   - **Scale** \u2014 explicitly forbidden (and the obvious Z-only shortcut).\n   - **Replace** (delete + recreate under the same name) \u2014 explicitly forbidden; would also break identity preservation.\n   - **Translate/rotate/mirror/copy** \u2014 cannot alter height or would create a duplicate.\n   - **Boolean union** of a matching 2 mm segment \u2014 the only remaining in-place-looking option, but it (a) converts the Rod from a primitive shape into a boolean/combine result in its shape history, and (b) requires the Rod's exact radius, axis, and position, which I don't have and won't invent.\n\nSo, under \"no replace, no scale, no run, preserve identity,\" **no available tool can perform the 10 \u2192 12 mm change**. I have made no modifications.\n\n**Please pick a path:**\n\n- **A \u2014 Boolean extension:** accept a Union of a 2 mm matching segment onto the existing Rod (name preserved, shape history becomes a boolean result). If you choose A, also tell me the Rod's radius/axis/position \u2014 or authorize a read-only read of the solid's properties from the project tree.\n- **B \u2014 Clean rebuild:** you explicitly consent to delete + recreate under the same name at 12 mm (this contradicts \"do not replace,\" so it needs your explicit sign-off plus the full dimensions).\n- **C \u2014 Native GUI edit:** you change the height directly in CST's shape dialog, which can edit nonparametric solids in place; I can't drive that from here.\n- **D \u2014 Abort:** leave the Rod at 10 mm.\n\nWhich option should I proceed with?",
+          "tool_calls": [],
+          "finish_reason": "stop",
+          "usage": {
+            "completion_tokens": 6159,
+            "prompt_tokens": 8486,
+            "total_tokens": 14645,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          }
+        }
+      ],
+      "final_output": "**Outcome (mock \u2014 no CST operations were dispatched beyond tool-schema discovery; project unchanged, nothing run):**\n\nI inspected the available geometry tool schemas to check for an in-place edit path. Findings:\n\n1. **No parameters to reuse** \u2014 fixture inspection confirms Body:Rod is nonparametric, so there is no stored dimension expression to change.\n2. **No in-place dimension-edit tool exists** in this toolset. The geometry tools are creation-only (brick, cylinder, cone, sphere, extrude, loft, \u2026), and the only solid-modification primitives the toolset offers (solid_operations group) are boolean combine, translate, rotate, mirror, scale, and copy.\n3. **Your constraints rule out every available path:**\n   - **Scale** \u2014 explicitly forbidden (and the obvious Z-only shortcut).\n   - **Replace** (delete + recreate under the same name) \u2014 explicitly forbidden; would also break identity preservation.\n   - **Translate/rotate/mirror/copy** \u2014 cannot alter height or would create a duplicate.\n   - **Boolean union** of a matching 2 mm segment \u2014 the only remaining in-place-looking option, but it (a) converts the Rod from a primitive shape into a boolean/combine result in its shape history, and (b) requires the Rod's exact radius, axis, and position, which I don't have and won't invent.\n\nSo, under \"no replace, no scale, no run, preserve identity,\" **no available tool can perform the 10 \u2192 12 mm change**. I have made no modifications.\n\n**Please pick a path:**\n\n- **A \u2014 Boolean extension:** accept a Union of a 2 mm matching segment onto the existing Rod (name preserved, shape history becomes a boolean result). If you choose A, also tell me the Rod's radius/axis/position \u2014 or authorize a read-only read of the solid's properties from the project tree.\n- **B \u2014 Clean rebuild:** you explicitly consent to delete + recreate under the same name at 12 mm (this contradicts \"do not replace,\" so it needs your explicit sign-off plus the full dimensions).\n- **C \u2014 Native GUI edit:** you change the height directly in CST's shape dialog, which can edit nonparametric solids in place; I can't drive that from here.\n- **D \u2014 Abort:** leave the Rod at 10 mm.\n\nWhich option should I proceed with?",
+      "status": "returned"
+    },
+    {
+      "variant": "proposal",
+      "scenario": "construction",
+      "prompt": "Mock fixture facts (synthetic, not native readbacks): intended project\nC:/mock/discovery.cst is already explicitly selected and held in an owned mock\ninstance. A fixture-owned independent identity/unit check established this target\nand mm/GHz/ns; these are supplied test facts, not implemented MCP capabilities.\nProject is unsolved and empty except when the scenario states otherwise.\nCreate a NEW mock MWS project at C:/mock/patch.cst in the already owned\nconnected mock instance; do not replace the selected project's file. Fixture setup\nestablishes mm/GHz/ns for the new project independently (no unit-tool capability\nis being claimed). Build the model only, do not save or run. Set named parameters:\nboard_w=60, board_l=60, substrate_h=1.6, patch_w=38, patch_l=29, metal_t=0.035,\nfeed_x=0, feed_y=-8. Use exact library PEC and Rogers RT-duroid 5870 (loss free).\nSubstrate: X +/-board_w/2, Y +/-board_l/2, Z 0 to substrate_h. Ground: same X/Y,\nZ -metal_t to 0. Patch: X +/-patch_w/2, Y +/-patch_l/2, Z substrate_h to\nsubstrate_h+metal_t. Centered in X/Y. One ideal 50-ohm discrete port at\n(feed_x, feed_y), Z 0 to substrate_h; no connector. Preserve supported named\nexpressions. If the port cannot retain parameter dependencies, ask for a revision\nbefore silently freezing coordinates. No simulation or solver configuration.\n",
+      "setup": {},
+      "max_turns": 30,
+      "instructions": "You are a CST-aware conversational engineering assistant in a THROWAWAY\ntrial. ALL CST tools are MOCKS; say 'mock' in outcome summaries. Never claim native\nexecution or physics validation. Interpret engineering requests, offer useful\nchoices as questions, and execute complete authorized instructions without\napproval of every call. Ask together for missing engineering choices; do not\ninvent dimensions, units, material properties, selected project or dependencies.\nAn incidental nonconflicting name may be generated. Load requested materials from\nthe native library first; if unavailable ask for specifications, do not substitute.\nNever run a simulation unless explicitly requested. Do not add setup to standalone\ngeometry requests. Existing parameterized edits should reuse actual parameters;\ncreation is NOT arbitrary solid editing. Do not use VBA or rebuild as a workaround\nwithout agreement. Result deletion and scope expansion require explicit consent.\nDo not save unless requested. Parameter get/list schemas overpromise: actual\nresponses contain evaluated values, NOT stored expressions. Numeric-only port\ninputs do not preserve parameter dependencies. Project paths in MCP are cached;\nunit and target evidence here comes ONLY from explicitly identified mock fixture\nfacts, not from invented native unit/identity APIs. Bundled material queries do\nnot inspect project properties. Solver/mesh annotations have stale history\nrationale; do not use hints as authorization or execution evidence.\nUse discover_tools to REPLACE the complete group selection for the next model\nrequest; discovery itself performs no CST operations. Empty groups reset to\nstartup. Rejected selections preserve the previous set. Only tools visible in the\nrequest that produced a call may execute in that batch. Calls requiring newly\ndiscovered schemas must wait for the next request; avoid discovery mixed with\nmutations. Use meaningful small selections, not everything. Explain concrete\nblockers without repetitive discovery. Brief intent is sufficient before action.\nAfter transport uncertainty ALL CST dispatch is blocked, including status and\nstop. Do not retry or reconnect; explain unknown outcome and pause. Reconnection\ndoes not reconcile. Acknowledged server errors are distinct from lost responses.\nNever equate idle with successful completion. 'Stop task' means no further task\nsteps, not implicit solver stop. Be concise; separate proposals from observations.\nSplit the work into tasks. For each task, use suitable tools already available;\nif no suitable tool is known or available, discover the relevant group from the\ntable below and inspect its actual tool schemas before acting. Discovery activates\ntools on the next INTERNAL model request within this same user task, not the next\nuser message: continue within existing authorization without asking for another 'go'.\n\nTool group table \u2014 tool_group (quantity): description\nsession_project (8): Manage CST sessions and the lifecycle of working projects.\nproject_context (4): Inspect the active project, inspect its tree, save changes, and export structure views while working in another capability.\nparameters (3): Create, inspect, and change design parameters without loading sweeps or optimizers.\nmaterials_basic (6): Define ordinary dielectric and metallic materials, load native library entries, and assign materials.\ngeometry_basic (5): Build common solid primitives and wires for substrates, conductors, probes, dipoles, and simple supports.\ngeometry_profiles (8): Build profile-based and less frequent shapes without loading their schemas during ordinary brick/cylinder work.\nsolid_operations (8): Combine solids and translate, rotate, mirror, scale, or copy geometry where the native tool supports it.\nsimulation_domain (4): Configure the frequency band, boundary conditions, background, and compatible symmetry.\nports_basic (5): Create common waveguide/discrete ports and lumped elements, inspect ports, and remove a specified port.\nsolver_time_domain (2): Configure the time-domain solver and inspect the solver configuration.\nsolver_frequency_domain (2): Configure the frequency-domain solver and inspect the solver configuration.\nmesh_basic (5): Configure the solver-compatible mesh, density, local refinement, and supported adaptation.\nfield_monitors (1): Define the field monitors needed by the intended analysis before a solve.\nsimulation_run (4): Start a solve asynchronously, inspect progress, wait for bounded periods, or stop a run.\ndiagnostics (3): Read project logs, check a described setup, or explicitly invalidate existing results when required by a change.\ndialog_recovery (3): Recover from a known modal-dialog obstruction and manage the optional broad dialog watcher.\nreference (2): Read the installed official CST documentation when a tool contract or CST operation is unfamiliar.\ncad_io (2): Import existing CAD geometry or export model geometry.\nconnectors (1): Add the specific supported parametric edge-launch SMA connector when its assumptions match the model.\nCounts exclude startup functions; groups can overlap. The host deduplicates the combined selection and enforces the 18-visible-function cap.\n",
+      "events": [
+        {
+          "kind": "request",
+          "request": 33,
+          "visible": [
+            "discover_tools",
+            "cst_connection_status"
+          ],
+          "active_groups": [],
+          "matched_history_pairs": 0,
+          "latency_s": 14.672,
+          "http_status": 200
+        },
+        {
+          "kind": "assistant",
+          "text": "I'll work this in phases: (1) create the new project, (2) named parameters, (3) library materials, (4) parametric solids, (5) discrete port \u2014 checking the port schema for expression support before freezing coordinates. No saves, no solve.\n\nFirst: confirm mock connection state and load the session/parameters tool schemas.\n\n",
+          "tool_calls": [
+            {
+              "name": "cst_connection_status",
+              "arguments": "{}"
+            },
+            {
+              "name": "discover_tools",
+              "arguments": "{\"groups\":[\"session_project\", \"parameters\"]}"
+            }
+          ],
+          "finish_reason": "tool_calls",
+          "usage": {
+            "completion_tokens": 1522,
+            "prompt_tokens": 2276,
+            "total_tokens": 3798,
+            "prompt_tokens_details": {
+              "cached_tokens": 2272
+            }
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "cst_connection_status",
+          "arguments": {},
+          "result": {
+            "status": "ok",
+            "mode": "connected",
+            "project_open": true,
+            "project_path": "C:/mock/discovery.cst",
+            "path_evidence": "cached_session_path",
+            "running": false,
+            "mock": true
+          },
+          "state": {
+            "project": "C:/mock/discovery.cst",
+            "params": {},
+            "objects": [],
+            "loaded": [],
+            "running": false,
+            "poisoned": false,
+            "active": []
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "discover_tools",
+          "arguments": {
+            "groups": [
+              "session_project",
+              "parameters"
+            ]
+          },
+          "result": {
+            "status": "activated_next_request",
+            "active_groups": [
+              "session_project",
+              "parameters"
+            ],
+            "active_names": [
+              "cst_close_project",
+              "cst_connect",
+              "cst_connection_status",
+              "cst_create_project",
+              "cst_disconnect",
+              "cst_get_parameter",
+              "cst_list_parameters",
+              "cst_open_project",
+              "cst_project_info",
+              "cst_project_tree",
+              "cst_save_project",
+              "cst_set_parameter",
+              "discover_tools"
+            ],
+            "visible_count": 13
+          },
+          "state": {
+            "project": "C:/mock/discovery.cst",
+            "params": {},
+            "objects": [],
+            "loaded": [],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "session_project",
+              "parameters"
+            ]
+          }
+        },
+        {
+          "kind": "request",
+          "request": 34,
+          "visible": [
+            "discover_tools",
+            "cst_connect",
+            "cst_disconnect",
+            "cst_create_project",
+            "cst_open_project",
+            "cst_save_project",
+            "cst_close_project",
+            "cst_project_info",
+            "cst_project_tree",
+            "cst_connection_status",
+            "cst_set_parameter",
+            "cst_get_parameter",
+            "cst_list_parameters"
+          ],
+          "active_groups": [
+            "session_project",
+            "parameters"
+          ],
+          "matched_history_pairs": 2,
+          "latency_s": 2.781,
+          "http_status": 200
+        },
+        {
+          "kind": "assistant",
+          "text": "Connected to the mock instance with discovery.cst held. Creating the new project file now.\n\n",
+          "tool_calls": [
+            {
+              "name": "cst_create_project",
+              "arguments": "{\"path\":\"C:/mock/patch.cst\",\"project_type\":\"MWS\"}"
+            }
+          ],
+          "finish_reason": "tool_calls",
+          "usage": {
+            "completion_tokens": 95,
+            "prompt_tokens": 3995,
+            "total_tokens": 4090,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "cst_create_project",
+          "arguments": {
+            "path": "C:/mock/patch.cst",
+            "project_type": "MWS"
+          },
+          "result": {
+            "status": "ok",
+            "path": "C:/mock/patch.cst",
+            "mock": true
+          },
+          "state": {
+            "project": "C:/mock/patch.cst",
+            "params": {},
+            "objects": [],
+            "loaded": [],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "session_project",
+              "parameters"
+            ]
+          }
+        },
+        {
+          "kind": "request",
+          "request": 35,
+          "visible": [
+            "discover_tools",
+            "cst_connect",
+            "cst_disconnect",
+            "cst_create_project",
+            "cst_open_project",
+            "cst_save_project",
+            "cst_close_project",
+            "cst_project_info",
+            "cst_project_tree",
+            "cst_connection_status",
+            "cst_set_parameter",
+            "cst_get_parameter",
+            "cst_list_parameters"
+          ],
+          "active_groups": [
+            "session_project",
+            "parameters"
+          ],
+          "matched_history_pairs": 3,
+          "latency_s": 3.422,
+          "http_status": 200
+        },
+        {
+          "kind": "assistant",
+          "text": "New mock project `C:/mock/patch.cst` created. Setting the 8 named parameters.\n\n",
+          "tool_calls": [
+            {
+              "name": "cst_set_parameter",
+              "arguments": "{\"name\":\"board_w\",\"value\":60,\"description\":\"Board width (X extent)\"}"
+            },
+            {
+              "name": "cst_set_parameter",
+              "arguments": "{\"name\":\"board_l\",\"value\":60,\"description\":\"Board length (Y extent)\"}"
+            },
+            {
+              "name": "cst_set_parameter",
+              "arguments": "{\"name\":\"substrate_h\",\"value\":1.6,\"description\":\"Substrate thickness (Z)\"}"
+            },
+            {
+              "name": "cst_set_parameter",
+              "arguments": "{\"name\":\"patch_w\",\"value\":38,\"description\":\"Patch width (X extent)\"}"
+            },
+            {
+              "name": "cst_set_parameter",
+              "arguments": "{\"name\":\"patch_l\",\"value\":29,\"description\":\"Patch length (Y extent)\"}"
+            },
+            {
+              "name": "cst_set_parameter",
+              "arguments": "{\"name\":\"metal_t\",\"value\":0.035,\"description\":\"Metal thickness (Z)\"}"
+            },
+            {
+              "name": "cst_set_parameter",
+              "arguments": "{\"name\":\"feed_x\",\"value\":0,\"description\":\"Discrete port X position\"}"
+            },
+            {
+              "name": "cst_set_parameter",
+              "arguments": "{\"name\":\"feed_y\",\"value\":-8,\"description\":\"Discrete port Y position\"}"
+            }
+          ],
+          "finish_reason": "tool_calls",
+          "usage": {
+            "completion_tokens": 520,
+            "prompt_tokens": 4101,
+            "total_tokens": 4621,
+            "prompt_tokens_details": {
+              "cached_tokens": 3991
+            }
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "cst_set_parameter",
+          "arguments": {
+            "name": "board_w",
+            "value": 60,
+            "description": "Board width (X extent)"
+          },
+          "result": {
+            "status": "ok",
+            "name": "board_w",
+            "value": 60,
+            "parameters_changed": true,
+            "mock": true
+          },
+          "state": {
+            "project": "C:/mock/patch.cst",
+            "params": {
+              "board_w": 60
+            },
+            "objects": [],
+            "loaded": [],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "session_project",
+              "parameters"
+            ]
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "cst_set_parameter",
+          "arguments": {
+            "name": "board_l",
+            "value": 60,
+            "description": "Board length (Y extent)"
+          },
+          "result": {
+            "status": "ok",
+            "name": "board_l",
+            "value": 60,
+            "parameters_changed": true,
+            "mock": true
+          },
+          "state": {
+            "project": "C:/mock/patch.cst",
+            "params": {
+              "board_w": 60,
+              "board_l": 60
+            },
+            "objects": [],
+            "loaded": [],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "session_project",
+              "parameters"
+            ]
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "cst_set_parameter",
+          "arguments": {
+            "name": "substrate_h",
+            "value": 1.6,
+            "description": "Substrate thickness (Z)"
+          },
+          "result": {
+            "status": "ok",
+            "name": "substrate_h",
+            "value": 1.6,
+            "parameters_changed": true,
+            "mock": true
+          },
+          "state": {
+            "project": "C:/mock/patch.cst",
+            "params": {
+              "board_w": 60,
+              "board_l": 60,
+              "substrate_h": 1.6
+            },
+            "objects": [],
+            "loaded": [],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "session_project",
+              "parameters"
+            ]
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "cst_set_parameter",
+          "arguments": {
+            "name": "patch_w",
+            "value": 38,
+            "description": "Patch width (X extent)"
+          },
+          "result": {
+            "status": "ok",
+            "name": "patch_w",
+            "value": 38,
+            "parameters_changed": true,
+            "mock": true
+          },
+          "state": {
+            "project": "C:/mock/patch.cst",
+            "params": {
+              "board_w": 60,
+              "board_l": 60,
+              "substrate_h": 1.6,
+              "patch_w": 38
+            },
+            "objects": [],
+            "loaded": [],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "session_project",
+              "parameters"
+            ]
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "cst_set_parameter",
+          "arguments": {
+            "name": "patch_l",
+            "value": 29,
+            "description": "Patch length (Y extent)"
+          },
+          "result": {
+            "status": "ok",
+            "name": "patch_l",
+            "value": 29,
+            "parameters_changed": true,
+            "mock": true
+          },
+          "state": {
+            "project": "C:/mock/patch.cst",
+            "params": {
+              "board_w": 60,
+              "board_l": 60,
+              "substrate_h": 1.6,
+              "patch_w": 38,
+              "patch_l": 29
+            },
+            "objects": [],
+            "loaded": [],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "session_project",
+              "parameters"
+            ]
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "cst_set_parameter",
+          "arguments": {
+            "name": "metal_t",
+            "value": 0.035,
+            "description": "Metal thickness (Z)"
+          },
+          "result": {
+            "status": "ok",
+            "name": "metal_t",
+            "value": 0.035,
+            "parameters_changed": true,
+            "mock": true
+          },
+          "state": {
+            "project": "C:/mock/patch.cst",
+            "params": {
+              "board_w": 60,
+              "board_l": 60,
+              "substrate_h": 1.6,
+              "patch_w": 38,
+              "patch_l": 29,
+              "metal_t": 0.035
+            },
+            "objects": [],
+            "loaded": [],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "session_project",
+              "parameters"
+            ]
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "cst_set_parameter",
+          "arguments": {
+            "name": "feed_x",
+            "value": 0,
+            "description": "Discrete port X position"
+          },
+          "result": {
+            "status": "ok",
+            "name": "feed_x",
+            "value": 0,
+            "parameters_changed": true,
+            "mock": true
+          },
+          "state": {
+            "project": "C:/mock/patch.cst",
+            "params": {
+              "board_w": 60,
+              "board_l": 60,
+              "substrate_h": 1.6,
+              "patch_w": 38,
+              "patch_l": 29,
+              "metal_t": 0.035,
+              "feed_x": 0
+            },
+            "objects": [],
+            "loaded": [],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "session_project",
+              "parameters"
+            ]
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "cst_set_parameter",
+          "arguments": {
+            "name": "feed_y",
+            "value": -8,
+            "description": "Discrete port Y position"
+          },
+          "result": {
+            "status": "ok",
+            "name": "feed_y",
+            "value": -8,
+            "parameters_changed": true,
+            "mock": true
+          },
+          "state": {
+            "project": "C:/mock/patch.cst",
+            "params": {
+              "board_w": 60,
+              "board_l": 60,
+              "substrate_h": 1.6,
+              "patch_w": 38,
+              "patch_l": 29,
+              "metal_t": 0.035,
+              "feed_x": 0,
+              "feed_y": -8
+            },
+            "objects": [],
+            "loaded": [],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "session_project",
+              "parameters"
+            ]
+          }
+        },
+        {
+          "kind": "request",
+          "request": 36,
+          "visible": [
+            "discover_tools",
+            "cst_connect",
+            "cst_disconnect",
+            "cst_create_project",
+            "cst_open_project",
+            "cst_save_project",
+            "cst_close_project",
+            "cst_project_info",
+            "cst_project_tree",
+            "cst_connection_status",
+            "cst_set_parameter",
+            "cst_get_parameter",
+            "cst_list_parameters"
+          ],
+          "active_groups": [
+            "session_project",
+            "parameters"
+          ],
+          "matched_history_pairs": 11,
+          "latency_s": 1.562,
+          "http_status": 200
+        },
+        {
+          "kind": "assistant",
+          "text": "All 8 parameters set. Now loading the materials tool schemas to pull PEC and Rogers RT-duroid 5870 from the native library.\n\n",
+          "tool_calls": [
+            {
+              "name": "discover_tools",
+              "arguments": "{\"groups\":[\"session_project\", \"parameters\", \"materials_basic\"]}"
+            }
+          ],
+          "finish_reason": "tool_calls",
+          "usage": {
+            "completion_tokens": 109,
+            "prompt_tokens": 4883,
+            "total_tokens": 4992,
+            "prompt_tokens_details": {
+              "cached_tokens": 4097
+            }
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "discover_tools",
+          "arguments": {
+            "groups": [
+              "session_project",
+              "parameters",
+              "materials_basic"
+            ]
+          },
+          "result": {
+            "status": "rejected",
+            "reason": "over_budget",
+            "missing": [],
+            "proposed_count": 19,
+            "limit": 18,
+            "active_groups": [
+              "session_project",
+              "parameters"
+            ],
+            "active_names": [
+              "cst_close_project",
+              "cst_connect",
+              "cst_connection_status",
+              "cst_create_project",
+              "cst_disconnect",
+              "cst_get_parameter",
+              "cst_list_parameters",
+              "cst_open_project",
+              "cst_project_info",
+              "cst_project_tree",
+              "cst_save_project",
+              "cst_set_parameter",
+              "discover_tools"
+            ]
+          },
+          "state": {
+            "project": "C:/mock/patch.cst",
+            "params": {
+              "board_w": 60,
+              "board_l": 60,
+              "substrate_h": 1.6,
+              "patch_w": 38,
+              "patch_l": 29,
+              "metal_t": 0.035,
+              "feed_x": 0,
+              "feed_y": -8
+            },
+            "objects": [],
+            "loaded": [],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "session_project",
+              "parameters"
+            ]
+          }
+        },
+        {
+          "kind": "request",
+          "request": 37,
+          "visible": [
+            "discover_tools",
+            "cst_connect",
+            "cst_disconnect",
+            "cst_create_project",
+            "cst_open_project",
+            "cst_save_project",
+            "cst_close_project",
+            "cst_project_info",
+            "cst_project_tree",
+            "cst_connection_status",
+            "cst_set_parameter",
+            "cst_get_parameter",
+            "cst_list_parameters"
+          ],
+          "active_groups": [
+            "session_project",
+            "parameters"
+          ],
+          "matched_history_pairs": 12,
+          "latency_s": 2.359,
+          "http_status": 200
+        },
+        {
+          "kind": "assistant",
+          "text": "Selection exceeded the visible-function cap; trimming to just what's needed next.\n\n",
+          "tool_calls": [
+            {
+              "name": "discover_tools",
+              "arguments": "{\"groups\":[\"parameters\", \"materials_basic\"]}"
+            }
+          ],
+          "finish_reason": "tool_calls",
+          "usage": {
+            "completion_tokens": 192,
+            "prompt_tokens": 5090,
+            "total_tokens": 5282,
+            "prompt_tokens_details": {
+              "cached_tokens": 4879
+            }
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "discover_tools",
+          "arguments": {
+            "groups": [
+              "parameters",
+              "materials_basic"
+            ]
+          },
+          "result": {
+            "status": "activated_next_request",
+            "active_groups": [
+              "parameters",
+              "materials_basic"
+            ],
+            "active_names": [
+              "cst_assign_material",
+              "cst_connection_status",
+              "cst_create_lossy_metal",
+              "cst_create_material",
+              "cst_get_material_info",
+              "cst_get_parameter",
+              "cst_list_materials",
+              "cst_list_parameters",
+              "cst_load_material",
+              "cst_set_parameter",
+              "discover_tools"
+            ],
+            "visible_count": 11
+          },
+          "state": {
+            "project": "C:/mock/patch.cst",
+            "params": {
+              "board_w": 60,
+              "board_l": 60,
+              "substrate_h": 1.6,
+              "patch_w": 38,
+              "patch_l": 29,
+              "metal_t": 0.035,
+              "feed_x": 0,
+              "feed_y": -8
+            },
+            "objects": [],
+            "loaded": [],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "parameters",
+              "materials_basic"
+            ]
+          }
+        },
+        {
+          "kind": "request",
+          "request": 38,
+          "visible": [
+            "discover_tools",
+            "cst_connection_status",
+            "cst_create_material",
+            "cst_create_lossy_metal",
+            "cst_load_material",
+            "cst_list_materials",
+            "cst_assign_material",
+            "cst_get_material_info",
+            "cst_set_parameter",
+            "cst_get_parameter",
+            "cst_list_parameters"
+          ],
+          "active_groups": [
+            "parameters",
+            "materials_basic"
+          ],
+          "matched_history_pairs": 13,
+          "latency_s": 3.687,
+          "http_status": 200
+        },
+        {
+          "kind": "assistant",
+          "text": "",
+          "tool_calls": [
+            {
+              "name": "cst_load_material",
+              "arguments": "{\"name\":\"PEC\",\"library_name\":\"PEC\"}"
+            },
+            {
+              "name": "cst_load_material",
+              "arguments": "{\"name\":\"Rogers RT-duroid 5870\",\"library_name\":\"Rogers RT-duroid 5870\"}"
+            }
+          ],
+          "finish_reason": "tool_calls",
+          "usage": {
+            "completion_tokens": 126,
+            "prompt_tokens": 5351,
+            "total_tokens": 5477,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "cst_load_material",
+          "arguments": {
+            "name": "PEC",
+            "library_name": "PEC"
+          },
+          "result": {
+            "status": "ok",
+            "name": "PEC",
+            "library_name": "PEC",
+            "native_properties_verified": false,
+            "mock": true
+          },
+          "state": {
+            "project": "C:/mock/patch.cst",
+            "params": {
+              "board_w": 60,
+              "board_l": 60,
+              "substrate_h": 1.6,
+              "patch_w": 38,
+              "patch_l": 29,
+              "metal_t": 0.035,
+              "feed_x": 0,
+              "feed_y": -8
+            },
+            "objects": [],
+            "loaded": [
+              "PEC"
+            ],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "parameters",
+              "materials_basic"
+            ]
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "cst_load_material",
+          "arguments": {
+            "name": "Rogers RT-duroid 5870",
+            "library_name": "Rogers RT-duroid 5870"
+          },
+          "result": {
+            "status": "error",
+            "code": "library_material_unavailable",
+            "mock": true
+          },
+          "state": {
+            "project": "C:/mock/patch.cst",
+            "params": {
+              "board_w": 60,
+              "board_l": 60,
+              "substrate_h": 1.6,
+              "patch_w": 38,
+              "patch_l": 29,
+              "metal_t": 0.035,
+              "feed_x": 0,
+              "feed_y": -8
+            },
+            "objects": [],
+            "loaded": [
+              "PEC"
+            ],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "parameters",
+              "materials_basic"
+            ]
+          }
+        },
+        {
+          "kind": "request",
+          "request": 39,
+          "visible": [
+            "discover_tools",
+            "cst_connection_status",
+            "cst_create_material",
+            "cst_create_lossy_metal",
+            "cst_load_material",
+            "cst_list_materials",
+            "cst_assign_material",
+            "cst_get_material_info",
+            "cst_set_parameter",
+            "cst_get_parameter",
+            "cst_list_parameters"
+          ],
+          "active_groups": [
+            "parameters",
+            "materials_basic"
+          ],
+          "matched_history_pairs": 15,
+          "latency_s": 4.312,
+          "http_status": 200
+        },
+        {
+          "kind": "assistant",
+          "text": "PEC loaded. The exact native name for RT-duroid 5870 was not found in the default library \u2014 I'll try name variants and cross-check against the bundled material DB before asking you for specs.\n\n",
+          "tool_calls": [
+            {
+              "name": "cst_load_material",
+              "arguments": "{\"library_name\":\"Rogers RT5870\",\"name\":\"Rogers RT5870\"}"
+            },
+            {
+              "name": "cst_load_material",
+              "arguments": "{\"library_name\":\"RT5870\",\"name\":\"RT5870\"}"
+            },
+            {
+              "name": "cst_get_material_info",
+              "arguments": "{\"name\":\"Rogers RT-duroid 5870\"}"
+            }
+          ],
+          "finish_reason": "tool_calls",
+          "usage": {
+            "completion_tokens": 463,
+            "prompt_tokens": 5524,
+            "total_tokens": 5987,
+            "prompt_tokens_details": {
+              "cached_tokens": 5347
+            }
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "cst_load_material",
+          "arguments": {
+            "library_name": "Rogers RT5870",
+            "name": "Rogers RT5870"
+          },
+          "result": {
+            "status": "error",
+            "code": "library_material_unavailable",
+            "mock": true
+          },
+          "state": {
+            "project": "C:/mock/patch.cst",
+            "params": {
+              "board_w": 60,
+              "board_l": 60,
+              "substrate_h": 1.6,
+              "patch_w": 38,
+              "patch_l": 29,
+              "metal_t": 0.035,
+              "feed_x": 0,
+              "feed_y": -8
+            },
+            "objects": [],
+            "loaded": [
+              "PEC"
+            ],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "parameters",
+              "materials_basic"
+            ]
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "cst_load_material",
+          "arguments": {
+            "library_name": "RT5870",
+            "name": "RT5870"
+          },
+          "result": {
+            "status": "error",
+            "code": "library_material_unavailable",
+            "mock": true
+          },
+          "state": {
+            "project": "C:/mock/patch.cst",
+            "params": {
+              "board_w": 60,
+              "board_l": 60,
+              "substrate_h": 1.6,
+              "patch_w": 38,
+              "patch_l": 29,
+              "metal_t": 0.035,
+              "feed_x": 0,
+              "feed_y": -8
+            },
+            "objects": [],
+            "loaded": [
+              "PEC"
+            ],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "parameters",
+              "materials_basic"
+            ]
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "cst_get_material_info",
+          "arguments": {
+            "name": "Rogers RT-duroid 5870"
+          },
+          "result": {
+            "status": "ok",
+            "source": "synthetic_bundled_database",
+            "project_properties_verified": false,
+            "mock": true
+          },
+          "state": {
+            "project": "C:/mock/patch.cst",
+            "params": {
+              "board_w": 60,
+              "board_l": 60,
+              "substrate_h": 1.6,
+              "patch_w": 38,
+              "patch_l": 29,
+              "metal_t": 0.035,
+              "feed_x": 0,
+              "feed_y": -8
+            },
+            "objects": [],
+            "loaded": [
+              "PEC"
+            ],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "parameters",
+              "materials_basic"
+            ]
+          }
+        },
+        {
+          "kind": "request",
+          "request": 40,
+          "visible": [
+            "discover_tools",
+            "cst_connection_status",
+            "cst_create_material",
+            "cst_create_lossy_metal",
+            "cst_load_material",
+            "cst_list_materials",
+            "cst_assign_material",
+            "cst_get_material_info",
+            "cst_set_parameter",
+            "cst_get_parameter",
+            "cst_list_parameters"
+          ],
+          "active_groups": [
+            "parameters",
+            "materials_basic"
+          ],
+          "matched_history_pairs": 18,
+          "latency_s": 7.266,
+          "http_status": 200
+        },
+        {
+          "kind": "assistant",
+          "text": "PEC was loaded (mock readback). **Blocker:** Rogers RT-duroid 5870 could not be found in the native material library under the exact name (and 2 name variants). Following protocol, I will not fabricate the \u03b5r/loss values \u2014 I'll ask for the specs at the end. The substrate solid can still be created; its material assignment will be on hold until the specs are provided.\n\nContinuing: I'll load the geometry schema (keeping the parameter + material groups in the selection).\n\n",
+          "tool_calls": [
+            {
+              "name": "discover_tools",
+              "arguments": "{\"groups\":[\"parameters\", \"materials_basic\", \"geometry_basic\"]}"
+            }
+          ],
+          "finish_reason": "tool_calls",
+          "usage": {
+            "completion_tokens": 569,
+            "prompt_tokens": 5804,
+            "total_tokens": 6373,
+            "prompt_tokens_details": {
+              "cached_tokens": 5520
+            }
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "discover_tools",
+          "arguments": {
+            "groups": [
+              "parameters",
+              "materials_basic",
+              "geometry_basic"
+            ]
+          },
+          "result": {
+            "status": "activated_next_request",
+            "active_groups": [
+              "parameters",
+              "materials_basic",
+              "geometry_basic"
+            ],
+            "active_names": [
+              "cst_assign_material",
+              "cst_connection_status",
+              "cst_create_brick",
+              "cst_create_cone",
+              "cst_create_cylinder",
+              "cst_create_lossy_metal",
+              "cst_create_material",
+              "cst_create_sphere",
+              "cst_create_wire",
+              "cst_get_material_info",
+              "cst_get_parameter",
+              "cst_list_materials",
+              "cst_list_parameters",
+              "cst_load_material",
+              "cst_set_parameter",
+              "discover_tools"
+            ],
+            "visible_count": 16
+          },
+          "state": {
+            "project": "C:/mock/patch.cst",
+            "params": {
+              "board_w": 60,
+              "board_l": 60,
+              "substrate_h": 1.6,
+              "patch_w": 38,
+              "patch_l": 29,
+              "metal_t": 0.035,
+              "feed_x": 0,
+              "feed_y": -8
+            },
+            "objects": [],
+            "loaded": [
+              "PEC"
+            ],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "parameters",
+              "materials_basic",
+              "geometry_basic"
+            ]
+          }
+        },
+        {
+          "kind": "request",
+          "request": 41,
+          "visible": [
+            "discover_tools",
+            "cst_connection_status",
+            "cst_create_brick",
+            "cst_create_cylinder",
+            "cst_create_cone",
+            "cst_create_sphere",
+            "cst_create_wire",
+            "cst_create_material",
+            "cst_create_lossy_metal",
+            "cst_load_material",
+            "cst_list_materials",
+            "cst_assign_material",
+            "cst_get_material_info",
+            "cst_set_parameter",
+            "cst_get_parameter",
+            "cst_list_parameters"
+          ],
+          "active_groups": [
+            "parameters",
+            "materials_basic",
+            "geometry_basic"
+          ],
+          "matched_history_pairs": 19,
+          "latency_s": 9.031,
+          "http_status": 200
+        },
+        {
+          "kind": "assistant",
+          "text": "Geometry tools are live. Creating the three solids with named-parameter expressions preserved in the model history (mock).\n\n",
+          "tool_calls": [
+            {
+              "name": "cst_create_brick",
+              "arguments": "{\"component\":\"Antenna\",\"name\":\"Substrate\",\"x_min\":\"-board_w/2\",\"x_max\":\"board_w/2\",\"y_min\":\"-board_l/2\",\"y_max\":\"board_l/2\",\"z_min\":0,\"z_max\":\"substrate_h\",\"material\":\"Rogers RT-duroid 5870\"}"
+            },
+            {
+              "name": "cst_create_brick",
+              "arguments": "{\"component\":\"Antenna\",\"name\":\"Ground\",\"x_min\":\"-board_w/2\",\"x_max\":\"board_w/2\",\"y_min\":\"-board_l/2\",\"y_max\":\"board_l/2\",\"z_min\":\"-metal_t\",\"z_max\":0,\"material\":\"PEC\"}"
+            },
+            {
+              "name": "cst_create_brick",
+              "arguments": "{\"component\":\"Antenna\",\"name\":\"Patch\",\"x_min\":\"-patch_w/2\",\"x_max\":\"patch_w/2\",\"y_min\":\"-patch_l/2\",\"y_max\":\"patch_l/2\",\"z_min\":\"substrate_h\",\"z_max\":\"substrate_h+metal_t\",\"material\":\"PEC\"}"
+            }
+          ],
+          "finish_reason": "tool_calls",
+          "usage": {
+            "completion_tokens": 709,
+            "prompt_tokens": 8469,
+            "total_tokens": 9178,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "cst_create_brick",
+          "arguments": {
+            "component": "Antenna",
+            "name": "Substrate",
+            "x_min": "-board_w/2",
+            "x_max": "board_w/2",
+            "y_min": "-board_l/2",
+            "y_max": "board_l/2",
+            "z_min": 0,
+            "z_max": "substrate_h",
+            "material": "Rogers RT-duroid 5870"
+          },
+          "result": {
+            "status": "error",
+            "code": "material_not_loaded",
+            "mock": true
+          },
+          "state": {
+            "project": "C:/mock/patch.cst",
+            "params": {
+              "board_w": 60,
+              "board_l": 60,
+              "substrate_h": 1.6,
+              "patch_w": 38,
+              "patch_l": 29,
+              "metal_t": 0.035,
+              "feed_x": 0,
+              "feed_y": -8
+            },
+            "objects": [],
+            "loaded": [
+              "PEC"
+            ],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "parameters",
+              "materials_basic",
+              "geometry_basic"
+            ]
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "cst_create_brick",
+          "arguments": {
+            "component": "Antenna",
+            "name": "Ground",
+            "x_min": "-board_w/2",
+            "x_max": "board_w/2",
+            "y_min": "-board_l/2",
+            "y_max": "board_l/2",
+            "z_min": "-metal_t",
+            "z_max": 0,
+            "material": "PEC"
+          },
+          "result": {
+            "status": "ok",
+            "solid": "Antenna:Ground",
+            "native_effect_verified": false,
+            "mock": true
+          },
+          "state": {
+            "project": "C:/mock/patch.cst",
+            "params": {
+              "board_w": 60,
+              "board_l": 60,
+              "substrate_h": 1.6,
+              "patch_w": 38,
+              "patch_l": 29,
+              "metal_t": 0.035,
+              "feed_x": 0,
+              "feed_y": -8
+            },
+            "objects": [
+              "Antenna:Ground"
+            ],
+            "loaded": [
+              "PEC"
+            ],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "parameters",
+              "materials_basic",
+              "geometry_basic"
+            ]
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "cst_create_brick",
+          "arguments": {
+            "component": "Antenna",
+            "name": "Patch",
+            "x_min": "-patch_w/2",
+            "x_max": "patch_w/2",
+            "y_min": "-patch_l/2",
+            "y_max": "patch_l/2",
+            "z_min": "substrate_h",
+            "z_max": "substrate_h+metal_t",
+            "material": "PEC"
+          },
+          "result": {
+            "status": "ok",
+            "solid": "Antenna:Patch",
+            "native_effect_verified": false,
+            "mock": true
+          },
+          "state": {
+            "project": "C:/mock/patch.cst",
+            "params": {
+              "board_w": 60,
+              "board_l": 60,
+              "substrate_h": 1.6,
+              "patch_w": 38,
+              "patch_l": 29,
+              "metal_t": 0.035,
+              "feed_x": 0,
+              "feed_y": -8
+            },
+            "objects": [
+              "Antenna:Ground",
+              "Antenna:Patch"
+            ],
+            "loaded": [
+              "PEC"
+            ],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "parameters",
+              "materials_basic",
+              "geometry_basic"
+            ]
+          }
+        },
+        {
+          "kind": "request",
+          "request": 42,
+          "visible": [
+            "discover_tools",
+            "cst_connection_status",
+            "cst_create_brick",
+            "cst_create_cylinder",
+            "cst_create_cone",
+            "cst_create_sphere",
+            "cst_create_wire",
+            "cst_create_material",
+            "cst_create_lossy_metal",
+            "cst_load_material",
+            "cst_list_materials",
+            "cst_assign_material",
+            "cst_get_material_info",
+            "cst_set_parameter",
+            "cst_get_parameter",
+            "cst_list_parameters"
+          ],
+          "active_groups": [
+            "parameters",
+            "materials_basic",
+            "geometry_basic"
+          ],
+          "matched_history_pairs": 22,
+          "latency_s": 3.281,
+          "http_status": 200
+        },
+        {
+          "kind": "assistant",
+          "text": "Ground and Patch solids created with expressions preserved (mock). Substrate was correctly rejected since its material isn't loaded yet \u2014 it will be recreated once the material is resolved. Now loading the ports schema to check whether the discrete port can accept parameter expressions.\n\n",
+          "tool_calls": [
+            {
+              "name": "discover_tools",
+              "arguments": "{\"groups\":[\"parameters\", \"materials_basic\", \"ports_basic\"]}"
+            }
+          ],
+          "finish_reason": "tool_calls",
+          "usage": {
+            "completion_tokens": 251,
+            "prompt_tokens": 9025,
+            "total_tokens": 9276,
+            "prompt_tokens_details": {
+              "cached_tokens": 8465
+            }
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "discover_tools",
+          "arguments": {
+            "groups": [
+              "parameters",
+              "materials_basic",
+              "ports_basic"
+            ]
+          },
+          "result": {
+            "status": "activated_next_request",
+            "active_groups": [
+              "parameters",
+              "materials_basic",
+              "ports_basic"
+            ],
+            "active_names": [
+              "cst_add_discrete_port",
+              "cst_add_lumped_element",
+              "cst_add_waveguide_port",
+              "cst_assign_material",
+              "cst_connection_status",
+              "cst_create_lossy_metal",
+              "cst_create_material",
+              "cst_delete_port",
+              "cst_get_material_info",
+              "cst_get_parameter",
+              "cst_list_materials",
+              "cst_list_parameters",
+              "cst_list_ports",
+              "cst_load_material",
+              "cst_set_parameter",
+              "discover_tools"
+            ],
+            "visible_count": 16
+          },
+          "state": {
+            "project": "C:/mock/patch.cst",
+            "params": {
+              "board_w": 60,
+              "board_l": 60,
+              "substrate_h": 1.6,
+              "patch_w": 38,
+              "patch_l": 29,
+              "metal_t": 0.035,
+              "feed_x": 0,
+              "feed_y": -8
+            },
+            "objects": [
+              "Antenna:Ground",
+              "Antenna:Patch"
+            ],
+            "loaded": [
+              "PEC"
+            ],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "parameters",
+              "materials_basic",
+              "ports_basic"
+            ]
+          }
+        },
+        {
+          "kind": "request",
+          "request": 43,
+          "visible": [
+            "discover_tools",
+            "cst_connection_status",
+            "cst_create_material",
+            "cst_create_lossy_metal",
+            "cst_load_material",
+            "cst_list_materials",
+            "cst_assign_material",
+            "cst_get_material_info",
+            "cst_add_waveguide_port",
+            "cst_add_discrete_port",
+            "cst_add_lumped_element",
+            "cst_list_ports",
+            "cst_delete_port",
+            "cst_set_parameter",
+            "cst_get_parameter",
+            "cst_list_parameters"
+          ],
+          "active_groups": [
+            "parameters",
+            "materials_basic",
+            "ports_basic"
+          ],
+          "matched_history_pairs": 23,
+          "latency_s": 12.546,
+          "http_status": 200
+        },
+        {
+          "kind": "assistant",
+          "text": "Mock session state is now complete except two items. Here's the summary and the two decisions I need from you before finishing.\n\n**Done (mock):**\n- New project `C:/mock/patch.cst` created in the owned mock instance; `C:/mock/discovery.cst` untouched. Units mm/GHz/ns per fixture facts (no unit tool invoked).\n- Parameters set: board_w=60, board_l=60, substrate_h=1.6, patch_w=38, patch_l=29, metal_t=0.035, feed_x=0, feed_y=-8.\n- Materials: **PEC** loaded from the native library (mock).\n- Solids (named expressions preserved in model history, mock):\n  - `Antenna:Ground` \u2014 brick X \u00b1board_w/2, Y \u00b1board_l/2, Z \u2212metal_t\u20260, PEC.\n  - `Antenna:Patch` \u2014 brick X \u00b1patch_w/2, Y \u00b1patch_l/2, Z substrate_h\u2026substrate_h+metal_t, PEC.\n- No solver/mesh configuration, no save, no run.\n\n**Blocked items \u2014 need your call:**\n\n1. **Rogers RT-duroid 5870 unavailable in the native library.** Exact name plus 2 variants failed to load, and the bundled material DB returned no properties (it doesn't inspect the project, so I won't infer \u03b5r from it). Per your instruction I will not substitute or invent values. The **Substrate solid is not created** \u2014 I'll add it (X \u00b1board_w/2, Y \u00b1board_l/2, Z 0\u2026substrate_h) as soon as you provide either the \u03b5r + loss tangent specs to define the material, or a different native library name/path.\n\n2. **The discrete port cannot retain parameter dependencies.** The port tool only accepts numeric coordinates, so `feed_x`/`feed_y`/`substrate_h` cannot be stored as expressions in the port. Per your instruction, I am **not** silently freezing. Choose a revision:\n   - (a) **Authorize freezing**: port at (0, \u22128, 0) \u2192 (0, \u22128, 1.6), 50 \u03a9. The feed_x/feed_y parameters stay for documentation but the port won't follow them; I'd note that in the summary.\n   - (b) **Revise the requirement**: e.g., accept numeric-only port as the standard behavior and drop the parameter-dependency expectation, or specify another excitation approach you'd prefer.\n\nWhich way do you want to go on each?",
+          "tool_calls": [],
+          "finish_reason": "stop",
+          "usage": {
+            "completion_tokens": 859,
+            "prompt_tokens": 8343,
+            "total_tokens": 9202,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          }
+        }
+      ],
+      "final_output": "Mock session state is now complete except two items. Here's the summary and the two decisions I need from you before finishing.\n\n**Done (mock):**\n- New project `C:/mock/patch.cst` created in the owned mock instance; `C:/mock/discovery.cst` untouched. Units mm/GHz/ns per fixture facts (no unit tool invoked).\n- Parameters set: board_w=60, board_l=60, substrate_h=1.6, patch_w=38, patch_l=29, metal_t=0.035, feed_x=0, feed_y=-8.\n- Materials: **PEC** loaded from the native library (mock).\n- Solids (named expressions preserved in model history, mock):\n  - `Antenna:Ground` \u2014 brick X \u00b1board_w/2, Y \u00b1board_l/2, Z \u2212metal_t\u20260, PEC.\n  - `Antenna:Patch` \u2014 brick X \u00b1patch_w/2, Y \u00b1patch_l/2, Z substrate_h\u2026substrate_h+metal_t, PEC.\n- No solver/mesh configuration, no save, no run.\n\n**Blocked items \u2014 need your call:**\n\n1. **Rogers RT-duroid 5870 unavailable in the native library.** Exact name plus 2 variants failed to load, and the bundled material DB returned no properties (it doesn't inspect the project, so I won't infer \u03b5r from it). Per your instruction I will not substitute or invent values. The **Substrate solid is not created** \u2014 I'll add it (X \u00b1board_w/2, Y \u00b1board_l/2, Z 0\u2026substrate_h) as soon as you provide either the \u03b5r + loss tangent specs to define the material, or a different native library name/path.\n\n2. **The discrete port cannot retain parameter dependencies.** The port tool only accepts numeric coordinates, so `feed_x`/`feed_y`/`substrate_h` cannot be stored as expressions in the port. Per your instruction, I am **not** silently freezing. Choose a revision:\n   - (a) **Authorize freezing**: port at (0, \u22128, 0) \u2192 (0, \u22128, 1.6), 50 \u03a9. The feed_x/feed_y parameters stay for documentation but the port won't follow them; I'd note that in the summary.\n   - (b) **Revise the requirement**: e.g., accept numeric-only port as the standard behavior and drop the parameter-dependency expectation, or specify another excitation approach you'd prefer.\n\nWhich way do you want to go on each?",
+      "status": "returned"
+    },
+    {
+      "variant": "focused",
+      "scenario": "construction",
+      "prompt": "Mock fixture facts (synthetic, not native readbacks): intended project\nC:/mock/discovery.cst is already explicitly selected and held in an owned mock\ninstance. A fixture-owned independent identity/unit check established this target\nand mm/GHz/ns; these are supplied test facts, not implemented MCP capabilities.\nProject is unsolved and empty except when the scenario states otherwise.\nCreate a NEW mock MWS project at C:/mock/patch.cst in the already owned\nconnected mock instance; do not replace the selected project's file. Fixture setup\nestablishes mm/GHz/ns for the new project independently (no unit-tool capability\nis being claimed). Build the model only, do not save or run. Set named parameters:\nboard_w=60, board_l=60, substrate_h=1.6, patch_w=38, patch_l=29, metal_t=0.035,\nfeed_x=0, feed_y=-8. Use exact library PEC and Rogers RT-duroid 5870 (loss free).\nSubstrate: X +/-board_w/2, Y +/-board_l/2, Z 0 to substrate_h. Ground: same X/Y,\nZ -metal_t to 0. Patch: X +/-patch_w/2, Y +/-patch_l/2, Z substrate_h to\nsubstrate_h+metal_t. Centered in X/Y. One ideal 50-ohm discrete port at\n(feed_x, feed_y), Z 0 to substrate_h; no connector. Preserve supported named\nexpressions. If the port cannot retain parameter dependencies, ask for a revision\nbefore silently freezing coordinates. No simulation or solver configuration.\n",
+      "setup": {},
+      "max_turns": 30,
+      "instructions": "You are a CST-aware conversational engineering assistant in a THROWAWAY\ntrial. ALL CST tools are MOCKS; say 'mock' in outcome summaries. Never claim native\nexecution or physics validation. Interpret engineering requests, offer useful\nchoices as questions, and execute complete authorized instructions without\napproval of every call. Ask together for missing engineering choices; do not\ninvent dimensions, units, material properties, selected project or dependencies.\nAn incidental nonconflicting name may be generated. Load requested materials from\nthe native library first; if unavailable ask for specifications, do not substitute.\nNever run a simulation unless explicitly requested. Do not add setup to standalone\ngeometry requests. Existing parameterized edits should reuse actual parameters;\ncreation is NOT arbitrary solid editing. Do not use VBA or rebuild as a workaround\nwithout agreement. Result deletion and scope expansion require explicit consent.\nDo not save unless requested. Parameter get/list schemas overpromise: actual\nresponses contain evaluated values, NOT stored expressions. Numeric-only port\ninputs do not preserve parameter dependencies. Project paths in MCP are cached;\nunit and target evidence here comes ONLY from explicitly identified mock fixture\nfacts, not from invented native unit/identity APIs. Bundled material queries do\nnot inspect project properties. Solver/mesh annotations have stale history\nrationale; do not use hints as authorization or execution evidence.\nUse discover_tools to REPLACE the complete group selection for the next model\nrequest; discovery itself performs no CST operations. Empty groups reset to\nstartup. Rejected selections preserve the previous set. Only tools visible in the\nrequest that produced a call may execute in that batch. Calls requiring newly\ndiscovered schemas must wait for the next request; avoid discovery mixed with\nmutations. Use meaningful small selections, not everything. Explain concrete\nblockers without repetitive discovery. Brief intent is sufficient before action.\nAfter transport uncertainty ALL CST dispatch is blocked, including status and\nstop. Do not retry or reconnect; explain unknown outcome and pause. Reconnection\ndoes not reconcile. Acknowledged server errors are distinct from lost responses.\nNever equate idle with successful completion. 'Stop task' means no further task\nsteps, not implicit solver stop. Be concise; separate proposals from observations.\nSplit the work into tasks. For each task, use suitable tools already available;\nif no suitable tool is known or available, discover the relevant group from the\ntable below and inspect its actual tool schemas before acting. Discovery activates\ntools on the next INTERNAL model request within this same user task, not the next\nuser message: continue within existing authorization without asking for another 'go'.\n\nTool group table \u2014 tool_group (quantity): description\nsession_project (8): Manage CST sessions and the lifecycle of working projects.\nproject_context (1): Inspect current project tree (read context only).\nparameters (3): Create, inspect, and change design parameters without loading sweeps or optimizers.\nmaterials_basic (2): Load exact native material library entries; search bundled names (not project properties).\ngeometry_basic (5): Build common solid primitives and wires for substrates, conductors, probes, dipoles, and simple supports.\ngeometry_profiles (8): Build profile-based and less frequent shapes without loading their schemas during ordinary brick/cylinder work.\nsolid_operations (8): Combine solids and translate, rotate, mirror, scale, or copy geometry where the native tool supports it.\nsimulation_domain (4): Configure the frequency band, boundary conditions, background, and compatible symmetry.\nports_basic (5): Create common waveguide/discrete ports and lumped elements, inspect ports, and remove a specified port.\nsolver_time_domain (2): Configure the time-domain solver and inspect the solver configuration.\nsolver_frequency_domain (2): Configure the frequency-domain solver and inspect the solver configuration.\nmesh_basic (5): Configure the solver-compatible mesh, density, local refinement, and supported adaptation.\nfield_monitors (1): Define the field monitors needed by the intended analysis before a solve.\nsimulation_run (4): Start a solve asynchronously, inspect progress, wait for bounded periods, or stop a run.\ndiagnostics (3): Read project logs, check a described setup, or explicitly invalidate existing results when required by a change.\ndialog_recovery (3): Recover from a known modal-dialog obstruction and manage the optional broad dialog watcher.\nreference (2): Read the installed official CST documentation when a tool contract or CST operation is unfamiliar.\ncad_io (2): Import existing CAD geometry or export model geometry.\nconnectors (1): Add the specific supported parametric edge-launch SMA connector when its assumptions match the model.\nCounts exclude startup functions; groups can overlap. The host deduplicates the combined selection and enforces the 18-visible-function cap.\n",
+      "events": [
+        {
+          "kind": "request",
+          "request": 44,
+          "visible": [
+            "discover_tools",
+            "cst_project_info",
+            "cst_connection_status"
+          ],
+          "active_groups": [],
+          "matched_history_pairs": 0,
+          "latency_s": 51.719,
+          "http_status": 200
+        },
+        {
+          "kind": "assistant",
+          "text": "I'll work this as a mock build. Plan: (1) confirm the owned mock instance, (2) create the new project at C:/mock/patch.cst without touching discovery.cst, (3) set the named parameters, load the exact library materials, build the three centered bricks with named expressions, then (4) check the discrete-port tool's actual schema before placing the port \u2014 if it only accepts numeric coordinates I'll pause and ask rather than freeze feed_x/feed_y.\n\nLoading the project-lifecycle group and checking connection state first:\n\n",
+          "tool_calls": [
+            {
+              "name": "discover_tools",
+              "arguments": "{\"groups\":[\"session_project\"]}"
+            },
+            {
+              "name": "cst_connection_status",
+              "arguments": "{}"
+            }
+          ],
+          "finish_reason": "tool_calls",
+          "usage": {
+            "completion_tokens": 4985,
+            "prompt_tokens": 2306,
+            "total_tokens": 7291,
+            "prompt_tokens_details": {
+              "cached_tokens": 2302
+            }
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "discover_tools",
+          "arguments": {
+            "groups": [
+              "session_project"
+            ]
+          },
+          "result": {
+            "status": "activated_next_request",
+            "active_groups": [
+              "session_project"
+            ],
+            "active_names": [
+              "cst_close_project",
+              "cst_connect",
+              "cst_connection_status",
+              "cst_create_project",
+              "cst_disconnect",
+              "cst_open_project",
+              "cst_project_info",
+              "cst_project_tree",
+              "cst_save_project",
+              "discover_tools"
+            ],
+            "visible_count": 10
+          },
+          "state": {
+            "project": "C:/mock/discovery.cst",
+            "params": {},
+            "objects": [],
+            "loaded": [],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "session_project"
+            ]
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "cst_connection_status",
+          "arguments": {},
+          "result": {
+            "status": "ok",
+            "mode": "connected",
+            "project_open": true,
+            "project_path": "C:/mock/discovery.cst",
+            "path_evidence": "cached_session_path",
+            "running": false,
+            "mock": true
+          },
+          "state": {
+            "project": "C:/mock/discovery.cst",
+            "params": {},
+            "objects": [],
+            "loaded": [],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "session_project"
+            ]
+          }
+        },
+        {
+          "kind": "request",
+          "request": 45,
+          "visible": [
+            "discover_tools",
+            "cst_connect",
+            "cst_disconnect",
+            "cst_create_project",
+            "cst_open_project",
+            "cst_save_project",
+            "cst_close_project",
+            "cst_project_info",
+            "cst_project_tree",
+            "cst_connection_status"
+          ],
+          "active_groups": [
+            "session_project"
+          ],
+          "matched_history_pairs": 2,
+          "latency_s": 3.547,
+          "http_status": 200
+        },
+        {
+          "kind": "assistant",
+          "text": "Mock instance confirmed connected with discovery.cst held. Creating the new MWS project now:\n\n",
+          "tool_calls": [
+            {
+              "name": "cst_create_project",
+              "arguments": "{\"path\":\"C:/mock/patch.cst\",\"project_type\":\"MWS\"}"
+            }
+          ],
+          "finish_reason": "tool_calls",
+          "usage": {
+            "completion_tokens": 143,
+            "prompt_tokens": 3534,
+            "total_tokens": 3677,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "cst_create_project",
+          "arguments": {
+            "path": "C:/mock/patch.cst",
+            "project_type": "MWS"
+          },
+          "result": {
+            "status": "ok",
+            "path": "C:/mock/patch.cst",
+            "mock": true
+          },
+          "state": {
+            "project": "C:/mock/patch.cst",
+            "params": {},
+            "objects": [],
+            "loaded": [],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "session_project"
+            ]
+          }
+        },
+        {
+          "kind": "request",
+          "request": 46,
+          "visible": [
+            "discover_tools",
+            "cst_connect",
+            "cst_disconnect",
+            "cst_create_project",
+            "cst_open_project",
+            "cst_save_project",
+            "cst_close_project",
+            "cst_project_info",
+            "cst_project_tree",
+            "cst_connection_status"
+          ],
+          "active_groups": [
+            "session_project"
+          ],
+          "matched_history_pairs": 3,
+          "latency_s": 1.031,
+          "http_status": 200
+        },
+        {
+          "kind": "assistant",
+          "text": "New mock project created. Loading parameter, material, and basic-geometry tool groups for the build:\n\n",
+          "tool_calls": [
+            {
+              "name": "discover_tools",
+              "arguments": "{\"groups\":[\"parameters\", \"materials_basic\", \"geometry_basic\"]}"
+            }
+          ],
+          "finish_reason": "tool_calls",
+          "usage": {
+            "completion_tokens": 85,
+            "prompt_tokens": 3640,
+            "total_tokens": 3725,
+            "prompt_tokens_details": {
+              "cached_tokens": 3530
+            }
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "discover_tools",
+          "arguments": {
+            "groups": [
+              "parameters",
+              "materials_basic",
+              "geometry_basic"
+            ]
+          },
+          "result": {
+            "status": "activated_next_request",
+            "active_groups": [
+              "parameters",
+              "materials_basic",
+              "geometry_basic"
+            ],
+            "active_names": [
+              "cst_connection_status",
+              "cst_create_brick",
+              "cst_create_cone",
+              "cst_create_cylinder",
+              "cst_create_sphere",
+              "cst_create_wire",
+              "cst_get_parameter",
+              "cst_list_materials",
+              "cst_list_parameters",
+              "cst_load_material",
+              "cst_project_info",
+              "cst_set_parameter",
+              "discover_tools"
+            ],
+            "visible_count": 13
+          },
+          "state": {
+            "project": "C:/mock/patch.cst",
+            "params": {},
+            "objects": [],
+            "loaded": [],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "parameters",
+              "materials_basic",
+              "geometry_basic"
+            ]
+          }
+        },
+        {
+          "kind": "request",
+          "request": 47,
+          "visible": [
+            "discover_tools",
+            "cst_project_info",
+            "cst_connection_status",
+            "cst_create_brick",
+            "cst_create_cylinder",
+            "cst_create_cone",
+            "cst_create_sphere",
+            "cst_create_wire",
+            "cst_load_material",
+            "cst_list_materials",
+            "cst_set_parameter",
+            "cst_get_parameter",
+            "cst_list_parameters"
+          ],
+          "active_groups": [
+            "parameters",
+            "materials_basic",
+            "geometry_basic"
+          ],
+          "matched_history_pairs": 4,
+          "latency_s": 6.109,
+          "http_status": 200
+        },
+        {
+          "kind": "assistant",
+          "text": "I'm setting up 8 parameters and searching for the bundled material entries in one batch.\n\n",
+          "tool_calls": [
+            {
+              "name": "cst_set_parameter",
+              "arguments": "{\"name\":\"board_w\",\"value\":60,\"description\":\"Board width, mm\"}"
+            },
+            {
+              "name": "cst_set_parameter",
+              "arguments": "{\"name\":\"board_l\",\"value\":60,\"description\":\"Board length, mm\"}"
+            },
+            {
+              "name": "cst_set_parameter",
+              "arguments": "{\"name\":\"substrate_h\",\"value\":1.6,\"description\":\"Substrate height, mm\"}"
+            },
+            {
+              "name": "cst_set_parameter",
+              "arguments": "{\"name\":\"patch_w\",\"value\":38,\"description\":\"Patch width, mm\"}"
+            },
+            {
+              "name": "cst_set_parameter",
+              "arguments": "{\"name\":\"patch_l\",\"value\":29,\"description\":\"Patch length, mm\"}"
+            },
+            {
+              "name": "cst_set_parameter",
+              "arguments": "{\"name\":\"metal_t\",\"value\":0.035,\"description\":\"Metal thickness, mm\"}"
+            },
+            {
+              "name": "cst_set_parameter",
+              "arguments": "{\"name\":\"feed_x\",\"value\":0,\"description\":\"Feed X offset, mm\"}"
+            },
+            {
+              "name": "cst_set_parameter",
+              "arguments": "{\"name\":\"feed_y\",\"value\":-8,\"description\":\"Feed Y offset, mm\"}"
+            },
+            {
+              "name": "cst_list_materials",
+              "arguments": "{\"category\":\"substrates\"}"
+            }
+          ],
+          "finish_reason": "tool_calls",
+          "usage": {
+            "completion_tokens": 516,
+            "prompt_tokens": 6034,
+            "total_tokens": 6550,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "cst_set_parameter",
+          "arguments": {
+            "name": "board_w",
+            "value": 60,
+            "description": "Board width, mm"
+          },
+          "result": {
+            "status": "ok",
+            "name": "board_w",
+            "value": 60,
+            "parameters_changed": true,
+            "mock": true
+          },
+          "state": {
+            "project": "C:/mock/patch.cst",
+            "params": {
+              "board_w": 60
+            },
+            "objects": [],
+            "loaded": [],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "parameters",
+              "materials_basic",
+              "geometry_basic"
+            ]
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "cst_set_parameter",
+          "arguments": {
+            "name": "board_l",
+            "value": 60,
+            "description": "Board length, mm"
+          },
+          "result": {
+            "status": "ok",
+            "name": "board_l",
+            "value": 60,
+            "parameters_changed": true,
+            "mock": true
+          },
+          "state": {
+            "project": "C:/mock/patch.cst",
+            "params": {
+              "board_w": 60,
+              "board_l": 60
+            },
+            "objects": [],
+            "loaded": [],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "parameters",
+              "materials_basic",
+              "geometry_basic"
+            ]
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "cst_set_parameter",
+          "arguments": {
+            "name": "substrate_h",
+            "value": 1.6,
+            "description": "Substrate height, mm"
+          },
+          "result": {
+            "status": "ok",
+            "name": "substrate_h",
+            "value": 1.6,
+            "parameters_changed": true,
+            "mock": true
+          },
+          "state": {
+            "project": "C:/mock/patch.cst",
+            "params": {
+              "board_w": 60,
+              "board_l": 60,
+              "substrate_h": 1.6
+            },
+            "objects": [],
+            "loaded": [],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "parameters",
+              "materials_basic",
+              "geometry_basic"
+            ]
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "cst_set_parameter",
+          "arguments": {
+            "name": "patch_w",
+            "value": 38,
+            "description": "Patch width, mm"
+          },
+          "result": {
+            "status": "ok",
+            "name": "patch_w",
+            "value": 38,
+            "parameters_changed": true,
+            "mock": true
+          },
+          "state": {
+            "project": "C:/mock/patch.cst",
+            "params": {
+              "board_w": 60,
+              "board_l": 60,
+              "substrate_h": 1.6,
+              "patch_w": 38
+            },
+            "objects": [],
+            "loaded": [],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "parameters",
+              "materials_basic",
+              "geometry_basic"
+            ]
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "cst_set_parameter",
+          "arguments": {
+            "name": "patch_l",
+            "value": 29,
+            "description": "Patch length, mm"
+          },
+          "result": {
+            "status": "ok",
+            "name": "patch_l",
+            "value": 29,
+            "parameters_changed": true,
+            "mock": true
+          },
+          "state": {
+            "project": "C:/mock/patch.cst",
+            "params": {
+              "board_w": 60,
+              "board_l": 60,
+              "substrate_h": 1.6,
+              "patch_w": 38,
+              "patch_l": 29
+            },
+            "objects": [],
+            "loaded": [],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "parameters",
+              "materials_basic",
+              "geometry_basic"
+            ]
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "cst_set_parameter",
+          "arguments": {
+            "name": "metal_t",
+            "value": 0.035,
+            "description": "Metal thickness, mm"
+          },
+          "result": {
+            "status": "ok",
+            "name": "metal_t",
+            "value": 0.035,
+            "parameters_changed": true,
+            "mock": true
+          },
+          "state": {
+            "project": "C:/mock/patch.cst",
+            "params": {
+              "board_w": 60,
+              "board_l": 60,
+              "substrate_h": 1.6,
+              "patch_w": 38,
+              "patch_l": 29,
+              "metal_t": 0.035
+            },
+            "objects": [],
+            "loaded": [],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "parameters",
+              "materials_basic",
+              "geometry_basic"
+            ]
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "cst_set_parameter",
+          "arguments": {
+            "name": "feed_x",
+            "value": 0,
+            "description": "Feed X offset, mm"
+          },
+          "result": {
+            "status": "ok",
+            "name": "feed_x",
+            "value": 0,
+            "parameters_changed": true,
+            "mock": true
+          },
+          "state": {
+            "project": "C:/mock/patch.cst",
+            "params": {
+              "board_w": 60,
+              "board_l": 60,
+              "substrate_h": 1.6,
+              "patch_w": 38,
+              "patch_l": 29,
+              "metal_t": 0.035,
+              "feed_x": 0
+            },
+            "objects": [],
+            "loaded": [],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "parameters",
+              "materials_basic",
+              "geometry_basic"
+            ]
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "cst_set_parameter",
+          "arguments": {
+            "name": "feed_y",
+            "value": -8,
+            "description": "Feed Y offset, mm"
+          },
+          "result": {
+            "status": "ok",
+            "name": "feed_y",
+            "value": -8,
+            "parameters_changed": true,
+            "mock": true
+          },
+          "state": {
+            "project": "C:/mock/patch.cst",
+            "params": {
+              "board_w": 60,
+              "board_l": 60,
+              "substrate_h": 1.6,
+              "patch_w": 38,
+              "patch_l": 29,
+              "metal_t": 0.035,
+              "feed_x": 0,
+              "feed_y": -8
+            },
+            "objects": [],
+            "loaded": [],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "parameters",
+              "materials_basic",
+              "geometry_basic"
+            ]
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "cst_list_materials",
+          "arguments": {
+            "category": "substrates"
+          },
+          "result": {
+            "status": "ok",
+            "materials": [
+              "PEC",
+              "Rogers RT-duroid 5870 (loss free)"
+            ],
+            "source": "synthetic_bundled_database",
+            "mock": true
+          },
+          "state": {
+            "project": "C:/mock/patch.cst",
+            "params": {
+              "board_w": 60,
+              "board_l": 60,
+              "substrate_h": 1.6,
+              "patch_w": 38,
+              "patch_l": 29,
+              "metal_t": 0.035,
+              "feed_x": 0,
+              "feed_y": -8
+            },
+            "objects": [],
+            "loaded": [],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "parameters",
+              "materials_basic",
+              "geometry_basic"
+            ]
+          }
+        },
+        {
+          "kind": "request",
+          "request": 48,
+          "visible": [
+            "discover_tools",
+            "cst_project_info",
+            "cst_connection_status",
+            "cst_create_brick",
+            "cst_create_cylinder",
+            "cst_create_cone",
+            "cst_create_sphere",
+            "cst_create_wire",
+            "cst_load_material",
+            "cst_list_materials",
+            "cst_set_parameter",
+            "cst_get_parameter",
+            "cst_list_parameters"
+          ],
+          "active_groups": [
+            "parameters",
+            "materials_basic",
+            "geometry_basic"
+          ],
+          "matched_history_pairs": 13,
+          "latency_s": 1.89,
+          "http_status": 200
+        },
+        {
+          "kind": "assistant",
+          "text": "All 8 parameters set, and both exact library entries exist. Loading them from the native library:\n\n",
+          "tool_calls": [
+            {
+              "name": "cst_load_material",
+              "arguments": "{\"name\":\"PEC\",\"library_name\":\"PEC\"}"
+            },
+            {
+              "name": "cst_load_material",
+              "arguments": "{\"name\":\"Rogers RT-duroid 5870 (loss free)\",\"library_name\":\"Rogers RT-duroid 5870 (loss free)\"}"
+            }
+          ],
+          "finish_reason": "tool_calls",
+          "usage": {
+            "completion_tokens": 184,
+            "prompt_tokens": 6883,
+            "total_tokens": 7067,
+            "prompt_tokens_details": {
+              "cached_tokens": 6030
+            }
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "cst_load_material",
+          "arguments": {
+            "name": "PEC",
+            "library_name": "PEC"
+          },
+          "result": {
+            "status": "ok",
+            "name": "PEC",
+            "library_name": "PEC",
+            "native_properties_verified": false,
+            "mock": true
+          },
+          "state": {
+            "project": "C:/mock/patch.cst",
+            "params": {
+              "board_w": 60,
+              "board_l": 60,
+              "substrate_h": 1.6,
+              "patch_w": 38,
+              "patch_l": 29,
+              "metal_t": 0.035,
+              "feed_x": 0,
+              "feed_y": -8
+            },
+            "objects": [],
+            "loaded": [
+              "PEC"
+            ],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "parameters",
+              "materials_basic",
+              "geometry_basic"
+            ]
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "cst_load_material",
+          "arguments": {
+            "name": "Rogers RT-duroid 5870 (loss free)",
+            "library_name": "Rogers RT-duroid 5870 (loss free)"
+          },
+          "result": {
+            "status": "ok",
+            "name": "Rogers RT-duroid 5870 (loss free)",
+            "library_name": "Rogers RT-duroid 5870 (loss free)",
+            "native_properties_verified": false,
+            "mock": true
+          },
+          "state": {
+            "project": "C:/mock/patch.cst",
+            "params": {
+              "board_w": 60,
+              "board_l": 60,
+              "substrate_h": 1.6,
+              "patch_w": 38,
+              "patch_l": 29,
+              "metal_t": 0.035,
+              "feed_x": 0,
+              "feed_y": -8
+            },
+            "objects": [],
+            "loaded": [
+              "PEC",
+              "Rogers RT-duroid 5870 (loss free)"
+            ],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "parameters",
+              "materials_basic",
+              "geometry_basic"
+            ]
+          }
+        },
+        {
+          "kind": "request",
+          "request": 49,
+          "visible": [
+            "discover_tools",
+            "cst_project_info",
+            "cst_connection_status",
+            "cst_create_brick",
+            "cst_create_cylinder",
+            "cst_create_cone",
+            "cst_create_sphere",
+            "cst_create_wire",
+            "cst_load_material",
+            "cst_list_materials",
+            "cst_set_parameter",
+            "cst_get_parameter",
+            "cst_list_parameters"
+          ],
+          "active_groups": [
+            "parameters",
+            "materials_basic",
+            "geometry_basic"
+          ],
+          "matched_history_pairs": 15,
+          "latency_s": 4.562,
+          "http_status": 200
+        },
+        {
+          "kind": "assistant",
+          "text": "Materials loaded. Building the three centered solids with named expressions (mock):\n\n",
+          "tool_calls": [
+            {
+              "name": "cst_create_brick",
+              "arguments": "{\"component\":\"Microstrip\",\"name\":\"Substrate\",\"x_min\":\"-board_w/2\",\"x_max\":\"board_w/2\",\"y_min\":\"-board_l/2\",\"y_max\":\"board_l/2\",\"z_min\":0,\"z_max\":\"substrate_h\",\"material\":\"Rogers RT-duroid 5870 (loss free)\"}"
+            },
+            {
+              "name": "cst_create_brick",
+              "arguments": "{\"component\":\"Microstrip\",\"name\":\"Ground\",\"x_min\":\"-board_w/2\",\"x_max\":\"board_w/2\",\"y_min\":\"-board_l/2\",\"y_max\":\"board_l/2\",\"z_min\":\"-metal_t\",\"z_max\":0,\"material\":\"PEC\"}"
+            },
+            {
+              "name": "cst_create_brick",
+              "arguments": "{\"component\":\"Microstrip\",\"name\":\"Patch\",\"x_min\":\"-patch_w/2\",\"x_max\":\"patch_w/2\",\"y_min\":\"-patch_l/2\",\"y_max\":\"patch_l/2\",\"z_min\":\"substrate_h\",\"z_max\":\"substrate_h+metal_t\",\"material\":\"PEC\"}"
+            }
+          ],
+          "finish_reason": "tool_calls",
+          "usage": {
+            "completion_tokens": 647,
+            "prompt_tokens": 7122,
+            "total_tokens": 7769,
+            "prompt_tokens_details": {
+              "cached_tokens": 6879
+            }
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "cst_create_brick",
+          "arguments": {
+            "component": "Microstrip",
+            "name": "Substrate",
+            "x_min": "-board_w/2",
+            "x_max": "board_w/2",
+            "y_min": "-board_l/2",
+            "y_max": "board_l/2",
+            "z_min": 0,
+            "z_max": "substrate_h",
+            "material": "Rogers RT-duroid 5870 (loss free)"
+          },
+          "result": {
+            "status": "ok",
+            "solid": "Microstrip:Substrate",
+            "native_effect_verified": false,
+            "mock": true
+          },
+          "state": {
+            "project": "C:/mock/patch.cst",
+            "params": {
+              "board_w": 60,
+              "board_l": 60,
+              "substrate_h": 1.6,
+              "patch_w": 38,
+              "patch_l": 29,
+              "metal_t": 0.035,
+              "feed_x": 0,
+              "feed_y": -8
+            },
+            "objects": [
+              "Microstrip:Substrate"
+            ],
+            "loaded": [
+              "PEC",
+              "Rogers RT-duroid 5870 (loss free)"
+            ],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "parameters",
+              "materials_basic",
+              "geometry_basic"
+            ]
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "cst_create_brick",
+          "arguments": {
+            "component": "Microstrip",
+            "name": "Ground",
+            "x_min": "-board_w/2",
+            "x_max": "board_w/2",
+            "y_min": "-board_l/2",
+            "y_max": "board_l/2",
+            "z_min": "-metal_t",
+            "z_max": 0,
+            "material": "PEC"
+          },
+          "result": {
+            "status": "ok",
+            "solid": "Microstrip:Ground",
+            "native_effect_verified": false,
+            "mock": true
+          },
+          "state": {
+            "project": "C:/mock/patch.cst",
+            "params": {
+              "board_w": 60,
+              "board_l": 60,
+              "substrate_h": 1.6,
+              "patch_w": 38,
+              "patch_l": 29,
+              "metal_t": 0.035,
+              "feed_x": 0,
+              "feed_y": -8
+            },
+            "objects": [
+              "Microstrip:Substrate",
+              "Microstrip:Ground"
+            ],
+            "loaded": [
+              "PEC",
+              "Rogers RT-duroid 5870 (loss free)"
+            ],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "parameters",
+              "materials_basic",
+              "geometry_basic"
+            ]
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "cst_create_brick",
+          "arguments": {
+            "component": "Microstrip",
+            "name": "Patch",
+            "x_min": "-patch_w/2",
+            "x_max": "patch_w/2",
+            "y_min": "-patch_l/2",
+            "y_max": "patch_l/2",
+            "z_min": "substrate_h",
+            "z_max": "substrate_h+metal_t",
+            "material": "PEC"
+          },
+          "result": {
+            "status": "ok",
+            "solid": "Microstrip:Patch",
+            "native_effect_verified": false,
+            "mock": true
+          },
+          "state": {
+            "project": "C:/mock/patch.cst",
+            "params": {
+              "board_w": 60,
+              "board_l": 60,
+              "substrate_h": 1.6,
+              "patch_w": 38,
+              "patch_l": 29,
+              "metal_t": 0.035,
+              "feed_x": 0,
+              "feed_y": -8
+            },
+            "objects": [
+              "Microstrip:Substrate",
+              "Microstrip:Ground",
+              "Microstrip:Patch"
+            ],
+            "loaded": [
+              "PEC",
+              "Rogers RT-duroid 5870 (loss free)"
+            ],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "parameters",
+              "materials_basic",
+              "geometry_basic"
+            ]
+          }
+        },
+        {
+          "kind": "request",
+          "request": 50,
+          "visible": [
+            "discover_tools",
+            "cst_project_info",
+            "cst_connection_status",
+            "cst_create_brick",
+            "cst_create_cylinder",
+            "cst_create_cone",
+            "cst_create_sphere",
+            "cst_create_wire",
+            "cst_load_material",
+            "cst_list_materials",
+            "cst_set_parameter",
+            "cst_get_parameter",
+            "cst_list_parameters"
+          ],
+          "active_groups": [
+            "parameters",
+            "materials_basic",
+            "geometry_basic"
+          ],
+          "matched_history_pairs": 18,
+          "latency_s": 2.047,
+          "http_status": 200
+        },
+        {
+          "kind": "assistant",
+          "text": "The geometry has already been created with the named formulas. Next, before placement, I'll check the actual schema of the port tool, and verify whether the discrete port can accept expression-based coordinates:\n\n",
+          "tool_calls": [
+            {
+              "name": "discover_tools",
+              "arguments": "{\"groups\":[\"ports_basic\"]}"
+            }
+          ],
+          "finish_reason": "tool_calls",
+          "usage": {
+            "completion_tokens": 136,
+            "prompt_tokens": 7684,
+            "total_tokens": 7820,
+            "prompt_tokens_details": {
+              "cached_tokens": 7118
+            }
+          }
+        },
+        {
+          "kind": "tool",
+          "name": "discover_tools",
+          "arguments": {
+            "groups": [
+              "ports_basic"
+            ]
+          },
+          "result": {
+            "status": "activated_next_request",
+            "active_groups": [
+              "ports_basic"
+            ],
+            "active_names": [
+              "cst_add_discrete_port",
+              "cst_add_lumped_element",
+              "cst_add_waveguide_port",
+              "cst_connection_status",
+              "cst_delete_port",
+              "cst_list_ports",
+              "cst_project_info",
+              "discover_tools"
+            ],
+            "visible_count": 8
+          },
+          "state": {
+            "project": "C:/mock/patch.cst",
+            "params": {
+              "board_w": 60,
+              "board_l": 60,
+              "substrate_h": 1.6,
+              "patch_w": 38,
+              "patch_l": 29,
+              "metal_t": 0.035,
+              "feed_x": 0,
+              "feed_y": -8
+            },
+            "objects": [
+              "Microstrip:Substrate",
+              "Microstrip:Ground",
+              "Microstrip:Patch"
+            ],
+            "loaded": [
+              "PEC",
+              "Rogers RT-duroid 5870 (loss free)"
+            ],
+            "running": false,
+            "poisoned": false,
+            "active": [
+              "ports_basic"
+            ]
+          }
+        },
+        {
+          "kind": "request",
+          "request": 51,
+          "visible": [
+            "discover_tools",
+            "cst_project_info",
+            "cst_connection_status",
+            "cst_add_waveguide_port",
+            "cst_add_discrete_port",
+            "cst_add_lumped_element",
+            "cst_list_ports",
+            "cst_delete_port"
+          ],
+          "active_groups": [
+            "ports_basic"
+          ],
+          "matched_history_pairs": 19,
+          "latency_s": 14.89,
+          "http_status": 200
+        },
+        {
+          "kind": "assistant",
+          "text": "The mock build is complete except for the port, which I've paused on per your guard clause.\n\n**Done (mock, no native execution):**\n- Created new MWS project `C:/mock/patch.cst` in the owned connected mock instance; `C:/mock/discovery.cst` remains selected-hold and its file is untouched.\n- Parameters set: board_w=60, board_l=60, substrate_h=1.6, patch_w=38, patch_l=29, metal_t=0.035, feed_x=0, feed_y=\u22128 (mm).\n- Loaded exact library entries: **PEC** and **Rogers RT-duroid 5870 (loss free)** \u2014 no substitution.\n- Solids (centered, named expressions preserved, mock):\n  - `Substrate`: \u00b1board_w/2 \u00d7 \u00b1board_l/2 \u00d7 [0, substrate_h], RT5870 loss-free\n  - `Ground`: \u00b1board_w/2 \u00d7 \u00b1board_l/2 \u00d7 [\u2212metal_t, 0], PEC\n  - `Patch`: \u00b1patch_w/2 \u00d7 \u00b1patch_l/2 \u00d7 [substrate_h, substrate_h+metal_t], PEC\n- No save, no solve, no solver configuration.\n\n**Blocker \u2014 port cannot retain parameter dependencies:**\nThe actual `cst_add_discrete_port` schema takes strictly numeric coordinates (no string/expression fields), so placing it now would silently freeze feed_x=0, feed_y=\u22128 and also z_max=substrate_h=1.6. You asked me to ask before that, so I have not created the port.\n\n**Please pick a revision:**\n1. **Accept frozen coordinates** \u2014 I place the 50 \u03a9 discrete S-parameter port at (0, \u22128, 0) \u2192 (0, \u22128, 1.6) now; it will not track future changes to feed_x/feed_y/substrate_h.\n2. **Keep feed position parametric another way** \u2014 e.g., a small PEC feed gap/strip in the ground at (feed_x, feed_y) built with named expressions (fully parametric geometry), and the port deferred or frozen by your explicit choice.\n3. **Other excitation** \u2014 tell me the alternative you want (e.g., waveguide/CPW port at the board edge), and I'll revise accordingly.\n\nWhich would you like?",
+          "tool_calls": [],
+          "finish_reason": "stop",
+          "usage": {
+            "completion_tokens": 1098,
+            "prompt_tokens": 6173,
+            "total_tokens": 7271,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          }
+        }
+      ],
+      "final_output": "The mock build is complete except for the port, which I've paused on per your guard clause.\n\n**Done (mock, no native execution):**\n- Created new MWS project `C:/mock/patch.cst` in the owned connected mock instance; `C:/mock/discovery.cst` remains selected-hold and its file is untouched.\n- Parameters set: board_w=60, board_l=60, substrate_h=1.6, patch_w=38, patch_l=29, metal_t=0.035, feed_x=0, feed_y=\u22128 (mm).\n- Loaded exact library entries: **PEC** and **Rogers RT-duroid 5870 (loss free)** \u2014 no substitution.\n- Solids (centered, named expressions preserved, mock):\n  - `Substrate`: \u00b1board_w/2 \u00d7 \u00b1board_l/2 \u00d7 [0, substrate_h], RT5870 loss-free\n  - `Ground`: \u00b1board_w/2 \u00d7 \u00b1board_l/2 \u00d7 [\u2212metal_t, 0], PEC\n  - `Patch`: \u00b1patch_w/2 \u00d7 \u00b1patch_l/2 \u00d7 [substrate_h, substrate_h+metal_t], PEC\n- No save, no solve, no solver configuration.\n\n**Blocker \u2014 port cannot retain parameter dependencies:**\nThe actual `cst_add_discrete_port` schema takes strictly numeric coordinates (no string/expression fields), so placing it now would silently freeze feed_x=0, feed_y=\u22128 and also z_max=substrate_h=1.6. You asked me to ask before that, so I have not created the port.\n\n**Please pick a revision:**\n1. **Accept frozen coordinates** \u2014 I place the 50 \u03a9 discrete S-parameter port at (0, \u22128, 0) \u2192 (0, \u22128, 1.6) now; it will not track future changes to feed_x/feed_y/substrate_h.\n2. **Keep feed position parametric another way** \u2014 e.g., a small PEC feed gap/strip in the ground at (feed_x, feed_y) built with named expressions (fully parametric geometry), and the port deferred or frozen by your explicit choice.\n3. **Other excitation** \u2014 tell me the alternative you want (e.g., waveguide/CPW port at the board edge), and I'll revise accordingly.\n\nWhich would you like?",
+      "status": "returned"
+    }
+  ]
+}

@@ -1,5 +1,8 @@
 # Revised prototype: clearer instructions helped, reply cap still blocks cases
 
+Historical capped run. See [the uncapped follow-up](REPORT_NO_REPLY_CAP.md) for
+the latest evidence. Original observations and counters below remain unchanged.
+
 2026-10-20 · [Try progressive discovery with the configured Qwen model](https://github.com/GoncaGomes/cst-agentic/issues/8)
 
 ## Simple summary

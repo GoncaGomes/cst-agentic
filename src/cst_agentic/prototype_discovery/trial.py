@@ -398,6 +398,7 @@ async def main():
     parser.add_argument("--budget-ledger", type=Path, required=True)
     parser.add_argument("--evidence-file", type=Path, required=True)
     parser.add_argument("--start-index", type=int, default=0)
+    parser.add_argument("--scenario", action="append", choices=sorted({s[1] for s in SCENARIOS}))
     args = parser.parse_args()
     if not args.live:
         print("Live execution requires --live and fresh human authorization.")
@@ -433,7 +434,9 @@ async def main():
 
     def save():
         payload = {
-            "revision": "task-planning-30-turns",
+            "revision": "task-planning-30-turns-no-reply-cap",
+            "reply_token_cap": None,
+            "scenario_filter": args.scenario,
             "scenario_start_index": args.start_index,
             "budget": BUDGET,
             "requests_used": used["requests"],
@@ -603,6 +606,8 @@ async def main():
 
     try:
         for variant, scenario, max_turns, prompt, setup in SCENARIOS[args.start_index:]:
+            if args.scenario and scenario not in args.scenario:
+                continue
             if used["requests"] >= BUDGET:
                 break
             state.clear()
@@ -638,7 +643,7 @@ async def main():
                 instructions=record["instructions"],
                 tools=tools(),
                 model_settings=ModelSettings(
-                    tool_choice="auto", parallel_tool_calls=True, max_tokens=3072, timeout=100
+                    tool_choice="auto", parallel_tool_calls=True, timeout=100
                 ),
             )
             before = used["requests"]
