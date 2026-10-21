@@ -1,0 +1,20 @@
+{
+    "case":  "leave-open-repeat",
+    "exit_code":  0,
+    "native_invocation_error_type":  null,
+    "driver_process_exit_observed":  true,
+    "outer_uv_seconds":  29.270096,
+    "inner_driver_seconds":  28.656,
+    "outer_overhead_seconds":  0.614096,
+    "wrapper_reserve_seconds":  30,
+    "wrapper_reserve_exceeded":  false,
+    "startup_with_all_outer_overhead_upper_seconds":  3.1140959,
+    "cleanup_with_all_outer_overhead_upper_seconds":  1.0200959,
+    "complete_allowance_exceeded":  false,
+    "case_300_second_ceiling_exceeded":  false,
+    "ledger_matches":  true,
+    "round_ceiling_exceeded":  false,
+    "cumulative_calls":  13,
+    "cumulative_charged_seconds":  579.9011519999999,
+    "qualification":  "Previous timing qualifications retained. Thirty seconds of outer overhead reserve charged before this case; no counters or original markers reset."
+}

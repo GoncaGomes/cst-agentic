@@ -1,0 +1,21 @@
+{
+  "record_kind": "human-confirmed partial design decision, not additional native verification",
+  "user_confirmation_verbatim": "I accept",
+  "accepted_recommendation": "Retain simulation stop as a bounded, best-effort control in the first version rather than defer it.",
+  "supported_contract": [
+    "Ordinary prompts wait until task completion or a pause requiring input; the separate mid-task cancel-task command is removed.",
+    "An explicit simulation-stop control remains available while task work is active.",
+    "The stop request uses the same protected serialized connection and cannot bypass already-dispatched work, authorization, target checks or uncertainty.",
+    "Report stop intent, queueing, request settlement and separately observed solver termination distinctly. Acceptance of stop does not establish immediate termination.",
+    "Retain the agreed complete request allowances, including the 60-second queue-inclusive stop allowance and a separate status allowance for termination evidence.",
+    "If stopping is blocked or cannot be verified within the allowed work, report that the solver may still be active and direct the human to CST when intervention is needed.",
+    "No emergency-stop or universal timing guarantee is offered. A latched uncertain client admits no further status or stop tools."
+  ],
+  "evidence": "verification.json and attempt/observations.json; the identified disposable project's native messages include Solver run aborted.",
+  "evidence_limits": "One CST 2025 dipole attempt, not worst-case native timing, long-launch stop responsiveness, normal server entry-point validation or whole-Controller crash recovery. Sampled idle time is not exact termination latency.",
+  "ticket_resolution": false,
+  "remaining_ticket_obligations_waived": false,
+  "additional_execution_authorized": false,
+  "publication_authorized": false,
+  "local_only": true
+}

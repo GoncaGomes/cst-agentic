@@ -1,0 +1,5 @@
+{"event": "ready", "monotonic": 257678.734}
+{"event": "request", "monotonic": 257678.765, "method": "initialize"}
+{"event": "request", "monotonic": 257678.765, "method": "tools/list"}
+{"event": "stdin_eof", "monotonic": 257678.781}
+{"event": "refusing_orderly_exit", "monotonic": 257678.781}

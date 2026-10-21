@@ -1,0 +1,16 @@
+{
+  "record_kind": "fresh human-authorized replacement of an incomplete native-free round",
+  "user_confirmation": "Fix it and rerun the missing lifecycle cheks",
+  "maximum_scenarios": 4,
+  "maximum_seconds": 300,
+  "includes_cleanup": true,
+  "retries": 0,
+  "target": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\opencode\\cst-lifecycle-final-02",
+  "scenarios": ["crash_restart", "partial_startup_failure", "startup_timeout", "stalled_shutdown"],
+  "scope": "Corrected disposable observer and safe error reporting; one fresh execution of the four missing lifecycle checks with installed public MCP SDK and fake local peers.",
+  "restrictions": "No CST import/execution, solver, model endpoint, arbitrary PID kill, private SDK modification, production implementation or dependency change.",
+  "preserve": "Do not edit/replay consumed final-01 source, ledgers, targets, markers or evidence. New final-02 has exclusive one-time admission.",
+  "publication_authorized": false,
+  "closure_authorized_by_this_round": false,
+  "review_required": "Present results and remaining limitations before publication or closure."
+}

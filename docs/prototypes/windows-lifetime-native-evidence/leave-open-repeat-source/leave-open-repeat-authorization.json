@@ -1,0 +1,23 @@
+{
+  "id": "leave-open-repeat-1",
+  "user_confirmation": "Yes you may",
+  "case": "leave-open-repeat",
+  "target": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\opencode\\cst-lifetime-native\\leave-open-repeat.cst",
+  "maximum_calls": 13,
+  "maximum_active_seconds": 900,
+  "case_maximum_seconds": 300,
+  "case_maximum_calls": 4,
+  "new_instance_only": true,
+  "same_disposable_mcp_peer": true,
+  "one_save_no_overwrite": true,
+  "manual_license_dialog_dismissal_if_needed": true,
+  "automatic_dialog_watcher": false,
+  "manual_confirmation_if_lifetime_inconclusive": true,
+  "no_remote_updates": true,
+  "no_commits": true,
+  "no_pushes": true,
+  "no_github_comments": true,
+  "solver_or_model_requests": false,
+  "previous_round_human_observation_verbatim": "The cst window oppened but a window about the educational license has pop-up which I pressed ok. The current mcp tool that connects to cst already closes that pop-up window via threading. I closed it, actually.",
+  "observation_qualification": "Human-provided context about the previous round, not independently timed or attributed to a particular case. No automatic popup-closing thread is added to this peer."
+}

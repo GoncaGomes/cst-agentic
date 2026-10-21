@@ -1,0 +1,11 @@
+{
+  "source": "Project.get_messages",
+  "tail": "[{'text': 'Defined reference frequency for open boundary condition (1 GHz) is larger than the lowest relevant system frequency (monitor at 0.9 GHz).\\nPlease check the Settings for PML Boundary (Simulation > Settings > Boundary Conditions > Open Boundary) to ensure accurate monitor results for the lowest frequency of interest. More...', 'type': 'INFO'}, {'text': 'Using 12 threads for parallelized CAD processing', 'type': 'INFO'}, {'text': '2026-10-21 13:30:57   current system memory usage reached 85% (12 GB)', 'type': 'WARNING'}, {'text': 'Multi-threaded CAD processing switched off to support CAD geometry, details:\\nunhandled exception', 'type': 'INFO'}, {'text': 'ACIS healing was disabled to support CAD geometry, details:\\nunhandled exception', 'type': 'INFO'}, {'text': 'Solver run aborted.', 'type': 'WARNING'}, {'text': '2 warnings occurred.', 'type': 'WARNING'}]",
+  "reported_size": 876,
+  "target_checks": {
+    "filename_matches": true,
+    "sole_project_matches": true,
+    "de_pid": 30660
+  },
+  "coverage": "bounded tail; no complete run-history guarantee"
+}

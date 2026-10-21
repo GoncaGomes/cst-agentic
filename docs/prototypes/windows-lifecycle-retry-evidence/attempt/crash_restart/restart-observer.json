@@ -1,0 +1,48 @@
+{
+  "stage": "post_exit_observation",
+  "exit_code": 0,
+  "complete_invocation_s": 1.389999999984866,
+  "alive_at_application_exit": {
+    "18496": false,
+    "22780": false,
+    "18164": false
+  },
+  "post_exit_samples": [
+    {
+      "monotonic": 257354.843,
+      "alive": {
+        "18496": false,
+        "22780": false,
+        "18164": false
+      }
+    }
+  ],
+  "all_tracked_terminated_before_containment_release": true,
+  "processes": [
+    {
+      "pid": 18496,
+      "parent_pid": 8768,
+      "executable_basename": "uv.exe",
+      "creation_time": "2026-10-21T13:27:17.818000+00:00"
+    },
+    {
+      "pid": 22780,
+      "parent_pid": 18496,
+      "executable_basename": "python.exe",
+      "creation_time": "2026-10-21T13:27:17.850000+00:00"
+    },
+    {
+      "pid": 18164,
+      "parent_pid": 22780,
+      "executable_basename": "python.exe",
+      "creation_time": "2026-10-21T13:27:17.868000+00:00"
+    }
+  ],
+  "alive_after_containment_release": {
+    "18496": false,
+    "22780": false,
+    "18164": false
+  },
+  "all_tracked_terminated_after_containment_release": true,
+  "total_observed_s": 1.389999999984866
+}

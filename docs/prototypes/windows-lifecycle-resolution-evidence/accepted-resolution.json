@@ -1,0 +1,31 @@
+{
+  "record_kind": "human-accepted restricted design resolution and publication authorization",
+  "user_confirmation_verbatim": "Do it, I agree with you",
+  "accepted_recommendation": "Stop experimenting and resolve issue #14 as a restricted lifecycle-design decision, not production readiness.",
+  "selected_strategy": "Installed public MCP stdio/SDK, newly Controller-launched session-bound instances, protected serialized dispatch, best-effort bounded stop, pre-dispatch recovery state and same-task SDK context ownership.",
+  "accepted_limits": [
+    "Exact SDK Job Object ownership is unknown and must not be represented as established.",
+    "New lifecycle observations used fake peers and disposable application processes, not the production Controller or native CST failure recovery.",
+    "Power-loss/disk-failure durability, unkillable processes, induced SDK cleanup exceptions, concurrent-session lease and general recovery clearance were not established.",
+    "Long-native-launch stop latency, actual native transport uncertainty and normal server entry-point behavior remain unverified.",
+    "Production implementation must validate its actual wrapper. These prototypes are not implementation or readiness certification."
+  ],
+  "prior_decisions_preserved": "Session-bound new instances, no task-completion closure permission, simplified task input, no separate mid-task cancel-task command, distinct serialized best-effort simulation stop, unchanged authorization/identity/uncertainty safeguards and provisional complete allowances.",
+  "publication_authorized": true,
+  "artifact_branch": "prototype/windows-transport-lifetime",
+  "artifact_commit_and_push_authorized": true,
+  "resolution_comment_authorized": true,
+  "parent_map_index_update_authorized": true,
+  "issue_14_closure_authorized": true,
+  "production_implementation_authorized": false,
+  "merge_or_PR_authorized": false,
+  "additional_experiments_authorized": false,
+  "issue_13_resolution_authorized": false,
+  "evidence": [
+    "../windows-lifetime-native.md",
+    "../windows-solver-stop.md",
+    "../windows-lifecycle-final.md",
+    "../windows-lifecycle-retry.md"
+  ],
+  "historical_publication_flags": "Earlier false/local-only fields describe recording-time scope and are preserved unchanged. This later acceptance authorizes the stated publication only."
+}

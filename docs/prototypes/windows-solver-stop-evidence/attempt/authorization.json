@@ -1,0 +1,34 @@
+{
+  "id": "dipole-stop-01",
+  "user_confirmation": "Yes",
+  "target": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\opencode\\cst-solver-stop-dipole-01\\dipole.cst",
+  "maximum_calls": 50,
+  "maximum_seconds": 1800,
+  "launches": 1,
+  "stop_attempts": 1,
+  "retries": 0,
+  "publication": false,
+  "installation": "CST Studio Suite 2025",
+  "operation_plan": [
+    "Create/configure exact dipole in a new instance; verify target and units",
+    "Save the prepared fixture at its controller-created target",
+    "Launch one asynchronous simulation and establish running",
+    "Submit stop intent while one five-second wait is pending on the same serialized connection",
+    "Send at most one stop, only if still applicable after the wait",
+    "Up to three bounded start-state and three bounded termination-state observations, plus owned-project messages",
+    "Close the owned instance only after known idle, then bounded transport cleanup"
+  ],
+  "complete_allowances_s": {
+    "startup": 120,
+    "ordinary": 120,
+    "launch": 480,
+    "short_wait": 45,
+    "stop_including_queue": 60,
+    "transport_cleanup_total": 30
+  },
+  "consequences": "Transport cleanup may terminate this disposable instance and lose partial results. Uncertainty blocks all further tools; human intervention in CST may be necessary.",
+  "restrictions": "No existing-instance attachment, preexisting-file overwrite, automatic retry, alternate target, model endpoint, watcher, private SDK preservation hooks or production changes.",
+  "normal_project_save": "Initial non-overwriting creation followed by one ordinary save of that same newly created project to persist its configured fixture; never replace an external file.",
+  "no_publication": "No commits, pushes, GitHub comments, closure or map updates.",
+  "partial_contract_revision": "The human confirmed removing mid-task task cancellation. Ordinary prompts wait for task completion or a pause requiring input; simulation stop remains the control exception being investigated. No emergency-stop guarantee."
+}

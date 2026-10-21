@@ -1,0 +1,6 @@
+{"event": "context_entered", "monotonic": 257671.015, "context": "transport", "task_id": 2543411164544}
+{"event": "context_entered", "monotonic": 257671.031, "context": "session", "task_id": 2543411164544}
+{"event": "context_exit_started", "monotonic": 257674.078, "context": "session", "task_id": 2543411164544}
+{"event": "context_boundary_finished", "monotonic": 257674.078, "context": "session", "entered": true, "task_id": 2543411164544}
+{"event": "context_exit_started", "monotonic": 257674.078, "context": "transport", "task_id": 2543411164544}
+{"event": "context_boundary_finished", "monotonic": 257676.078, "context": "transport", "entered": true, "task_id": 2543411164544}

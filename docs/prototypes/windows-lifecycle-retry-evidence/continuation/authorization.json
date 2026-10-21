@@ -1,0 +1,16 @@
+{
+  "record_kind": "unrun remainder of the same user-authorized four-scenario replacement round",
+  "user_confirmation": "Fix it and rerun the missing lifecycle cheks",
+  "maximum_scenarios": 2,
+  "maximum_total_unique_scenarios": 4,
+  "maximum_seconds": 300,
+  "time_budget_is_cumulative_with_final_02": true,
+  "includes_cleanup": true,
+  "retries": 0,
+  "target": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\opencode\\cst-lifecycle-final-03",
+  "scenarios": ["startup_timeout", "stalled_shutdown"],
+  "preserve": "final-01 and final-02 sources, targets, ledgers and markers remain unchanged. Do not repeat the crash/restart or startup-refusal scenarios.",
+  "scope": "Correct public SDK exception-name verification using saved evidence only, then execute the two untouched scenarios once. Cumulative execution including cleanup must stay within the existing 300-second authorization.",
+  "publication_authorized": false,
+  "closure_authorized_by_this_round": false
+}

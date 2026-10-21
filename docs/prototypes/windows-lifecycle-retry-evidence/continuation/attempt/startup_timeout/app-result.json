@@ -1,0 +1,195 @@
+{
+  "mode": "startup_timeout",
+  "synthetic_only": true,
+  "status": "failed_not_success",
+  "startup_allowance_s": 3,
+  "cleanup_allowance_s": 10,
+  "startup_started": 257671.015,
+  "primary_exception_types": [
+    "TimeoutError"
+  ],
+  "primary_failure": {
+    "exception_types": [
+      "TimeoutError"
+    ],
+    "category": "external_exception",
+    "frames": [
+      {
+        "file": "windows_lifecycle_remaining.py",
+        "function": "application",
+        "line": 402
+      },
+      {
+        "file": "contextlib.py",
+        "function": "__exit__",
+        "line": 158
+      },
+      {
+        "file": "_tasks.py",
+        "function": "fail_after",
+        "line": 178
+      },
+      {
+        "file": "contextlib.py",
+        "function": "__exit__",
+        "line": 158
+      },
+      {
+        "file": "_tasks.py",
+        "function": "fail_at",
+        "line": 155
+      }
+    ],
+    "children": []
+  },
+  "startup_or_task_failure_observed": 257674.078,
+  "cleanup_started": 257674.078,
+  "context_outcomes": [
+    {
+      "context": "session",
+      "entered": true,
+      "owner_task_id": 2543411164544,
+      "exit_task_id": 2543411164544,
+      "boundary_exception_types": [
+        "ExceptionGroup",
+        "TimeoutError"
+      ],
+      "body_exception_types": [
+        "TimeoutError"
+      ],
+      "same_exception_object_as_body": false
+    },
+    {
+      "context": "transport",
+      "entered": true,
+      "owner_task_id": 2543411164544,
+      "exit_task_id": 2543411164544,
+      "boundary_exception_types": [
+        "ExceptionGroup",
+        "ExceptionGroup",
+        "TimeoutError"
+      ],
+      "body_exception_types": [
+        "ExceptionGroup",
+        "TimeoutError"
+      ],
+      "same_exception_object_as_body": false
+    }
+  ],
+  "final_exception_types": [
+    "ExceptionGroup",
+    "ExceptionGroup",
+    "TimeoutError"
+  ],
+  "final_failure": {
+    "exception_types": [
+      "ExceptionGroup",
+      "ExceptionGroup",
+      "TimeoutError"
+    ],
+    "category": "external_exception",
+    "frames": [
+      {
+        "file": "contextlib.py",
+        "function": "__aexit__",
+        "line": 231
+      },
+      {
+        "file": "windows_lifecycle_remaining.py",
+        "function": "observed_context",
+        "line": 272
+      },
+      {
+        "file": "contextlib.py",
+        "function": "__aexit__",
+        "line": 231
+      },
+      {
+        "file": "stdio.py",
+        "function": "stdio_client",
+        "line": 201
+      },
+      {
+        "file": "_asyncio.py",
+        "function": "__aexit__",
+        "line": 847
+      }
+    ],
+    "children": [
+      {
+        "exception_types": [
+          "ExceptionGroup",
+          "TimeoutError"
+        ],
+        "category": "external_exception",
+        "frames": [
+          {
+            "file": "windows_lifecycle_remaining.py",
+            "function": "application",
+            "line": 397
+          },
+          {
+            "file": "contextlib.py",
+            "function": "__aexit__",
+            "line": 231
+          },
+          {
+            "file": "windows_lifecycle_remaining.py",
+            "function": "observed_context",
+            "line": 272
+          },
+          {
+            "file": "session.py",
+            "function": "__aexit__",
+            "line": 514
+          },
+          {
+            "file": "_asyncio.py",
+            "function": "__aexit__",
+            "line": 847
+          }
+        ],
+        "children": [
+          {
+            "exception_types": [
+              "TimeoutError"
+            ],
+            "category": "external_exception",
+            "frames": [
+              {
+                "file": "windows_lifecycle_remaining.py",
+                "function": "application",
+                "line": 402
+              },
+              {
+                "file": "contextlib.py",
+                "function": "__exit__",
+                "line": 158
+              },
+              {
+                "file": "_tasks.py",
+                "function": "fail_after",
+                "line": 178
+              },
+              {
+                "file": "contextlib.py",
+                "function": "__exit__",
+                "line": 158
+              },
+              {
+                "file": "_tasks.py",
+                "function": "fail_at",
+                "line": 155
+              }
+            ],
+            "children": []
+          }
+        ]
+      }
+    ]
+  },
+  "application_total_s": 5.0939999999827705,
+  "cleanup_s": 2.0309999999881256,
+  "cleanup_allowance_exceeded": false,
+  "recovery_marker_retained": false
+}

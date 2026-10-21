@@ -1,0 +1,202 @@
+{
+  "case": "leave-open-repeat",
+  "target": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\opencode\\cst-lifetime-native\\leave-open-repeat.cst",
+  "attempts": [
+    {
+      "name": "native_connect",
+      "admitted": 244898.406,
+      "state": "received",
+      "dispatch": 244898.421,
+      "response": {
+        "status": "connected",
+        "de_pid": 11548,
+        "newly_started": true,
+        "existing_de_count": 0,
+        "open_project_count": 0
+      },
+      "is_error": false,
+      "settled": 244917.406,
+      "total_s": 19.0
+    },
+    {
+      "name": "native_create",
+      "admitted": 244917.421,
+      "state": "received",
+      "dispatch": 244917.515,
+      "response": {
+        "status": "created",
+        "filename_matches": true,
+        "only_expected_project_open": true
+      },
+      "is_error": false,
+      "settled": 244924.0,
+      "total_s": 6.579
+    },
+    {
+      "name": "native_status",
+      "admitted": 244924.0,
+      "state": "received",
+      "dispatch": 244924.0,
+      "response": {
+        "status": "observed",
+        "de_pid": 11548,
+        "filename_matches": true,
+        "only_expected_project_open": true
+      },
+      "is_error": false,
+      "settled": 244924.015,
+      "total_s": 0.015
+    },
+    {
+      "name": "native_disconnect",
+      "admitted": 244924.015,
+      "state": "received",
+      "dispatch": 244924.015,
+      "response": {
+        "status": "disconnected",
+        "filename_matches": true,
+        "only_expected_project_open": true
+      },
+      "is_error": false,
+      "settled": 244924.031,
+      "total_s": 0.016
+    }
+  ],
+  "versions": {
+    "mcp": "2.3.0",
+    "anyio": "4.15.1"
+  },
+  "source_sha256": {
+    "windows_lifetime_native.py": "AB3F2B110C8E2B44D9195D10B8F44A4B1B352F782B5202D2D2565FD23097ECB2",
+    "windows_lifetime_native_peer.py": "0E67D2AF6EACA4241744F19B616E17F36435A414ABB90365E6BF0CB470C88379"
+  },
+  "manual_confirmation_required": false,
+  "continuation": null,
+  "wrapper_reserve_seconds": 30,
+  "case_maximum_seconds": 300,
+  "startup_s": 2.5,
+  "processes": [
+    {
+      "pid": 11548,
+      "parent_pid": 31200,
+      "executable_basename": "CST DESIGN ENVIRONMENT_AMD64.exe",
+      "role": "cst_instance",
+      "in_any_job": true,
+      "creation_filetime": 134370503828350688
+    },
+    {
+      "pid": 31200,
+      "parent_pid": 11540,
+      "executable_basename": "python.exe",
+      "role": "peer",
+      "in_any_job": true,
+      "creation_filetime": 134370503812637359
+    },
+    {
+      "pid": 11540,
+      "parent_pid": 17592,
+      "executable_basename": "python.exe",
+      "role": "launcher",
+      "in_any_job": true,
+      "creation_filetime": 134370503812486873
+    },
+    {
+      "pid": 17592,
+      "parent_pid": 11384,
+      "executable_basename": "uv.exe",
+      "role": "launcher",
+      "in_any_job": true,
+      "creation_filetime": 134370503812038936
+    },
+    {
+      "pid": 32620,
+      "parent_pid": 17592,
+      "executable_basename": "conhost.exe",
+      "role": "observed_descendant",
+      "in_any_job": true,
+      "creation_filetime": 134370503812119399
+    },
+    {
+      "pid": 11608,
+      "parent_pid": 11548,
+      "executable_basename": "DBStorageServer_AMD64.exe",
+      "role": "observed_descendant",
+      "in_any_job": true,
+      "creation_filetime": 134370503842099737
+    }
+  ],
+  "windows_before_exit_action": {
+    "visible_count": 2,
+    "expected_project_title_count": 1
+  },
+  "alive_before_exit_action": {
+    "11548": true,
+    "31200": true,
+    "11540": true,
+    "17592": true,
+    "32620": true,
+    "11608": true
+  },
+  "alive_after_exit_action": {
+    "11548": true,
+    "31200": true,
+    "11540": true,
+    "17592": true,
+    "32620": true,
+    "11608": true
+  },
+  "session_exit_returned": 244924.031,
+  "transport_exit_returned": 244924.437,
+  "cleanup_s": 0.406,
+  "post_teardown_samples": [
+    {
+      "after_teardown_s": 0.0,
+      "alive": {
+        "11548": true,
+        "31200": false,
+        "11540": false,
+        "17592": false,
+        "32620": true,
+        "11608": true
+      }
+    },
+    {
+      "after_teardown_s": 0.063,
+      "alive": {
+        "11548": true,
+        "31200": false,
+        "11540": false,
+        "17592": false,
+        "32620": false,
+        "11608": false
+      }
+    },
+    {
+      "after_teardown_s": 0.125,
+      "alive": {
+        "11548": false,
+        "31200": false,
+        "11540": false,
+        "17592": false,
+        "32620": false,
+        "11608": false
+      }
+    }
+  ],
+  "observation_window_s": 0.125,
+  "final_alive": {
+    "11548": false,
+    "31200": false,
+    "11540": false,
+    "17592": false,
+    "32620": false,
+    "11608": false
+  },
+  "windows_after_teardown": {
+    "visible_count": 0,
+    "expected_project_title_count": 0
+  },
+  "saved_file_exists": true,
+  "instance_observation": "identified_DE_process_terminated",
+  "total_s": 28.656
+}

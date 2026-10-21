@@ -1,0 +1,13 @@
+﻿{
+    "id":  "dipole-stop-01",
+    "started_utc":  "2026-10-21T12:30:28.3213409Z",
+    "ended_utc":  "2026-10-21T12:31:07.9117715Z",
+    "outer_elapsed_s":  39.5857187,
+    "exit_code":  0,
+    "launch_error_type":  null,
+    "total_ceiling_exceeded":  false,
+    "outer_overhead_s":  2.3047186999827716,
+    "startup_upper_s":  4.1797186999827716,
+    "cleanup_upper_s":  2.8517186999741568,
+    "complete_allowances_verified":  true
+}

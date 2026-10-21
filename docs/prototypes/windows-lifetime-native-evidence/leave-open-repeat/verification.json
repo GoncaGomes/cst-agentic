@@ -1,0 +1,20 @@
+{
+  "repeat_evidence_verified": true,
+  "new_native_calls": 4,
+  "cumulative_calls": 13,
+  "maximum_cumulative_calls": 13,
+  "maximum_cumulative_seconds": 900,
+  "charged_seconds_rounded": 579.901152,
+  "outer_case_seconds": 29.270096,
+  "case_maximum_seconds": 300,
+  "old_failure_and_recovery_marker_preserved": true,
+  "executed_source_snapshots_match": true,
+  "one_save_and_no_explicit_instance_close": true,
+  "identified_de_and_all_tracked_processes_terminated": true,
+  "manual_lifetime_confirmation_required": false,
+  "human_ui_actions_during_repeat": "Not independently observed or separately confirmed",
+  "native_api_calls_by_this_check": 0,
+  "git_or_tracker_writes_by_this_check": 0,
+  "verification_source_sha256": "35F8D7CBE5EC467DD1C51359EC72F2A195B6446B8E89BC82711F3FD2A191713F",
+  "qualification": "Prior timing qualifications retained; no causal isolation of native finalization, transport cleanup or human UI interaction."
+}

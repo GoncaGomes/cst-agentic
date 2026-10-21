@@ -1,0 +1,3 @@
+# Preserve accepted-decision and publication-audit bytes.
+* -text whitespace=cr-at-eol
+**/* -text whitespace=cr-at-eol

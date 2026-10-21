@@ -1,0 +1,17 @@
+{
+  "state": "completed_synthetic_observations",
+  "maximum_seconds": 300,
+  "maximum_scenarios": 2,
+  "maximum_total_unique_scenarios": 4,
+  "prior_execution_seconds": 9.144360299999999,
+  "scenarios_admitted": [
+    "startup_timeout",
+    "stalled_shutdown"
+  ],
+  "source_sha256": {
+    "windows_lifecycle_remaining.py": "7beac10dfbf5778faf0a6dde190e41f85cd23342eefc0fd91640b658143f4126",
+    "windows_lifecycle_final_processes.py": "1775dbfc16a7cb361c95053a28b9f09b80c63b3d3ebeb266363ba8c79ed837dd",
+    "windows_lifecycle_remaining_checks.py": "9de43db8d45f8e4580c1463e5cb8d3aa8bba578ddcbfd92e01741b7fb9ff91d7"
+  },
+  "elapsed_s": 11.484000000025844
+}

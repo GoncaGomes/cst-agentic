@@ -1,0 +1,84 @@
+{
+  "stage": "post_exit_observation",
+  "exit_code": 23,
+  "complete_invocation_s": 2.6560000000172295,
+  "alive_at_application_exit": {
+    "18012": false,
+    "16444": false,
+    "1896": false,
+    "36164": false,
+    "18984": false,
+    "37692": false,
+    "34888": false
+  },
+  "post_exit_samples": [
+    {
+      "monotonic": 257353.437,
+      "alive": {
+        "18012": false,
+        "16444": false,
+        "1896": false,
+        "36164": false,
+        "18984": false,
+        "37692": false,
+        "34888": false
+      }
+    }
+  ],
+  "all_tracked_terminated_before_containment_release": true,
+  "processes": [
+    {
+      "pid": 18012,
+      "parent_pid": 8768,
+      "executable_basename": "uv.exe",
+      "creation_time": "2026-10-21T13:27:15.143000+00:00"
+    },
+    {
+      "pid": 16444,
+      "parent_pid": 18012,
+      "executable_basename": "python.exe",
+      "creation_time": "2026-10-21T13:27:15.184000+00:00"
+    },
+    {
+      "pid": 1896,
+      "parent_pid": 16444,
+      "executable_basename": "python.exe",
+      "creation_time": "2026-10-21T13:27:15.201000+00:00"
+    },
+    {
+      "pid": 36164,
+      "parent_pid": 1896,
+      "executable_basename": "uv.exe",
+      "creation_time": "2026-10-21T13:27:16.483000+00:00"
+    },
+    {
+      "pid": 18984,
+      "parent_pid": 36164,
+      "executable_basename": "conhost.exe",
+      "creation_time": "2026-10-21T13:27:16.492000+00:00"
+    },
+    {
+      "pid": 37692,
+      "parent_pid": 36164,
+      "executable_basename": "python.exe",
+      "creation_time": "2026-10-21T13:27:16.534000+00:00"
+    },
+    {
+      "pid": 34888,
+      "parent_pid": 37692,
+      "executable_basename": "python.exe",
+      "creation_time": "2026-10-21T13:27:16.549000+00:00"
+    }
+  ],
+  "alive_after_containment_release": {
+    "18012": false,
+    "16444": false,
+    "1896": false,
+    "36164": false,
+    "18984": false,
+    "37692": false,
+    "34888": false
+  },
+  "all_tracked_terminated_after_containment_release": true,
+  "total_observed_s": 2.6560000000172295
+}

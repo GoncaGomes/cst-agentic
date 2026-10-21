@@ -1,0 +1,11 @@
+{
+  "evidence_kind": "human-provided",
+  "case": "leave-open-repeat",
+  "question": "During this run, did you only dismiss the license dialog, without closing CST itself?",
+  "answer_verbatim": "Yes, I only dismissed the license dialog.",
+  "interpretation": "The human reports dismissing only the educational-license dialog, not closing the main CST instance.",
+  "received_after": "Repeat native observations and the initial local verification record",
+  "qualification": "Human confirmation supplements the original observations; it is not an independent UI trace, new native observation, or proof of the exact cleanup mechanism.",
+  "native_calls": 0,
+  "publication_authorized": false
+}

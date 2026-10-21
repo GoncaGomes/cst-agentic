@@ -1,0 +1,3 @@
+{"event": "ready", "monotonic": 257672.187}
+{"event": "request", "monotonic": 257672.234, "method": "initialize"}
+{"event": "initialization_stalled", "monotonic": 257672.234}

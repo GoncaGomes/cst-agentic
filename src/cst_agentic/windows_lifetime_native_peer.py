@@ -1,6 +1,6 @@
 """THROWAWAY: fixed-target native lifetime peer, NOT the production CST server.
 
-Only the two human-approved blank projects are supported. No attachment, solver,
+Only the three human-approved blank targets are supported. No attachment, solver,
 VBA, save retry, model client, SDK patch, or automatic native cleanup operation.
 """
 
@@ -17,7 +17,9 @@ from pathlib import Path
 ROOT = Path(r"C:\Users\Lenovo\AppData\Local\Temp\opencode\cst-lifetime-native")
 INSTALL = Path(r"C:\Program Files (x86)\CST Studio Suite 2025")
 NAMES = ("native_connect", "native_create", "native_status", "native_disconnect", "native_close")
-TARGETS = {case: ROOT / (case + ".cst") for case in ("leave-open", "authorized-close")}
+TARGETS = {
+    case: ROOT / (case + ".cst") for case in ("leave-open", "authorized-close", "leave-open-repeat")
+}
 RESUME_FLAG = "--resume-approved-logging-fix"
 
 
@@ -95,7 +97,7 @@ class NativeFixture:
             self.thread = current
         if current != self.thread or self.halted:
             raise RuntimeError("peer_halted_or_owner_changed")
-        last = "native_disconnect" if self.case == "leave-open" else "native_close"
+        last = "native_close" if self.case == "authorized-close" else "native_disconnect"
         expected = ("native_connect", "native_create", "native_status", last)
         if self.step >= len(expected) or name != expected[self.step]:
             raise RuntimeError("unexpected_operation_order")

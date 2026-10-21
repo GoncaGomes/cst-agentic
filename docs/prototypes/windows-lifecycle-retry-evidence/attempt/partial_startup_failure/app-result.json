@@ -1,0 +1,190 @@
+{
+  "mode": "partial_startup_failure",
+  "synthetic_only": true,
+  "status": "failed_not_success",
+  "startup_allowance_s": 10,
+  "cleanup_allowance_s": 10,
+  "startup_started": 257356.0,
+  "primary_exception_types": [
+    "MCPError"
+  ],
+  "primary_failure": {
+    "exception_types": [
+      "MCPError"
+    ],
+    "category": "external_exception",
+    "frames": [
+      {
+        "file": "windows_lifecycle_retry.py",
+        "function": "application",
+        "line": 404
+      },
+      {
+        "file": "session.py",
+        "function": "initialize",
+        "line": 654
+      },
+      {
+        "file": "session.py",
+        "function": "send_request",
+        "line": 586
+      },
+      {
+        "file": "jsonrpc_dispatcher.py",
+        "function": "send_raw_request",
+        "line": 461
+      }
+    ],
+    "children": []
+  },
+  "startup_or_task_failure_observed": 257357.14,
+  "cleanup_started": 257357.14,
+  "context_outcomes": [
+    {
+      "context": "session",
+      "entered": true,
+      "owner_task_id": 1732123571584,
+      "exit_task_id": 1732123571584,
+      "boundary_exception_types": [
+        "ExceptionGroup",
+        "MCPError"
+      ],
+      "body_exception_types": [
+        "MCPError"
+      ],
+      "same_exception_object_as_body": false
+    },
+    {
+      "context": "transport",
+      "entered": true,
+      "owner_task_id": 1732123571584,
+      "exit_task_id": 1732123571584,
+      "boundary_exception_types": [
+        "ExceptionGroup",
+        "ExceptionGroup",
+        "MCPError"
+      ],
+      "body_exception_types": [
+        "ExceptionGroup",
+        "MCPError"
+      ],
+      "same_exception_object_as_body": false
+    }
+  ],
+  "final_exception_types": [
+    "ExceptionGroup",
+    "ExceptionGroup",
+    "MCPError"
+  ],
+  "final_failure": {
+    "exception_types": [
+      "ExceptionGroup",
+      "ExceptionGroup",
+      "MCPError"
+    ],
+    "category": "external_exception",
+    "frames": [
+      {
+        "file": "contextlib.py",
+        "function": "__aexit__",
+        "line": 231
+      },
+      {
+        "file": "windows_lifecycle_retry.py",
+        "function": "observed_context",
+        "line": 271
+      },
+      {
+        "file": "contextlib.py",
+        "function": "__aexit__",
+        "line": 231
+      },
+      {
+        "file": "stdio.py",
+        "function": "stdio_client",
+        "line": 201
+      },
+      {
+        "file": "_asyncio.py",
+        "function": "__aexit__",
+        "line": 847
+      }
+    ],
+    "children": [
+      {
+        "exception_types": [
+          "ExceptionGroup",
+          "MCPError"
+        ],
+        "category": "external_exception",
+        "frames": [
+          {
+            "file": "windows_lifecycle_retry.py",
+            "function": "application",
+            "line": 396
+          },
+          {
+            "file": "contextlib.py",
+            "function": "__aexit__",
+            "line": 231
+          },
+          {
+            "file": "windows_lifecycle_retry.py",
+            "function": "observed_context",
+            "line": 271
+          },
+          {
+            "file": "session.py",
+            "function": "__aexit__",
+            "line": 514
+          },
+          {
+            "file": "_asyncio.py",
+            "function": "__aexit__",
+            "line": 847
+          }
+        ],
+        "children": [
+          {
+            "exception_types": [
+              "MCPError"
+            ],
+            "category": "external_exception",
+            "frames": [
+              {
+                "file": "windows_lifecycle_retry.py",
+                "function": "observed_context",
+                "line": 275
+              },
+              {
+                "file": "windows_lifecycle_retry.py",
+                "function": "application",
+                "line": 404
+              },
+              {
+                "file": "session.py",
+                "function": "initialize",
+                "line": 654
+              },
+              {
+                "file": "session.py",
+                "function": "send_request",
+                "line": 586
+              },
+              {
+                "file": "jsonrpc_dispatcher.py",
+                "function": "send_raw_request",
+                "line": 461
+              }
+            ],
+            "children": []
+          }
+        ]
+      }
+    ]
+  },
+  "application_total_s": 1.5150000000139698,
+  "cleanup_s": 0.375,
+  "cleanup_allowance_exceeded": false,
+  "recovery_marker_retained": false
+}

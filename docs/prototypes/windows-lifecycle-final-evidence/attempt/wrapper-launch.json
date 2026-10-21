@@ -1,0 +1,7 @@
+﻿{
+    "state":  "admitted_once",
+    "started_utc":  "2026-10-21T13:05:52.3637616Z",
+    "maximum_seconds":  300,
+    "maximum_scenarios":  4,
+    "driver_sha256":  "DE5B5EF1316AB7675F6B4AF071C4CF79C050CE7C147176D914CB164F6C68C614"
+}

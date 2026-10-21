@@ -1,0 +1,55 @@
+{
+  "native_free_post_run_verification": true,
+  "prior_evidence_files_unchanged": 65,
+  "status": "completed",
+  "tool_calls": 38,
+  "outer_elapsed_s": 39.5857187,
+  "complete_time_allowances_verified": true,
+  "all_tracked_terminated": true,
+  "human_reconciliation_required": false,
+  "stop_calls": 1,
+  "wait_calls": 1,
+  "solver_states_observed": [
+    true,
+    true,
+    true,
+    false
+  ],
+  "CST_alive_at_idle_observation": true,
+  "queue_overlap_evidenced": true,
+  "stop_metrics": [
+    {
+      "queue_s": 4.0789999999979045,
+      "dispatch_to_settlement_s": 0.015000000013969839,
+      "total_s": 4.094000000011874,
+      "state": "received"
+    }
+  ],
+  "idle_observation_after_stop_response_s": 4.202999999979511,
+  "idle_observation_after_stop_intent_s": 8.296999999991385,
+  "native_abort_message_observed": true,
+  "evidence_finalizer_sha256": "4d2d9a67f908ac27f191d2399345c2c33571f3a35bf9b58fb925693c04ec56f1",
+  "inventory_sha256": {
+    "authorization.json": "831441ecc348cef2d4f05f4c95c122f5f5fd6888cd0902f3ccc7711a3f026173",
+    "round.json": "aec27e85f339f982b941512a718977032cee3e39f35d506b2caf2bfabb442519",
+    "observations.json": "36379d2ea05bcf567fb57a4143e01171366f90dc4aaefb9e183b95ea1dd051df",
+    "native-free-checks.json": "0f44e8eead5152f0c53673d0569e7098522d175b77ff2ad8f8bd41739db95d0c",
+    "catalogue.json": "d5eb5bd223c5b84616d33d7c150f87ccbc468921578bdb2672f8a634ed2b49c6",
+    "peer-identity.json": "3627a89a4b606881145fc473078e220b7fb5add7df963a8322fe6d21680c2aba",
+    "launch-identity.json": "898e0da89030777d3fda715f2342193ce88d2cfcf8afd817cefe93115d2d6702",
+    "peer-events.jsonl": "26b870cd067ec2589c36b3b5987d1cbd505c308c135a7c6ec800ed9970c03a78",
+    "settlements.jsonl": "3f080f457306043a5a40505ce911fa7a778a0c1c3bb4900594928004bc73e95e",
+    "wait-entered.json": "336d9c2751c398c9a0a5e4d1b774c3ff016df8f1f9ccb1afee27b901f9f3f81d",
+    "owned-native-log.json": "6dd89599476b4ea28595e5aef9d751d7a612e22d96643157693ede46f65d578a",
+    "outer-observation.json": "dfdbac438dc43be5b1e79e6d357dc728e873f787b1e61d752fad5b98db66e59b",
+    "sources/run_dipole.py": "1e253f404ded1092c60487c5a972041f0fc6ded1b8db9cab9e81f444dbbeea8f",
+    "sources/windows_solver_stop.py": "6919cd8e8beffcb2fd5db5c7a6a7ec3062c5eaa711ed2de00e88e902e3b5a7b9",
+    "sources/windows_solver_stop_checks.py": "a42ff6117562115dfcb33171369e4cf343f88e78730f92910e1ba6382e7a885c",
+    "sources/windows_solver_stop_peer.py": "f7d702846929fae8d601fc1743dec0c80228dad6b682c580306102011e00f852",
+    "sources/windows_solver_stop_plan.py": "4b1c6d2b8e78b3a9935825bcea14146c41750cb9864a0867648f1f0a08c0fb2b",
+    "sources/windows_solver_stop_processes.py": "343af18fa7ed66bbc4e801cb395dd7d495033f1d0e34df72cef394bcf8efa1ee",
+    "wrapper-launch.json": "4249c3fc05fb3ee99e0ce9be2cbc2d13203a4832d71a021ab688d4d383bfef5d"
+  },
+  "publication_authorized": false,
+  "qualification": "Running->accepted stop->idle is a bounded observation, not numerical success, isolated abort causation or production/crash-recovery acceptance."
+}

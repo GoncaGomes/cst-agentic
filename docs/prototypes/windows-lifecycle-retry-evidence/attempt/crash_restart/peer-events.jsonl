@@ -1,0 +1,5 @@
+{"event": "ready", "monotonic": 257353.25}
+{"event": "request", "monotonic": 257353.359, "method": "initialize"}
+{"event": "request", "monotonic": 257353.359, "method": "tools/list"}
+{"event": "request", "monotonic": 257353.375, "method": "tools/call"}
+{"event": "work_entered_with_marker", "monotonic": 257353.375, "operation": "work"}

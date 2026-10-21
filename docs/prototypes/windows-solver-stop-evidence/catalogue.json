@@ -1,0 +1,674 @@
+{
+  "cst_execute_vba": {
+    "type": "object",
+    "properties": {
+      "code": {
+        "type": "string",
+        "description": "VBA code to execute in CST Studio. Code matching the best-effort denylist (program launching, COM objects, file I/O, native API declarations, ...) is rejected; this screening is not a sandbox."
+      }
+    },
+    "required": [
+      "code"
+    ]
+  },
+  "cst_load_material": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string",
+        "description": "Name for the material in the project"
+      },
+      "library_name": {
+        "type": "string",
+        "description": "Name in the CST library (e.g. 'Copper (annealed)')"
+      },
+      "library_path": {
+        "type": "string",
+        "description": "Directory containing native .mtd material files. Overrides the configured CST installation's Library/Materials directory."
+      }
+    },
+    "required": [
+      "name",
+      "library_name"
+    ]
+  },
+  "cst_create_cylinder": {
+    "type": "object",
+    "properties": {
+      "component": {
+        "type": "string",
+        "description": "Component name"
+      },
+      "name": {
+        "type": "string",
+        "description": "Solid name"
+      },
+      "material": {
+        "type": "string",
+        "description": "Material name",
+        "default": "PEC"
+      },
+      "axis": {
+        "type": "string",
+        "enum": [
+          "x",
+          "y",
+          "z"
+        ],
+        "description": "Cylinder axis"
+      },
+      "outer_radius": {
+        "type": [
+          "number",
+          "string"
+        ],
+        "minLength": 1,
+        "description": "Outer radius: finite JSON number or nonempty single-line CST expression; preserved in model history. CST reports semantic expression errors."
+      },
+      "inner_radius": {
+        "type": [
+          "number",
+          "string"
+        ],
+        "minLength": 1,
+        "description": "Inner radius (0 for solid): finite JSON number or nonempty single-line CST expression; preserved in model history. CST reports semantic expression errors.",
+        "default": 0
+      },
+      "center_x": {
+        "type": [
+          "number",
+          "string"
+        ],
+        "minLength": 1,
+        "description": "Center X coordinate: finite JSON number or nonempty single-line CST expression; preserved in model history. CST reports semantic expression errors.",
+        "default": 0
+      },
+      "center_y": {
+        "type": [
+          "number",
+          "string"
+        ],
+        "minLength": 1,
+        "description": "Center Y coordinate: finite JSON number or nonempty single-line CST expression; preserved in model history. CST reports semantic expression errors.",
+        "default": 0
+      },
+      "center_z": {
+        "type": [
+          "number",
+          "string"
+        ],
+        "minLength": 1,
+        "description": "Center Z coordinate: finite JSON number or nonempty single-line CST expression; preserved in model history. CST reports semantic expression errors.",
+        "default": 0
+      },
+      "range_min": {
+        "type": [
+          "number",
+          "string"
+        ],
+        "minLength": 1,
+        "description": "Axis range minimum: finite JSON number or nonempty single-line CST expression; preserved in model history. CST reports semantic expression errors."
+      },
+      "range_max": {
+        "type": [
+          "number",
+          "string"
+        ],
+        "minLength": 1,
+        "description": "Axis range maximum: finite JSON number or nonempty single-line CST expression; preserved in model history. CST reports semantic expression errors."
+      }
+    },
+    "required": [
+      "component",
+      "name",
+      "axis",
+      "outer_radius",
+      "range_min",
+      "range_max"
+    ]
+  },
+  "cst_add_discrete_port": {
+    "type": "object",
+    "properties": {
+      "port_number": {
+        "type": "integer",
+        "description": "Port number (1-999)"
+      },
+      "impedance": {
+        "type": "number",
+        "description": "Port impedance in ohms (default 50)",
+        "default": 50.0
+      },
+      "x1": {
+        "type": "number",
+        "description": "X coordinate of the start point (mm)"
+      },
+      "y1": {
+        "type": "number",
+        "description": "Y coordinate of the start point (mm)"
+      },
+      "z1": {
+        "type": "number",
+        "description": "Z coordinate of the start point (mm)"
+      },
+      "x2": {
+        "type": "number",
+        "description": "X coordinate of the end point (mm)"
+      },
+      "y2": {
+        "type": "number",
+        "description": "Y coordinate of the end point (mm)"
+      },
+      "z2": {
+        "type": "number",
+        "description": "Z coordinate of the end point (mm)"
+      },
+      "port_type": {
+        "type": "string",
+        "enum": [
+          "SParameter",
+          "Voltage",
+          "Current"
+        ],
+        "description": "Excitation type (default SParameter)",
+        "default": "SParameter"
+      }
+    },
+    "required": [
+      "port_number",
+      "x1",
+      "y1",
+      "z1",
+      "x2",
+      "y2",
+      "z2"
+    ]
+  },
+  "cst_list_ports": {
+    "type": "object",
+    "properties": {},
+    "required": []
+  },
+  "cst_set_boundary": {
+    "type": "object",
+    "properties": {
+      "x_min": {
+        "type": "string",
+        "enum": [
+          "open",
+          "open (add space)",
+          "electric",
+          "magnetic",
+          "periodic",
+          "conducting wall",
+          "expanded open"
+        ],
+        "description": "Boundary condition on the -X face"
+      },
+      "x_max": {
+        "type": "string",
+        "enum": [
+          "open",
+          "open (add space)",
+          "electric",
+          "magnetic",
+          "periodic",
+          "conducting wall",
+          "expanded open"
+        ],
+        "description": "Boundary condition on the +X face"
+      },
+      "y_min": {
+        "type": "string",
+        "enum": [
+          "open",
+          "open (add space)",
+          "electric",
+          "magnetic",
+          "periodic",
+          "conducting wall",
+          "expanded open"
+        ],
+        "description": "Boundary condition on the -Y face"
+      },
+      "y_max": {
+        "type": "string",
+        "enum": [
+          "open",
+          "open (add space)",
+          "electric",
+          "magnetic",
+          "periodic",
+          "conducting wall",
+          "expanded open"
+        ],
+        "description": "Boundary condition on the +Y face"
+      },
+      "z_min": {
+        "type": "string",
+        "enum": [
+          "open",
+          "open (add space)",
+          "electric",
+          "magnetic",
+          "periodic",
+          "conducting wall",
+          "expanded open"
+        ],
+        "description": "Boundary condition on the -Z face"
+      },
+      "z_max": {
+        "type": "string",
+        "enum": [
+          "open",
+          "open (add space)",
+          "electric",
+          "magnetic",
+          "periodic",
+          "conducting wall",
+          "expanded open"
+        ],
+        "description": "Boundary condition on the +Z face"
+      },
+      "waveguide_port_faces": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "enum": [
+            "x_min",
+            "x_max",
+            "y_min",
+            "y_max",
+            "z_min",
+            "z_max"
+          ]
+        },
+        "maxItems": 6,
+        "default": [],
+        "description": "Optional: faces that carry a waveguide port with structure touching them. A port on a plain 'open' face is reported as an error-level warning."
+      }
+    },
+    "required": [
+      "x_min",
+      "x_max",
+      "y_min",
+      "y_max",
+      "z_min",
+      "z_max"
+    ]
+  },
+  "cst_set_background": {
+    "type": "object",
+    "properties": {
+      "material": {
+        "type": "string",
+        "enum": [
+          "Normal",
+          "PEC",
+          "PMC"
+        ],
+        "description": "Background material type (default Normal)",
+        "default": "Normal"
+      },
+      "epsilon": {
+        "type": "number",
+        "description": "Relative permittivity (default 1.0, used when material is Normal)",
+        "default": 1.0
+      },
+      "mu": {
+        "type": "number",
+        "description": "Relative permeability (default 1.0, used when material is Normal)",
+        "default": 1.0
+      }
+    },
+    "required": []
+  },
+  "cst_set_symmetry": {
+    "type": "object",
+    "properties": {
+      "x_plane": {
+        "type": "string",
+        "enum": [
+          "none",
+          "electric",
+          "magnetic"
+        ],
+        "description": "Symmetry condition on the YZ plane (default none)",
+        "default": "none"
+      },
+      "y_plane": {
+        "type": "string",
+        "enum": [
+          "none",
+          "electric",
+          "magnetic"
+        ],
+        "description": "Symmetry condition on the XZ plane (default none)",
+        "default": "none"
+      },
+      "z_plane": {
+        "type": "string",
+        "enum": [
+          "none",
+          "electric",
+          "magnetic"
+        ],
+        "description": "Symmetry condition on the XY plane (default none)",
+        "default": "none"
+      }
+    },
+    "required": []
+  },
+  "cst_set_frequency_range": {
+    "type": "object",
+    "properties": {
+      "f_min": {
+        "type": "number",
+        "description": "Minimum frequency in GHz"
+      },
+      "f_max": {
+        "type": "number",
+        "description": "Maximum frequency in GHz"
+      }
+    },
+    "required": [
+      "f_min",
+      "f_max"
+    ]
+  },
+  "cst_set_mesh_type": {
+    "type": "object",
+    "properties": {
+      "mesh_type": {
+        "type": "string",
+        "enum": [
+          "Hexahedral",
+          "Tetrahedral",
+          "Surface",
+          "Hexahedral TLM"
+        ],
+        "description": "Type of mesh to use"
+      }
+    },
+    "required": [
+      "mesh_type"
+    ]
+  },
+  "cst_set_mesh_density": {
+    "type": "object",
+    "properties": {
+      "cells_per_wavelength": {
+        "type": "integer",
+        "description": "Number of mesh cells per wavelength (default 15)",
+        "default": 15
+      },
+      "min_cells": {
+        "type": "integer",
+        "description": "Minimum number of mesh steps across any structure (default 5)",
+        "default": 5
+      },
+      "ratio_limit": {
+        "type": "number",
+        "description": "Maximum ratio between adjacent mesh cells (default 20; hexahedral only)",
+        "default": 20
+      },
+      "mesh_type": {
+        "type": "string",
+        "enum": [
+          "Hex",
+          "Tet"
+        ],
+        "default": "Hex",
+        "description": "Which MeshSettings map to write: 'Hex' (time domain / hexahedral) or 'Tet' (frequency domain / tetrahedral)."
+      }
+    },
+    "required": []
+  },
+  "cst_add_mesh_refinement": {
+    "type": "object",
+    "properties": {
+      "component": {
+        "type": "string",
+        "description": "Component name containing the solid"
+      },
+      "solid": {
+        "type": "string",
+        "description": "Solid name to refine mesh around"
+      },
+      "refinement_factor": {
+        "type": "number",
+        "description": "Refinement factor \u2014 mesh cells are divided by this value (default 2.0)",
+        "default": 2.0
+      }
+    },
+    "required": [
+      "component",
+      "solid"
+    ]
+  },
+  "cst_set_adaptive_mesh": {
+    "type": "object",
+    "properties": {
+      "enabled": {
+        "type": "boolean",
+        "description": "Enable or disable adaptive meshing (default true)",
+        "default": true
+      },
+      "max_passes": {
+        "type": "integer",
+        "description": "Maximum adaptive refinement passes, at least 2 when enabled (default 3). Not applied when disabled.",
+        "default": 3
+      },
+      "threshold": {
+        "type": "number",
+        "description": "Maximum linear magnitude of the complex S-parameter difference between successive passes, from 0 to 1 (default 0.02). Not applied when disabled.",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0.02
+      }
+    },
+    "required": []
+  },
+  "cst_get_mesh_info": {
+    "type": "object",
+    "properties": {},
+    "required": []
+  },
+  "cst_configure_time_domain_solver": {
+    "type": "object",
+    "properties": {
+      "accuracy": {
+        "type": "number",
+        "description": "Steady-state accuracy in dB (Solver.SteadyStateLimit, integer in [-80, 0]) \u2014 solver stops when energy has decayed to this level (default -40)",
+        "default": -40,
+        "minimum": -80,
+        "maximum": 0
+      },
+      "max_time_steps": {
+        "type": "integer",
+        "description": "Deprecated/ignored: CST 2026's Solver has no MaxTimeSteps (a note is returned when non-zero). 0 means automatic (default 0)",
+        "default": 0
+      },
+      "stimulation_port": {
+        "type": "integer",
+        "description": "Port number used for excitation (default 1)",
+        "default": 1
+      },
+      "excitation_type": {
+        "type": "string",
+        "enum": [
+          "Gaussian",
+          "Rectangular",
+          "Smooth"
+        ],
+        "description": "Excitation signal shape (default Gaussian). Only Gaussian (CST's default signal) is applied; other shapes need an excitation-signal definition and return a note.",
+        "default": "Gaussian"
+      },
+      "normalize_to_fixed_impedance": {
+        "type": "boolean",
+        "description": "Normalize S-parameters to a fixed reference impedance (default true; Solver.AutoNormImpedance True + NormingImpedance). False: port impedance.",
+        "default": true
+      },
+      "fixed_impedance": {
+        "type": "number",
+        "description": "Reference impedance in ohms when normalization is enabled (default 50)",
+        "default": 50
+      },
+      "activate_power_loss_1d": {
+        "type": "boolean",
+        "default": false,
+        "description": "Enable Solver.ActivatePowerLoss1DMonitor: 1D 'Loss in Dielectrics/Metals' curves. Without it losses exist only at 3D field-monitor frequencies, so the power balance (cst_check_power_balance) cannot be checked at farfield frequencies. Omitted/false leaves the project setting unchanged."
+      },
+      "power_loss_1d_use_field_monitors": {
+        "type": "boolean",
+        "default": true,
+        "description": "Use3DFieldMonitorForPowerLoss1DMonitor (losses at 3D field-monitor frequencies)."
+      },
+      "power_loss_1d_use_farfield_monitors": {
+        "type": "boolean",
+        "default": true,
+        "description": "UseFarFieldMonitorForPowerLoss1DMonitor (losses at farfield-monitor frequencies; internal full-domain monitors, extra memory)."
+      },
+      "power_loss_1d_extra_frequencies": {
+        "type": "array",
+        "items": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "maxItems": 64,
+        "default": [],
+        "description": "Extra frequencies (project unit) via UseExtraFreqForPowerLoss1DMonitor + AddPowerLoss1DMonitorExtraFreq."
+      },
+      "power_loss_1d_per_solid": {
+        "type": "boolean",
+        "default": false,
+        "description": "PowerLoss1DMonitorPerSolid: extra per-solid loss subfolder."
+      }
+    },
+    "required": []
+  },
+  "cst_get_solver_info": {
+    "type": "object",
+    "properties": {},
+    "required": []
+  },
+  "cst_add_field_monitor": {
+    "type": "object",
+    "properties": {
+      "monitor_type": {
+        "type": "string",
+        "description": "CST Monitor.FieldType: Efield, Hfield, Powerflow, Current, Powerloss, Eenergy, Henergy, Farfield, Fieldsource, Spacecharge, Particlecurrentdensity. Hfield also gives the surface current. Aliases such as 'surface current'/'Surfacecurrent' are translated to Hfield; anything else undocumented is rejected.",
+        "examples": [
+          "Efield",
+          "Hfield",
+          "Farfield",
+          "surface current"
+        ]
+      },
+      "frequency": {
+        "type": "number",
+        "description": "Monitor frequency in GHz."
+      },
+      "name": {
+        "type": "string",
+        "description": "Custom name for the monitor. If omitted, a name is auto-generated from the type and frequency, e.g. 'e-field (f=2.45)'."
+      }
+    },
+    "required": [
+      "monitor_type",
+      "frequency"
+    ]
+  },
+  "cst_run_simulation_async": {
+    "type": "object",
+    "properties": {
+      "solver_type": {
+        "type": "string",
+        "enum": [
+          "Time Domain",
+          "Frequency Domain",
+          "Eigenmode",
+          "Integral Equation"
+        ],
+        "description": "Solver type to use. If omitted, the currently configured solver is used. Options: 'Time Domain', 'Frequency Domain', 'Eigenmode', 'Integral Equation'."
+      },
+      "timeout_s": {
+        "type": "number",
+        "default": 30,
+        "exclusiveMinimum": 0,
+        "description": "Maximum CST Python API start-command duration in seconds."
+      }
+    },
+    "required": []
+  },
+  "cst_get_simulation_status": {
+    "type": "object",
+    "properties": {
+      "timeout_s": {
+        "type": "number",
+        "default": 30,
+        "exclusiveMinimum": 0
+      }
+    },
+    "required": []
+  },
+  "cst_wait_for_simulation": {
+    "type": "object",
+    "properties": {
+      "max_wait_s": {
+        "type": "number",
+        "default": 45.0,
+        "minimum": 0,
+        "maximum": 55.0,
+        "description": "Maximum seconds to wait in this call (0-55). 0 performs a single status check."
+      }
+    },
+    "required": []
+  },
+  "cst_stop_simulation": {
+    "type": "object",
+    "properties": {
+      "timeout_s": {
+        "type": "number",
+        "default": 30,
+        "exclusiveMinimum": 0
+      }
+    },
+    "required": []
+  },
+  "cst_read_project_log": {
+    "type": "object",
+    "properties": {},
+    "required": []
+  },
+  "fixture_connect": {
+    "type": "object",
+    "properties": {},
+    "required": [],
+    "additionalProperties": false
+  },
+  "fixture_create": {
+    "type": "object",
+    "properties": {},
+    "required": [],
+    "additionalProperties": false
+  },
+  "fixture_save": {
+    "type": "object",
+    "properties": {},
+    "required": [],
+    "additionalProperties": false
+  },
+  "fixture_identity": {
+    "type": "object",
+    "properties": {},
+    "required": [],
+    "additionalProperties": false
+  },
+  "fixture_close": {
+    "type": "object",
+    "properties": {},
+    "required": [],
+    "additionalProperties": false
+  }
+}

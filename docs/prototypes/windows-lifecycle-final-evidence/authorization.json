@@ -1,0 +1,20 @@
+{
+  "record_kind": "human-authorized native-free disposable experiment",
+  "user_confirmation": "I authorize it.",
+  "maximum_scenarios": 4,
+  "maximum_seconds": 300,
+  "includes_cleanup": true,
+  "retries": 0,
+  "scenarios": [
+    "crash_restart",
+    "partial_startup_failure",
+    "startup_timeout",
+    "stalled_shutdown"
+  ],
+  "scope": "New disposable application harness, installed public MCP SDK, fake local JSON-RPC peer, exact-process read-only observation and scratch recovery files.",
+  "restrictions": "No CST import/execution, solver, model/provider endpoint, arbitrary PID kill, existing experiment replay, production implementation or dependency change.",
+  "containment": "Fake application/peer self-exit watchdogs and exact scratch release flags; ordinary public SDK transport shutdown may terminate its own fake server chain.",
+  "publication_authorized": false,
+  "closure_authorized_by_this_round": false,
+  "review_required": "Present results and remaining restrictions to the human before resolution or closure."
+}

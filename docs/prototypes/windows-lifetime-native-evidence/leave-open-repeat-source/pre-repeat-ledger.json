@@ -1,0 +1,36 @@
+{
+  "tool_calls": 9,
+  "active_seconds": 521.245152,
+  "cases": {
+    "leave-open": "completed",
+    "authorized-close": "completed"
+  },
+  "maximum_calls": 12,
+  "maximum_active_seconds": 900,
+  "continuation": {
+    "id": "logging-fix-1",
+    "authorization_sha256": "b71ea4d61f0c96f146ec7cc23cf00c85b20d6d33c3e8b9bbea7c30e93f83d43f",
+    "failed_evidence_directory": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\opencode\\cst-lifetime-native\\evidence\\leave-open",
+    "failed_ledger": {
+      "tool_calls": 1,
+      "active_seconds": 3.89,
+      "cases": {
+        "leave-open": "blocked_reconciliation"
+      },
+      "maximum_calls": 12,
+      "maximum_active_seconds": 900
+    },
+    "prior_attempt_charge_seconds": 180,
+    "qualification": "Conservative charge, not retrospective proof of unmeasured overhead."
+  },
+  "between_case_accounting": {
+    "source": "Both wrapper-start UTC timestamps and outer uv stopwatch observations",
+    "between_case_seconds_charged": 146.542152,
+    "new_round_utc_envelope_seconds": 282.250508,
+    "new_driver_plus_wrapper_stopwatch_seconds": 135.708356,
+    "ledger_before_gap_charge_seconds": 374.703,
+    "retained_wrapper_reserve_seconds": 60,
+    "prior_attempt_conservative_charge_seconds": 180,
+    "qualification": "Gap charged after evidence review; both cases would still have passed the 155-second admission reserve with that gap included. UTC envelope is not independently protected against wall-clock adjustment. Original failed-path overhead remains unmeasured; no retrospective complete-budget guarantee."
+  }
+}

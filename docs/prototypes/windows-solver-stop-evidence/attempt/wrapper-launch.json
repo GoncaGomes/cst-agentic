@@ -1,0 +1,8 @@
+﻿{
+    "id":  "dipole-stop-01",
+    "started_utc":  "2026-10-21T12:30:28.3213409Z",
+    "driver_sha256":  "6919CD8E8BEFFCB2FD5DB5C7A6A7EC3062C5EAA711ED2DE00E88E902E3B5A7B9",
+    "maximum_calls":  50,
+    "maximum_seconds":  1800,
+    "state":  "admitted_once"
+}

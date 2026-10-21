@@ -1,0 +1,82 @@
+{"event": "operation_entered", "monotonic": 253947.968, "operation": "fixture_connect"}
+{"event": "operation_returned", "monotonic": 253958.578, "operation": "fixture_connect", "payload": {"status": "connected", "de_pid": 30660, "existing_de_count": 0}}
+{"event": "operation_entered", "monotonic": 253958.64, "operation": "fixture_create"}
+{"event": "initial_save_entered", "monotonic": 253964.203}
+{"event": "operation_returned", "monotonic": 253965.453, "operation": "fixture_create", "payload": {"status": "created", "filename_matches": true, "sole_project_matches": true, "de_pid": 30660}}
+{"event": "operation_entered", "monotonic": 253965.484, "operation": "cst_execute_vba"}
+{"event": "operation_returned", "monotonic": 253965.625, "operation": "cst_execute_vba", "payload": {"status": "executed", "target_checks": {"filename_matches": true, "sole_project_matches": true, "de_pid": 30660}}}
+{"event": "operation_entered", "monotonic": 253965.64, "operation": "cst_execute_vba"}
+{"event": "operation_returned", "monotonic": 253965.734, "operation": "cst_execute_vba", "payload": {"status": "ok", "verified_units": {"Length": "mm", "Frequency": "GHz", "Time": "ns"}, "target_checks": {"filename_matches": true, "sole_project_matches": true, "de_pid": 30660}}}
+{"event": "operation_entered", "monotonic": 253965.75, "operation": "cst_load_material"}
+{"event": "operation_returned", "monotonic": 253965.828, "operation": "cst_load_material", "payload": {"status": "executed", "target_checks": {"filename_matches": true, "sole_project_matches": true, "de_pid": 30660}}}
+{"event": "operation_entered", "monotonic": 253965.859, "operation": "cst_create_cylinder"}
+{"event": "operation_returned", "monotonic": 253965.937, "operation": "cst_create_cylinder", "payload": {"status": "executed", "target_checks": {"filename_matches": true, "sole_project_matches": true, "de_pid": 30660}}}
+{"event": "operation_entered", "monotonic": 253965.968, "operation": "cst_create_cylinder"}
+{"event": "operation_returned", "monotonic": 253966.015, "operation": "cst_create_cylinder", "payload": {"status": "executed", "target_checks": {"filename_matches": true, "sole_project_matches": true, "de_pid": 30660}}}
+{"event": "operation_entered", "monotonic": 253966.046, "operation": "cst_add_discrete_port"}
+{"event": "operation_returned", "monotonic": 253966.109, "operation": "cst_add_discrete_port", "payload": {"status": "executed", "target_checks": {"filename_matches": true, "sole_project_matches": true, "de_pid": 30660}}}
+{"event": "operation_entered", "monotonic": 253966.125, "operation": "cst_execute_vba"}
+{"event": "operation_returned", "monotonic": 253966.203, "operation": "cst_execute_vba", "payload": {"status": "ok", "verified_shapes": {"Dipole:ArmNegative": "DipoleCopper", "Dipole:ArmPositive": "DipoleCopper"}, "target_checks": {"filename_matches": true, "sole_project_matches": true, "de_pid": 30660}}}
+{"event": "operation_entered", "monotonic": 253966.234, "operation": "cst_list_ports"}
+{"event": "operation_returned", "monotonic": 253966.25, "operation": "cst_list_ports", "payload": {"status": "ok", "target_checks": {"filename_matches": true, "sole_project_matches": true, "de_pid": 30660}}}
+{"event": "operation_entered", "monotonic": 253966.265, "operation": "cst_set_background"}
+{"event": "operation_returned", "monotonic": 253966.343, "operation": "cst_set_background", "payload": {"status": "executed", "target_checks": {"filename_matches": true, "sole_project_matches": true, "de_pid": 30660}}}
+{"event": "operation_entered", "monotonic": 253966.359, "operation": "cst_set_frequency_range"}
+{"event": "operation_returned", "monotonic": 253966.562, "operation": "cst_set_frequency_range", "payload": {"status": "executed", "target_checks": {"filename_matches": true, "sole_project_matches": true, "de_pid": 30660}}}
+{"event": "operation_entered", "monotonic": 253966.593, "operation": "cst_set_boundary"}
+{"event": "operation_returned", "monotonic": 253966.64, "operation": "cst_set_boundary", "payload": {"status": "executed", "target_checks": {"filename_matches": true, "sole_project_matches": true, "de_pid": 30660}}}
+{"event": "operation_entered", "monotonic": 253966.671, "operation": "cst_set_symmetry"}
+{"event": "operation_returned", "monotonic": 253966.718, "operation": "cst_set_symmetry", "payload": {"status": "executed", "target_checks": {"filename_matches": true, "sole_project_matches": true, "de_pid": 30660}}}
+{"event": "operation_entered", "monotonic": 253966.75, "operation": "cst_set_mesh_type"}
+{"event": "operation_returned", "monotonic": 253966.781, "operation": "cst_set_mesh_type", "payload": {"status": "executed", "target_checks": {"filename_matches": true, "sole_project_matches": true, "de_pid": 30660}}}
+{"event": "operation_entered", "monotonic": 253966.812, "operation": "cst_set_mesh_density"}
+{"event": "operation_returned", "monotonic": 253966.859, "operation": "cst_set_mesh_density", "payload": {"status": "executed", "target_checks": {"filename_matches": true, "sole_project_matches": true, "de_pid": 30660}}}
+{"event": "operation_entered", "monotonic": 253966.875, "operation": "cst_add_mesh_refinement"}
+{"event": "operation_returned", "monotonic": 253966.921, "operation": "cst_add_mesh_refinement", "payload": {"status": "executed", "target_checks": {"filename_matches": true, "sole_project_matches": true, "de_pid": 30660}}}
+{"event": "operation_entered", "monotonic": 253966.953, "operation": "cst_add_mesh_refinement"}
+{"event": "operation_returned", "monotonic": 253966.984, "operation": "cst_add_mesh_refinement", "payload": {"status": "executed", "target_checks": {"filename_matches": true, "sole_project_matches": true, "de_pid": 30660}}}
+{"event": "operation_entered", "monotonic": 253967.015, "operation": "cst_set_adaptive_mesh"}
+{"event": "operation_returned", "monotonic": 253967.062, "operation": "cst_set_adaptive_mesh", "payload": {"status": "executed", "target_checks": {"filename_matches": true, "sole_project_matches": true, "de_pid": 30660}}}
+{"event": "operation_entered", "monotonic": 253967.093, "operation": "cst_configure_time_domain_solver"}
+{"event": "operation_returned", "monotonic": 253967.14, "operation": "cst_configure_time_domain_solver", "payload": {"status": "executed", "target_checks": {"filename_matches": true, "sole_project_matches": true, "de_pid": 30660}}}
+{"event": "operation_entered", "monotonic": 253967.156, "operation": "cst_add_field_monitor"}
+{"event": "operation_returned", "monotonic": 253967.203, "operation": "cst_add_field_monitor", "payload": {"status": "executed", "target_checks": {"filename_matches": true, "sole_project_matches": true, "de_pid": 30660}}}
+{"event": "operation_entered", "monotonic": 253967.234, "operation": "cst_add_field_monitor"}
+{"event": "operation_returned", "monotonic": 253967.281, "operation": "cst_add_field_monitor", "payload": {"status": "executed", "target_checks": {"filename_matches": true, "sole_project_matches": true, "de_pid": 30660}}}
+{"event": "operation_entered", "monotonic": 253967.312, "operation": "cst_add_field_monitor"}
+{"event": "operation_returned", "monotonic": 253967.359, "operation": "cst_add_field_monitor", "payload": {"status": "executed", "target_checks": {"filename_matches": true, "sole_project_matches": true, "de_pid": 30660}}}
+{"event": "operation_entered", "monotonic": 253967.39, "operation": "cst_add_field_monitor"}
+{"event": "operation_returned", "monotonic": 253967.453, "operation": "cst_add_field_monitor", "payload": {"status": "executed", "target_checks": {"filename_matches": true, "sole_project_matches": true, "de_pid": 30660}}}
+{"event": "operation_entered", "monotonic": 253967.468, "operation": "cst_add_field_monitor"}
+{"event": "operation_returned", "monotonic": 253967.515, "operation": "cst_add_field_monitor", "payload": {"status": "executed", "target_checks": {"filename_matches": true, "sole_project_matches": true, "de_pid": 30660}}}
+{"event": "operation_entered", "monotonic": 253967.546, "operation": "cst_get_solver_info"}
+{"event": "operation_returned", "monotonic": 253967.593, "operation": "cst_get_solver_info", "payload": {"status": "ok", "target_checks": {"filename_matches": true, "sole_project_matches": true, "de_pid": 30660}}}
+{"event": "operation_entered", "monotonic": 253967.609, "operation": "cst_get_mesh_info"}
+{"event": "operation_returned", "monotonic": 253967.843, "operation": "cst_get_mesh_info", "payload": {"status": "ok", "target_checks": {"filename_matches": true, "sole_project_matches": true, "de_pid": 30660}}}
+{"event": "operation_entered", "monotonic": 253967.859, "operation": "fixture_save"}
+{"event": "prepared_fixture_save_entered", "monotonic": 253967.89}
+{"event": "operation_returned", "monotonic": 253968.75, "operation": "fixture_save", "payload": {"status": "saved", "filename_matches": true, "sole_project_matches": true, "de_pid": 30660}}
+{"event": "operation_entered", "monotonic": 253968.781, "operation": "fixture_identity"}
+{"event": "operation_returned", "monotonic": 253968.781, "operation": "fixture_identity", "payload": {"status": "observed", "filename_matches": true, "sole_project_matches": true, "de_pid": 30660}}
+{"event": "operation_entered", "monotonic": 253968.796, "operation": "cst_run_simulation_async"}
+{"event": "operation_returned", "monotonic": 253968.906, "operation": "cst_run_simulation_async", "payload": {"status": "started", "target_checks": {"filename_matches": true, "sole_project_matches": true, "de_pid": 30660}}}
+{"event": "operation_entered", "monotonic": 253968.937, "operation": "cst_get_simulation_status"}
+{"event": "operation_returned", "monotonic": 253969.015, "operation": "cst_get_simulation_status", "payload": {"status": "ok", "running": true, "active_solver": "HF Time Domain", "run_info": {"last_reported_state": "RUNNING", "state_note": "Last state CST reported for a previous solver run/history update; it carries no timestamp and may be stale. Use 'running' for the current solver condition."}, "target_checks": {"filename_matches": true, "sole_project_matches": true, "de_pid": 30660}}}
+{"event": "operation_entered", "monotonic": 253969.093, "operation": "cst_wait_for_simulation"}
+{"event": "operation_returned", "monotonic": 253973.171, "operation": "cst_wait_for_simulation", "payload": {"status": "running", "running": true, "elapsed_s": 4.015, "polls": 3, "max_wait_s": 5.0, "target_checks": {"filename_matches": true, "sole_project_matches": true, "de_pid": 30660}}}
+{"event": "operation_entered", "monotonic": 253973.25, "operation": "cst_stop_simulation"}
+{"event": "stop_handler_entered", "monotonic": 253973.25}
+{"event": "operation_returned", "monotonic": 253973.265, "operation": "cst_stop_simulation", "payload": {"status": "executed", "command": "stop", "target_checks": {"filename_matches": true, "sole_project_matches": true, "de_pid": 30660}}}
+{"event": "operation_entered", "monotonic": 253973.281, "operation": "cst_get_simulation_status"}
+{"event": "operation_returned", "monotonic": 253973.296, "operation": "cst_get_simulation_status", "payload": {"status": "ok", "running": true, "active_solver": "HF Time Domain", "run_info": {"last_reported_state": "RUNNING", "state_note": "Last state CST reported for a previous solver run/history update; it carries no timestamp and may be stale. Use 'running' for the current solver condition."}, "target_checks": {"filename_matches": true, "sole_project_matches": true, "de_pid": 30660}}}
+{"event": "operation_entered", "monotonic": 253975.328, "operation": "cst_get_simulation_status"}
+{"event": "operation_returned", "monotonic": 253975.343, "operation": "cst_get_simulation_status", "payload": {"status": "ok", "running": true, "active_solver": "HF Time Domain", "run_info": {"last_reported_state": "RUNNING", "state_note": "Last state CST reported for a previous solver run/history update; it carries no timestamp and may be stale. Use 'running' for the current solver condition."}, "target_checks": {"filename_matches": true, "sole_project_matches": true, "de_pid": 30660}}}
+{"event": "operation_entered", "monotonic": 253977.437, "operation": "cst_get_simulation_status"}
+{"event": "operation_returned", "monotonic": 253977.453, "operation": "cst_get_simulation_status", "payload": {"status": "ok", "running": false, "active_solver": "HF Time Domain", "run_info": {"last_reported_state": "ERROR", "state_note": "Last state CST reported for a previous solver run/history update; it carries no timestamp and may be stale. Use 'running' for the current solver condition. The solver is idle now."}, "target_checks": {"filename_matches": true, "sole_project_matches": true, "de_pid": 30660}}}
+{"event": "operation_entered", "monotonic": 253977.468, "operation": "cst_read_project_log"}
+{"event": "operation_returned", "monotonic": 253977.484, "operation": "cst_read_project_log", "payload": {"status": "ok", "owned_log_classification": {"abort_or_cancel_mentioned": true, "normal_completion_mentioned": false, "owned_log_tail_retained": true, "qualification": "Keyword hints only, not causal proof or timestamped attribution."}, "target_checks": {"filename_matches": true, "sole_project_matches": true, "de_pid": 30660}}}
+{"event": "operation_entered", "monotonic": 253977.5, "operation": "fixture_close"}
+{"event": "orderly_instance_close_entered", "monotonic": 253977.5}
+{"event": "orderly_instance_close_returned", "monotonic": 253982.562}
+{"event": "operation_returned", "monotonic": 253982.562, "operation": "fixture_close", "payload": {"status": "closed", "filename_matches": true, "sole_project_matches": true, "de_pid": 30660}}
+{"event": "server_eof_returned", "monotonic": 253982.578}

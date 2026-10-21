@@ -1,0 +1,20 @@
+{
+  "record_kind": "human-confirmed partial design decision, not native verification",
+  "user_confirmation_verbatim": "Yes and yes",
+  "confirmed_questions": [
+    "Does session death include both normal Controller exit and an unexpected crash, rather than merely finishing a task or batch?",
+    "Does permission for session-bound CST termination apply only to instances newly launched by the Controller?"
+  ],
+  "accepted_restriction": "CST instances launched by the Controller are session-bound: there is no promise that they survive normal application exit or unexpected application termination.",
+  "controller_session": "One run of the CST Controller, potentially containing multiple user tasks.",
+  "normal_exit": "Warn about unsaved work and active simulations, preserve applicable authorization/confirmation rules, and attempt bounded orderly cleanup. This restriction does not authorize silent destructive exit.",
+  "task_completion_or_interruption": "Does not by itself end the Controller session or authorize closing CST.",
+  "existing_instance_attachment": "Remains blocked pending precise attachment and established lifetime consequences; this permission does not cover pre-existing instances.",
+  "simulation_stop": "Process termination is not evidence of a verified graceful solver stop. Bounded solver-stop behavior remains unresolved.",
+  "revised_prior_requirement": "The earlier default-leave-open/survival promise is relaxed for Controller-launched instances at application exit; it is not replaced with a claim that MCP requires native termination.",
+  "causal_qualification": "The exact native termination mechanism remains unisolated. This decision accepts a lifecycle consequence; it does not establish a sole MCP-side fault.",
+  "ticket_resolution": false,
+  "new_native_or_endpoint_authorization": false,
+  "local_only": true,
+  "commits_pushes_or_github_updates_authorized": false
+}

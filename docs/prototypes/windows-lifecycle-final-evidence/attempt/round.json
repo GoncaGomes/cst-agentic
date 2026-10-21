@@ -1,0 +1,13 @@
+{
+  "state": "blocked_review_required",
+  "maximum_seconds": 300,
+  "maximum_scenarios": 4,
+  "scenarios_admitted": [
+    "crash_restart"
+  ],
+  "source_sha256": {
+    "windows_lifecycle_final.py": "de5b5ef1316ab7675f6b4af071c4cf79c050ce7c147176d914cb164f6c68c614",
+    "windows_lifecycle_final_processes.py": "1775dbfc16a7cb361c95053a28b9f09b80c63b3d3ebeb266363ba8c79ed837dd"
+  },
+  "elapsed_s": 2.6559999999881256
+}

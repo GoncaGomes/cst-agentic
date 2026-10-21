@@ -1,0 +1,483 @@
+{
+  "scope": "NATIVE-FREE, SYNTHETIC DESIGN EVIDENCE ONLY",
+  "cases": [
+    {
+      "name": "crash_restart",
+      "synthetic_only": true,
+      "application_process": {
+        "stage": "post_exit_observation",
+        "exit_code": 23,
+        "complete_invocation_s": 2.6560000000172295,
+        "alive_at_application_exit": {
+          "18012": false,
+          "16444": false,
+          "1896": false,
+          "36164": false,
+          "18984": false,
+          "37692": false,
+          "34888": false
+        },
+        "post_exit_samples": [
+          {
+            "monotonic": 257353.437,
+            "alive": {
+              "18012": false,
+              "16444": false,
+              "1896": false,
+              "36164": false,
+              "18984": false,
+              "37692": false,
+              "34888": false
+            }
+          }
+        ],
+        "all_tracked_terminated_before_containment_release": true,
+        "processes": [
+          {
+            "pid": 18012,
+            "parent_pid": 8768,
+            "executable_basename": "uv.exe",
+            "creation_time": "2026-10-21T13:27:15.143000+00:00"
+          },
+          {
+            "pid": 16444,
+            "parent_pid": 18012,
+            "executable_basename": "python.exe",
+            "creation_time": "2026-10-21T13:27:15.184000+00:00"
+          },
+          {
+            "pid": 1896,
+            "parent_pid": 16444,
+            "executable_basename": "python.exe",
+            "creation_time": "2026-10-21T13:27:15.201000+00:00"
+          },
+          {
+            "pid": 36164,
+            "parent_pid": 1896,
+            "executable_basename": "uv.exe",
+            "creation_time": "2026-10-21T13:27:16.483000+00:00"
+          },
+          {
+            "pid": 18984,
+            "parent_pid": 36164,
+            "executable_basename": "conhost.exe",
+            "creation_time": "2026-10-21T13:27:16.492000+00:00"
+          },
+          {
+            "pid": 37692,
+            "parent_pid": 36164,
+            "executable_basename": "python.exe",
+            "creation_time": "2026-10-21T13:27:16.534000+00:00"
+          },
+          {
+            "pid": 34888,
+            "parent_pid": 37692,
+            "executable_basename": "python.exe",
+            "creation_time": "2026-10-21T13:27:16.549000+00:00"
+          }
+        ],
+        "alive_after_containment_release": {
+          "18012": false,
+          "16444": false,
+          "1896": false,
+          "36164": false,
+          "18984": false,
+          "37692": false,
+          "34888": false
+        },
+        "all_tracked_terminated_after_containment_release": true,
+        "total_observed_s": 2.6560000000172295
+      },
+      "restart_process": {
+        "stage": "post_exit_observation",
+        "exit_code": 0,
+        "complete_invocation_s": 1.389999999984866,
+        "alive_at_application_exit": {
+          "18496": false,
+          "22780": false,
+          "18164": false
+        },
+        "post_exit_samples": [
+          {
+            "monotonic": 257354.843,
+            "alive": {
+              "18496": false,
+              "22780": false,
+              "18164": false
+            }
+          }
+        ],
+        "all_tracked_terminated_before_containment_release": true,
+        "processes": [
+          {
+            "pid": 18496,
+            "parent_pid": 8768,
+            "executable_basename": "uv.exe",
+            "creation_time": "2026-10-21T13:27:17.818000+00:00"
+          },
+          {
+            "pid": 22780,
+            "parent_pid": 18496,
+            "executable_basename": "python.exe",
+            "creation_time": "2026-10-21T13:27:17.850000+00:00"
+          },
+          {
+            "pid": 18164,
+            "parent_pid": 22780,
+            "executable_basename": "python.exe",
+            "creation_time": "2026-10-21T13:27:17.868000+00:00"
+          }
+        ],
+        "alive_after_containment_release": {
+          "18496": false,
+          "22780": false,
+          "18164": false
+        },
+        "all_tracked_terminated_after_containment_release": true,
+        "total_observed_s": 1.389999999984866
+      },
+      "tools_call_count": 1,
+      "peer_identity": {
+        "pid": 34888,
+        "parent_pid": 37692
+      },
+      "marker_retained_and_fresh_process_blocks_all_tools": true,
+      "verification": "passed_synthetic_design_observation",
+      "complete_scenario_s": 4.077999999979511
+    },
+    {
+      "name": "partial_startup_failure",
+      "synthetic_only": true,
+      "application_process": {
+        "stage": "post_exit_observation",
+        "exit_code": 20,
+        "complete_invocation_s": 2.9060000000172295,
+        "alive_at_application_exit": {
+          "25444": false,
+          "20472": false,
+          "19124": false,
+          "34940": false,
+          "7208": false,
+          "29152": false,
+          "15148": false
+        },
+        "post_exit_samples": [
+          {
+            "monotonic": 257357.765,
+            "alive": {
+              "25444": false,
+              "20472": false,
+              "19124": false,
+              "34940": false,
+              "7208": false,
+              "29152": false,
+              "15148": false
+            }
+          }
+        ],
+        "all_tracked_terminated_before_containment_release": true,
+        "processes": [
+          {
+            "pid": 25444,
+            "parent_pid": 8768,
+            "executable_basename": "uv.exe",
+            "creation_time": "2026-10-21T13:27:19.227000+00:00"
+          },
+          {
+            "pid": 20472,
+            "parent_pid": 25444,
+            "executable_basename": "python.exe",
+            "creation_time": "2026-10-21T13:27:19.259000+00:00"
+          },
+          {
+            "pid": 19124,
+            "parent_pid": 20472,
+            "executable_basename": "python.exe",
+            "creation_time": "2026-10-21T13:27:19.275000+00:00"
+          },
+          {
+            "pid": 34940,
+            "parent_pid": 19124,
+            "executable_basename": "uv.exe",
+            "creation_time": "2026-10-21T13:27:20.371000+00:00"
+          },
+          {
+            "pid": 7208,
+            "parent_pid": 34940,
+            "executable_basename": "conhost.exe",
+            "creation_time": "2026-10-21T13:27:20.381000+00:00"
+          },
+          {
+            "pid": 29152,
+            "parent_pid": 34940,
+            "executable_basename": "python.exe",
+            "creation_time": "2026-10-21T13:27:20.419000+00:00"
+          },
+          {
+            "pid": 15148,
+            "parent_pid": 29152,
+            "executable_basename": "python.exe",
+            "creation_time": "2026-10-21T13:27:20.434000+00:00"
+          }
+        ],
+        "alive_after_containment_release": {
+          "25444": false,
+          "20472": false,
+          "19124": false,
+          "34940": false,
+          "7208": false,
+          "29152": false,
+          "15148": false
+        },
+        "all_tracked_terminated_after_containment_release": true,
+        "total_observed_s": 2.9530000000086147
+      },
+      "tools_call_count": 0,
+      "peer_identity": {
+        "pid": 15148,
+        "parent_pid": 29152
+      },
+      "application_report": {
+        "mode": "partial_startup_failure",
+        "synthetic_only": true,
+        "status": "failed_not_success",
+        "startup_allowance_s": 10,
+        "cleanup_allowance_s": 10,
+        "startup_started": 257356.0,
+        "primary_exception_types": [
+          "MCPError"
+        ],
+        "primary_failure": {
+          "exception_types": [
+            "MCPError"
+          ],
+          "category": "external_exception",
+          "frames": [
+            {
+              "file": "windows_lifecycle_retry.py",
+              "function": "application",
+              "line": 404
+            },
+            {
+              "file": "session.py",
+              "function": "initialize",
+              "line": 654
+            },
+            {
+              "file": "session.py",
+              "function": "send_request",
+              "line": 586
+            },
+            {
+              "file": "jsonrpc_dispatcher.py",
+              "function": "send_raw_request",
+              "line": 461
+            }
+          ],
+          "children": []
+        },
+        "startup_or_task_failure_observed": 257357.14,
+        "cleanup_started": 257357.14,
+        "context_outcomes": [
+          {
+            "context": "session",
+            "entered": true,
+            "owner_task_id": 1732123571584,
+            "exit_task_id": 1732123571584,
+            "boundary_exception_types": [
+              "ExceptionGroup",
+              "MCPError"
+            ],
+            "body_exception_types": [
+              "MCPError"
+            ],
+            "same_exception_object_as_body": false
+          },
+          {
+            "context": "transport",
+            "entered": true,
+            "owner_task_id": 1732123571584,
+            "exit_task_id": 1732123571584,
+            "boundary_exception_types": [
+              "ExceptionGroup",
+              "ExceptionGroup",
+              "MCPError"
+            ],
+            "body_exception_types": [
+              "ExceptionGroup",
+              "MCPError"
+            ],
+            "same_exception_object_as_body": false
+          }
+        ],
+        "final_exception_types": [
+          "ExceptionGroup",
+          "ExceptionGroup",
+          "MCPError"
+        ],
+        "final_failure": {
+          "exception_types": [
+            "ExceptionGroup",
+            "ExceptionGroup",
+            "MCPError"
+          ],
+          "category": "external_exception",
+          "frames": [
+            {
+              "file": "contextlib.py",
+              "function": "__aexit__",
+              "line": 231
+            },
+            {
+              "file": "windows_lifecycle_retry.py",
+              "function": "observed_context",
+              "line": 271
+            },
+            {
+              "file": "contextlib.py",
+              "function": "__aexit__",
+              "line": 231
+            },
+            {
+              "file": "stdio.py",
+              "function": "stdio_client",
+              "line": 201
+            },
+            {
+              "file": "_asyncio.py",
+              "function": "__aexit__",
+              "line": 847
+            }
+          ],
+          "children": [
+            {
+              "exception_types": [
+                "ExceptionGroup",
+                "MCPError"
+              ],
+              "category": "external_exception",
+              "frames": [
+                {
+                  "file": "windows_lifecycle_retry.py",
+                  "function": "application",
+                  "line": 396
+                },
+                {
+                  "file": "contextlib.py",
+                  "function": "__aexit__",
+                  "line": 231
+                },
+                {
+                  "file": "windows_lifecycle_retry.py",
+                  "function": "observed_context",
+                  "line": 271
+                },
+                {
+                  "file": "session.py",
+                  "function": "__aexit__",
+                  "line": 514
+                },
+                {
+                  "file": "_asyncio.py",
+                  "function": "__aexit__",
+                  "line": 847
+                }
+              ],
+              "children": [
+                {
+                  "exception_types": [
+                    "MCPError"
+                  ],
+                  "category": "external_exception",
+                  "frames": [
+                    {
+                      "file": "windows_lifecycle_retry.py",
+                      "function": "observed_context",
+                      "line": 275
+                    },
+                    {
+                      "file": "windows_lifecycle_retry.py",
+                      "function": "application",
+                      "line": 404
+                    },
+                    {
+                      "file": "session.py",
+                      "function": "initialize",
+                      "line": 654
+                    },
+                    {
+                      "file": "session.py",
+                      "function": "send_request",
+                      "line": 586
+                    },
+                    {
+                      "file": "jsonrpc_dispatcher.py",
+                      "function": "send_raw_request",
+                      "line": 461
+                    }
+                  ],
+                  "children": []
+                }
+              ]
+            }
+          ]
+        },
+        "application_total_s": 1.5150000000139698,
+        "cleanup_s": 0.375,
+        "cleanup_allowance_exceeded": false,
+        "recovery_marker_retained": false
+      },
+      "failure": {
+        "exception_types": [
+          "ExperimentFailure"
+        ],
+        "category": "failure_not_preserved_or_cleanup_over_budget",
+        "frames": [
+          {
+            "file": "windows_lifecycle_retry.py",
+            "function": "run_round",
+            "line": 757
+          },
+          {
+            "file": "windows_lifecycle_retry.py",
+            "function": "verify_case",
+            "line": 583
+          }
+        ],
+        "children": []
+      },
+      "complete_scenario_s": 2.9690000000118744
+    }
+  ],
+  "status": "blocked_review_required",
+  "versions": {
+    "mcp": "2.3.0",
+    "anyio": "4.15.1"
+  },
+  "CST_solver_endpoint_executions": 0,
+  "publication_authorized": false,
+  "error_types": [
+    "ExperimentFailure"
+  ],
+  "failure": {
+    "exception_types": [
+      "ExperimentFailure"
+    ],
+    "category": "failure_not_preserved_or_cleanup_over_budget",
+    "frames": [
+      {
+        "file": "windows_lifecycle_retry.py",
+        "function": "run_round",
+        "line": 757
+      },
+      {
+        "file": "windows_lifecycle_retry.py",
+        "function": "verify_case",
+        "line": 583
+      }
+    ],
+    "children": []
+  },
+  "elapsed_s": 7.172000000020489,
+  "internal_round_limit_met": true
+}

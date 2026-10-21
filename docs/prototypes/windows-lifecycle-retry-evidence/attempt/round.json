@@ -1,0 +1,15 @@
+{
+  "state": "blocked_review_required",
+  "maximum_seconds": 300,
+  "maximum_scenarios": 4,
+  "scenarios_admitted": [
+    "crash_restart",
+    "partial_startup_failure"
+  ],
+  "source_sha256": {
+    "windows_lifecycle_retry.py": "388cca01c5f035401a8464e54d922fec0bf6af47aa1e224cb426306a2a38f97f",
+    "windows_lifecycle_final_processes.py": "1775dbfc16a7cb361c95053a28b9f09b80c63b3d3ebeb266363ba8c79ed837dd",
+    "windows_lifecycle_retry_checks.py": "2eca6cf48fc892628807bc6590106de7b1070f32557b90c1c27da8abc357ca14"
+  },
+  "elapsed_s": 7.172000000020489
+}

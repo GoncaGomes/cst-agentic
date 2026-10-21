@@ -1,0 +1,18 @@
+{
+  "state": "completed",
+  "target": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\opencode\\cst-solver-stop-dipole-01\\dipole.cst",
+  "tool_calls": 38,
+  "maximum_calls": 50,
+  "maximum_seconds": 1800,
+  "source_sha256": {
+    "windows_solver_stop.py": "6919cd8e8beffcb2fd5db5c7a6a7ec3062c5eaa711ed2de00e88e902e3b5a7b9",
+    "windows_solver_stop_peer.py": "f7d702846929fae8d601fc1743dec0c80228dad6b682c580306102011e00f852",
+    "windows_solver_stop_plan.py": "4b1c6d2b8e78b3a9935825bcea14146c41750cb9864a0867648f1f0a08c0fb2b",
+    "windows_solver_stop_processes.py": "343af18fa7ed66bbc4e801cb395dd7d495033f1d0e34df72cef394bcf8efa1ee",
+    "windows_solver_stop_checks.py": "a42ff6117562115dfcb33171369e4cf343f88e78730f92910e1ba6382e7a885c"
+  },
+  "fixture_sha256": "1e253f404ded1092c60487c5a972041f0fc6ded1b8db9cab9e81f444dbbeea8f",
+  "authorization_sha256": "831441ecc348cef2d4f05f4c95c122f5f5fd6888cd0902f3ccc7711a3f026173",
+  "active_seconds": 37.28100000001723,
+  "human_reconciliation_required": false
+}

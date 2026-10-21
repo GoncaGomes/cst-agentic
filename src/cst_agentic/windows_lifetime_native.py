@@ -1,8 +1,8 @@
 """THROWAWAY: one approved native blank-project lifetime case per invocation.
 
-Exactly two fixed targets, <=12 tools/call, <=900 active experiment seconds
-including cleanup, no solver/model requests. Re-execution is refused except for
-the single explicitly reconciled, pre-native logging failure recorded on disk.
+Three fixed targets, <=13 cumulative tools/call, <=900 active experiment seconds
+including cleanup, no solver/model requests. The explicit leave-open repeat has
+a 300-second ceiling; consumed attempts/targets are never reused.
 This is not the production client and does not validate production handlers.
 """
 
@@ -162,11 +162,15 @@ class NativeDispatch:
             ("native_connect", {"mode": "new"}),
             ("native_create", {"path": str(TARGETS[case])}),
             ("native_status", {}),
-            ("native_disconnect" if case == "leave-open" else "native_close", {}),
+            ("native_close" if case == "authorized-close" else "native_disconnect", {}),
         ]
 
     def remaining(self) -> float:
-        return 900 - self.ledger["active_seconds"] - (time.monotonic() - self.started)
+        elapsed = time.monotonic() - self.started
+        remaining = 900 - self.ledger["active_seconds"] - elapsed
+        if self.case == "leave-open-repeat":
+            remaining = min(remaining, 300 - WRAPPER_RESERVE_SECONDS - elapsed)
+        return remaining
 
     async def call(self, name: str, arguments: dict) -> dict:
         admitted = time.monotonic()
@@ -179,7 +183,10 @@ class NativeDispatch:
                 async with self.lock:
                     if self.halted or self.marker.exists() or (name, arguments) != self.plan[index]:
                         raise RuntimeError("dispatch_guard_blocked")
-                    if self.ledger["tool_calls"] >= 12 or self.remaining() < 155:
+                    if (
+                        self.ledger["tool_calls"] >= self.ledger["maximum_calls"]
+                        or self.remaining() < 155
+                    ):
                         raise RuntimeError("approved_budget_exhausted")
                     if name == "native_create" and TARGETS[self.case].exists():
                         raise RuntimeError("target_now_exists")
@@ -222,6 +229,55 @@ class NativeDispatch:
             attempt["total_s"] = round(attempt["settled"] - admitted, 6)
 
 
+def prepare_repeat(ledger: dict) -> tuple[dict, Path]:
+    """One new human-authorized case; preserve prior cases and increase only calls."""
+    archive = HERE.parents[2] / "docs/prototypes/windows-lifetime-native-evidence"
+    previous = json.loads((archive / "round-after-accounting.json").read_text("utf-8"))
+    approval_path = ROOT / "leave-open-repeat-authorization.json"
+    approval = json.loads(approval_path.read_text("utf-8"))
+    target = TARGETS["leave-open-repeat"]
+    if (
+        ledger != previous
+        or ledger["cases"] != {"leave-open": "completed", "authorized-close": "completed"}
+        or ledger["tool_calls"] != 9
+        or ledger["maximum_calls"] != 12
+        or ledger["maximum_active_seconds"] != 900
+        or approval["id"] != "leave-open-repeat-1"
+        or approval["user_confirmation"] != "Yes you may"
+        or approval["case"] != "leave-open-repeat"
+        or approval["target"] != str(target)
+        or approval["maximum_calls"] != 13
+        or approval["maximum_active_seconds"] != 900
+        or approval["case_maximum_seconds"] != 300
+        or approval["case_maximum_calls"] != 4
+        or approval["no_remote_updates"] is not True
+        or target.exists()
+        or ledger["active_seconds"] + WRAPPER_RESERVE_SECONDS + 155 >= 900
+    ):
+        raise RuntimeError("repeat_authorization_or_prior_state_mismatch")
+    for label in ("leave-open-logging-fix-1", "authorized-close"):
+        prior = json.loads((ROOT / "evidence" / label / "observations.json").read_text("utf-8"))
+        if prior["manual_confirmation_required"] or any(prior["final_alive"].values()):
+            raise RuntimeError("prior_case_requires_human_reconciliation")
+    scratch = evidence_directory("leave-open-repeat")
+    scratch.mkdir()  # Exclusive: repeat cannot reuse any prior attempt or evidence.
+    durable_write(scratch / "ledger-before-authorization.json", ledger)
+    ledger["repeat_authorization"] = {
+        "id": approval["id"],
+        "sha256": hashlib.sha256(approval_path.read_bytes()).hexdigest(),
+        "previous_maximum_calls": 12,
+        "maximum_calls": 13,
+        "case_maximum_seconds": 300,
+        "target": str(target),
+    }
+    ledger["maximum_calls"] = 13
+    ledger["active_seconds"] += WRAPPER_RESERVE_SECONDS
+    ledger["cases"]["leave-open-repeat"] = "in_flight"
+    durable_write(ROUND_FILE, ledger)
+    durable_write(scratch / "ledger-at-admission.json", ledger)
+    return ledger, scratch
+
+
 def prepare_case(case: str, resumed: bool) -> tuple[dict, Path]:
     """Admit one reconciled retry without deleting or rewriting failed evidence."""
     if case not in TARGETS or (resumed and case != "leave-open"):
@@ -229,6 +285,8 @@ def prepare_case(case: str, resumed: bool) -> tuple[dict, Path]:
     if not ROUND_FILE.is_file():
         raise RuntimeError("existing_round_required")
     ledger = json.loads(ROUND_FILE.read_text("utf-8"))
+    if case == "leave-open-repeat":
+        return prepare_repeat(ledger)
     if ledger["maximum_calls"] != 12 or ledger["maximum_active_seconds"] != 900:
         raise RuntimeError("original_limits_required")
     if resumed:
@@ -319,6 +377,7 @@ async def run_case(case: str, resumed: bool = False) -> None:
         "manual_confirmation_required": True,
         "continuation": "logging-fix-1" if resumed else None,
         "wrapper_reserve_seconds": WRAPPER_RESERVE_SECONDS,
+        "case_maximum_seconds": 300 if case == "leave-open-repeat" else None,
     }
     handles = {}
     de_pid = None
@@ -412,7 +471,11 @@ async def run_case(case: str, resumed: bool = False) -> None:
                             report["alive_before_exit_action"] = {
                                 str(p): alive(h) for p, h in handles.items()
                             }
-                            last = "native_disconnect" if case == "leave-open" else "native_close"
+                            last = (
+                                "native_close"
+                                if case == "authorized-close"
+                                else "native_disconnect"
+                            )
                             await gateway.call(last, {})
                             report["alive_after_exit_action"] = {
                                 str(p): alive(h) for p, h in handles.items()

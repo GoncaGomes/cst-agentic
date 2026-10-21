@@ -1,0 +1,24 @@
+{
+  "mode": "crash_restart",
+  "synthetic_only": true,
+  "status": "reconciliation_required",
+  "startup_reconciliation_required": true,
+  "attempts": [
+    {
+      "operation": "work",
+      "state": "not_dispatched",
+      "reconciliation_required": true
+    },
+    {
+      "operation": "status",
+      "state": "not_dispatched",
+      "reconciliation_required": true
+    },
+    {
+      "operation": "stop",
+      "state": "not_dispatched",
+      "reconciliation_required": true
+    }
+  ],
+  "sdk_transport_opened": false
+}

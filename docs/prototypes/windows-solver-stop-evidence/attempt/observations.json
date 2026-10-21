@@ -1,0 +1,905 @@
+{
+  "target": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\opencode\\cst-solver-stop-dipole-01\\dipole.cst",
+  "attempts": [
+    {
+      "name": "fixture_connect",
+      "requested": 253947.906,
+      "state": "received",
+      "allowance_s": 120,
+      "dispatch": 253947.968,
+      "response": {
+        "status": "connected",
+        "de_pid": 30660,
+        "existing_de_count": 0
+      },
+      "settled": 253958.593,
+      "total_s": 10.687000000005355,
+      "queue_s": 0.062000000005355105,
+      "dispatch_to_settlement_s": 10.625
+    },
+    {
+      "name": "fixture_create",
+      "requested": 253958.625,
+      "state": "received",
+      "allowance_s": 120,
+      "dispatch": 253958.625,
+      "response": {
+        "status": "created",
+        "filename_matches": true,
+        "sole_project_matches": true,
+        "de_pid": 30660
+      },
+      "settled": 253965.468,
+      "total_s": 6.842999999993481,
+      "queue_s": 0.0,
+      "dispatch_to_settlement_s": 6.842999999993481
+    },
+    {
+      "name": "cst_execute_vba",
+      "requested": 253965.468,
+      "state": "received",
+      "allowance_s": 120,
+      "dispatch": 253965.484,
+      "response": {
+        "status": "executed",
+        "target_checks": {
+          "filename_matches": true,
+          "sole_project_matches": true,
+          "de_pid": 30660
+        }
+      },
+      "settled": 253965.64,
+      "total_s": 0.1720000000204891,
+      "queue_s": 0.01600000000325963,
+      "dispatch_to_settlement_s": 0.15600000001722947
+    },
+    {
+      "name": "cst_execute_vba",
+      "requested": 253965.64,
+      "state": "received",
+      "allowance_s": 120,
+      "dispatch": 253965.64,
+      "response": {
+        "status": "ok",
+        "verified_units": {
+          "Length": "mm",
+          "Frequency": "GHz",
+          "Time": "ns"
+        },
+        "target_checks": {
+          "filename_matches": true,
+          "sole_project_matches": true,
+          "de_pid": 30660
+        }
+      },
+      "settled": 253965.734,
+      "total_s": 0.09399999998277053,
+      "queue_s": 0.0,
+      "dispatch_to_settlement_s": 0.09399999998277053
+    },
+    {
+      "name": "cst_load_material",
+      "requested": 253965.734,
+      "state": "received",
+      "allowance_s": 120,
+      "dispatch": 253965.75,
+      "response": {
+        "status": "executed",
+        "target_checks": {
+          "filename_matches": true,
+          "sole_project_matches": true,
+          "de_pid": 30660
+        }
+      },
+      "settled": 253965.828,
+      "total_s": 0.09400000001187436,
+      "queue_s": 0.01600000000325963,
+      "dispatch_to_settlement_s": 0.07800000000861473
+    },
+    {
+      "name": "cst_create_cylinder",
+      "requested": 253965.828,
+      "state": "received",
+      "allowance_s": 120,
+      "dispatch": 253965.843,
+      "response": {
+        "status": "executed",
+        "target_checks": {
+          "filename_matches": true,
+          "sole_project_matches": true,
+          "de_pid": 30660
+        }
+      },
+      "settled": 253965.937,
+      "total_s": 0.10899999999674037,
+      "queue_s": 0.014999999984866008,
+      "dispatch_to_settlement_s": 0.09400000001187436
+    },
+    {
+      "name": "cst_create_cylinder",
+      "requested": 253965.937,
+      "state": "received",
+      "allowance_s": 120,
+      "dispatch": 253965.953,
+      "response": {
+        "status": "executed",
+        "target_checks": {
+          "filename_matches": true,
+          "sole_project_matches": true,
+          "de_pid": 30660
+        }
+      },
+      "settled": 253966.031,
+      "total_s": 0.09399999998277053,
+      "queue_s": 0.01600000000325963,
+      "dispatch_to_settlement_s": 0.0779999999795109
+    },
+    {
+      "name": "cst_add_discrete_port",
+      "requested": 253966.031,
+      "state": "received",
+      "allowance_s": 120,
+      "dispatch": 253966.046,
+      "response": {
+        "status": "executed",
+        "target_checks": {
+          "filename_matches": true,
+          "sole_project_matches": true,
+          "de_pid": 30660
+        }
+      },
+      "settled": 253966.109,
+      "total_s": 0.07800000000861473,
+      "queue_s": 0.015000000013969839,
+      "dispatch_to_settlement_s": 0.0629999999946449
+    },
+    {
+      "name": "cst_execute_vba",
+      "requested": 253966.125,
+      "state": "received",
+      "allowance_s": 120,
+      "dispatch": 253966.125,
+      "response": {
+        "status": "ok",
+        "verified_shapes": {
+          "Dipole:ArmNegative": "DipoleCopper",
+          "Dipole:ArmPositive": "DipoleCopper"
+        },
+        "target_checks": {
+          "filename_matches": true,
+          "sole_project_matches": true,
+          "de_pid": 30660
+        }
+      },
+      "settled": 253966.218,
+      "total_s": 0.09299999999348074,
+      "queue_s": 0.0,
+      "dispatch_to_settlement_s": 0.09299999999348074
+    },
+    {
+      "name": "cst_list_ports",
+      "requested": 253966.218,
+      "state": "received",
+      "allowance_s": 120,
+      "dispatch": 253966.218,
+      "response": {
+        "status": "ok",
+        "target_checks": {
+          "filename_matches": true,
+          "sole_project_matches": true,
+          "de_pid": 30660
+        }
+      },
+      "settled": 253966.265,
+      "total_s": 0.0470000000204891,
+      "queue_s": 0.0,
+      "dispatch_to_settlement_s": 0.0470000000204891
+    },
+    {
+      "name": "cst_set_background",
+      "requested": 253966.265,
+      "state": "received",
+      "allowance_s": 120,
+      "dispatch": 253966.265,
+      "response": {
+        "status": "executed",
+        "target_checks": {
+          "filename_matches": true,
+          "sole_project_matches": true,
+          "de_pid": 30660
+        }
+      },
+      "settled": 253966.343,
+      "total_s": 0.0779999999795109,
+      "queue_s": 0.0,
+      "dispatch_to_settlement_s": 0.0779999999795109
+    },
+    {
+      "name": "cst_set_frequency_range",
+      "requested": 253966.359,
+      "state": "received",
+      "allowance_s": 120,
+      "dispatch": 253966.359,
+      "response": {
+        "status": "executed",
+        "target_checks": {
+          "filename_matches": true,
+          "sole_project_matches": true,
+          "de_pid": 30660
+        }
+      },
+      "settled": 253966.578,
+      "total_s": 0.21900000001187436,
+      "queue_s": 0.0,
+      "dispatch_to_settlement_s": 0.21900000001187436
+    },
+    {
+      "name": "cst_set_boundary",
+      "requested": 253966.578,
+      "state": "received",
+      "allowance_s": 120,
+      "dispatch": 253966.578,
+      "response": {
+        "status": "executed",
+        "target_checks": {
+          "filename_matches": true,
+          "sole_project_matches": true,
+          "de_pid": 30660
+        }
+      },
+      "settled": 253966.656,
+      "total_s": 0.0779999999795109,
+      "queue_s": 0.0,
+      "dispatch_to_settlement_s": 0.0779999999795109
+    },
+    {
+      "name": "cst_set_symmetry",
+      "requested": 253966.656,
+      "state": "received",
+      "allowance_s": 120,
+      "dispatch": 253966.671,
+      "response": {
+        "status": "executed",
+        "target_checks": {
+          "filename_matches": true,
+          "sole_project_matches": true,
+          "de_pid": 30660
+        }
+      },
+      "settled": 253966.718,
+      "total_s": 0.062000000005355105,
+      "queue_s": 0.015000000013969839,
+      "dispatch_to_settlement_s": 0.046999999991385266
+    },
+    {
+      "name": "cst_set_mesh_type",
+      "requested": 253966.734,
+      "state": "received",
+      "allowance_s": 120,
+      "dispatch": 253966.734,
+      "response": {
+        "status": "executed",
+        "target_checks": {
+          "filename_matches": true,
+          "sole_project_matches": true,
+          "de_pid": 30660
+        }
+      },
+      "settled": 253966.796,
+      "total_s": 0.062000000005355105,
+      "queue_s": 0.0,
+      "dispatch_to_settlement_s": 0.062000000005355105
+    },
+    {
+      "name": "cst_set_mesh_density",
+      "requested": 253966.796,
+      "state": "received",
+      "allowance_s": 120,
+      "dispatch": 253966.796,
+      "response": {
+        "status": "executed",
+        "target_checks": {
+          "filename_matches": true,
+          "sole_project_matches": true,
+          "de_pid": 30660
+        }
+      },
+      "settled": 253966.859,
+      "total_s": 0.0629999999946449,
+      "queue_s": 0.0,
+      "dispatch_to_settlement_s": 0.0629999999946449
+    },
+    {
+      "name": "cst_add_mesh_refinement",
+      "requested": 253966.859,
+      "state": "received",
+      "allowance_s": 120,
+      "dispatch": 253966.875,
+      "response": {
+        "status": "executed",
+        "target_checks": {
+          "filename_matches": true,
+          "sole_project_matches": true,
+          "de_pid": 30660
+        }
+      },
+      "settled": 253966.937,
+      "total_s": 0.07800000000861473,
+      "queue_s": 0.01600000000325963,
+      "dispatch_to_settlement_s": 0.062000000005355105
+    },
+    {
+      "name": "cst_add_mesh_refinement",
+      "requested": 253966.937,
+      "state": "received",
+      "allowance_s": 120,
+      "dispatch": 253966.953,
+      "response": {
+        "status": "executed",
+        "target_checks": {
+          "filename_matches": true,
+          "sole_project_matches": true,
+          "de_pid": 30660
+        }
+      },
+      "settled": 253967.0,
+      "total_s": 0.0629999999946449,
+      "queue_s": 0.01600000000325963,
+      "dispatch_to_settlement_s": 0.046999999991385266
+    },
+    {
+      "name": "cst_set_adaptive_mesh",
+      "requested": 253967.0,
+      "state": "received",
+      "allowance_s": 120,
+      "dispatch": 253967.015,
+      "response": {
+        "status": "executed",
+        "target_checks": {
+          "filename_matches": true,
+          "sole_project_matches": true,
+          "de_pid": 30660
+        }
+      },
+      "settled": 253967.062,
+      "total_s": 0.062000000005355105,
+      "queue_s": 0.015000000013969839,
+      "dispatch_to_settlement_s": 0.046999999991385266
+    },
+    {
+      "name": "cst_configure_time_domain_solver",
+      "requested": 253967.062,
+      "state": "received",
+      "allowance_s": 120,
+      "dispatch": 253967.093,
+      "response": {
+        "status": "executed",
+        "target_checks": {
+          "filename_matches": true,
+          "sole_project_matches": true,
+          "de_pid": 30660
+        }
+      },
+      "settled": 253967.14,
+      "total_s": 0.07800000000861473,
+      "queue_s": 0.030999999988125637,
+      "dispatch_to_settlement_s": 0.0470000000204891
+    },
+    {
+      "name": "cst_add_field_monitor",
+      "requested": 253967.14,
+      "state": "received",
+      "allowance_s": 120,
+      "dispatch": 253967.156,
+      "response": {
+        "status": "executed",
+        "target_checks": {
+          "filename_matches": true,
+          "sole_project_matches": true,
+          "de_pid": 30660
+        }
+      },
+      "settled": 253967.218,
+      "total_s": 0.0779999999795109,
+      "queue_s": 0.0159999999741558,
+      "dispatch_to_settlement_s": 0.062000000005355105
+    },
+    {
+      "name": "cst_add_field_monitor",
+      "requested": 253967.218,
+      "state": "received",
+      "allowance_s": 120,
+      "dispatch": 253967.218,
+      "response": {
+        "status": "executed",
+        "target_checks": {
+          "filename_matches": true,
+          "sole_project_matches": true,
+          "de_pid": 30660
+        }
+      },
+      "settled": 253967.296,
+      "total_s": 0.07800000000861473,
+      "queue_s": 0.0,
+      "dispatch_to_settlement_s": 0.07800000000861473
+    },
+    {
+      "name": "cst_add_field_monitor",
+      "requested": 253967.296,
+      "state": "received",
+      "allowance_s": 120,
+      "dispatch": 253967.312,
+      "response": {
+        "status": "executed",
+        "target_checks": {
+          "filename_matches": true,
+          "sole_project_matches": true,
+          "de_pid": 30660
+        }
+      },
+      "settled": 253967.375,
+      "total_s": 0.07899999999790452,
+      "queue_s": 0.01600000000325963,
+      "dispatch_to_settlement_s": 0.0629999999946449
+    },
+    {
+      "name": "cst_add_field_monitor",
+      "requested": 253967.375,
+      "state": "received",
+      "allowance_s": 120,
+      "dispatch": 253967.39,
+      "response": {
+        "status": "executed",
+        "target_checks": {
+          "filename_matches": true,
+          "sole_project_matches": true,
+          "de_pid": 30660
+        }
+      },
+      "settled": 253967.453,
+      "total_s": 0.07800000000861473,
+      "queue_s": 0.015000000013969839,
+      "dispatch_to_settlement_s": 0.0629999999946449
+    },
+    {
+      "name": "cst_add_field_monitor",
+      "requested": 253967.453,
+      "state": "received",
+      "allowance_s": 120,
+      "dispatch": 253967.468,
+      "response": {
+        "status": "executed",
+        "target_checks": {
+          "filename_matches": true,
+          "sole_project_matches": true,
+          "de_pid": 30660
+        }
+      },
+      "settled": 253967.531,
+      "total_s": 0.0779999999795109,
+      "queue_s": 0.014999999984866008,
+      "dispatch_to_settlement_s": 0.0629999999946449
+    },
+    {
+      "name": "cst_get_solver_info",
+      "requested": 253967.531,
+      "state": "received",
+      "allowance_s": 120,
+      "dispatch": 253967.546,
+      "response": {
+        "status": "ok",
+        "target_checks": {
+          "filename_matches": true,
+          "sole_project_matches": true,
+          "de_pid": 30660
+        }
+      },
+      "settled": 253967.593,
+      "total_s": 0.062000000005355105,
+      "queue_s": 0.015000000013969839,
+      "dispatch_to_settlement_s": 0.046999999991385266
+    },
+    {
+      "name": "cst_get_mesh_info",
+      "requested": 253967.609,
+      "state": "received",
+      "allowance_s": 120,
+      "dispatch": 253967.609,
+      "response": {
+        "status": "ok",
+        "target_checks": {
+          "filename_matches": true,
+          "sole_project_matches": true,
+          "de_pid": 30660
+        }
+      },
+      "settled": 253967.843,
+      "total_s": 0.23399999999674037,
+      "queue_s": 0.0,
+      "dispatch_to_settlement_s": 0.23399999999674037
+    },
+    {
+      "name": "fixture_save",
+      "requested": 253967.843,
+      "state": "received",
+      "allowance_s": 120,
+      "dispatch": 253967.859,
+      "response": {
+        "status": "saved",
+        "filename_matches": true,
+        "sole_project_matches": true,
+        "de_pid": 30660
+      },
+      "settled": 253968.765,
+      "total_s": 0.9220000000204891,
+      "queue_s": 0.01600000000325963,
+      "dispatch_to_settlement_s": 0.9060000000172295
+    },
+    {
+      "name": "fixture_identity",
+      "requested": 253968.765,
+      "state": "received",
+      "allowance_s": 120,
+      "dispatch": 253968.765,
+      "response": {
+        "status": "observed",
+        "filename_matches": true,
+        "sole_project_matches": true,
+        "de_pid": 30660
+      },
+      "settled": 253968.781,
+      "total_s": 0.0159999999741558,
+      "queue_s": 0.0,
+      "dispatch_to_settlement_s": 0.0159999999741558
+    },
+    {
+      "name": "cst_run_simulation_async",
+      "requested": 253968.796,
+      "state": "received",
+      "allowance_s": 480,
+      "dispatch": 253968.796,
+      "response": {
+        "status": "started",
+        "target_checks": {
+          "filename_matches": true,
+          "sole_project_matches": true,
+          "de_pid": 30660
+        }
+      },
+      "settled": 253968.921,
+      "total_s": 0.125,
+      "queue_s": 0.0,
+      "dispatch_to_settlement_s": 0.125
+    },
+    {
+      "name": "cst_get_simulation_status",
+      "requested": 253968.921,
+      "state": "received",
+      "allowance_s": 120,
+      "dispatch": 253968.937,
+      "response": {
+        "status": "ok",
+        "running": true,
+        "active_solver": "HF Time Domain",
+        "run_info": {
+          "last_reported_state": "RUNNING",
+          "state_note": "Last state CST reported for a previous solver run/history update; it carries no timestamp and may be stale. Use 'running' for the current solver condition."
+        },
+        "target_checks": {
+          "filename_matches": true,
+          "sole_project_matches": true,
+          "de_pid": 30660
+        }
+      },
+      "settled": 253969.046,
+      "total_s": 0.125,
+      "queue_s": 0.01600000000325963,
+      "dispatch_to_settlement_s": 0.10899999999674037
+    },
+    {
+      "name": "cst_wait_for_simulation",
+      "requested": 253969.078,
+      "state": "received",
+      "allowance_s": 45,
+      "dispatch": 253969.078,
+      "response": {
+        "status": "running",
+        "running": true,
+        "elapsed_s": 4.015,
+        "polls": 3,
+        "max_wait_s": 5.0,
+        "target_checks": {
+          "filename_matches": true,
+          "sole_project_matches": true,
+          "de_pid": 30660
+        }
+      },
+      "settled": 253973.234,
+      "total_s": 4.155999999988126,
+      "queue_s": 0.0,
+      "dispatch_to_settlement_s": 4.155999999988126
+    },
+    {
+      "name": "cst_stop_simulation",
+      "requested": 253969.171,
+      "state": "received",
+      "allowance_s": 60,
+      "dispatch": 253973.25,
+      "response": {
+        "status": "executed",
+        "command": "stop",
+        "target_checks": {
+          "filename_matches": true,
+          "sole_project_matches": true,
+          "de_pid": 30660
+        }
+      },
+      "settled": 253973.265,
+      "total_s": 4.094000000011874,
+      "queue_s": 4.0789999999979045,
+      "dispatch_to_settlement_s": 0.015000000013969839
+    },
+    {
+      "name": "cst_get_simulation_status",
+      "requested": 253973.281,
+      "state": "received",
+      "allowance_s": 120,
+      "dispatch": 253973.281,
+      "response": {
+        "status": "ok",
+        "running": true,
+        "active_solver": "HF Time Domain",
+        "run_info": {
+          "last_reported_state": "RUNNING",
+          "state_note": "Last state CST reported for a previous solver run/history update; it carries no timestamp and may be stale. Use 'running' for the current solver condition."
+        },
+        "target_checks": {
+          "filename_matches": true,
+          "sole_project_matches": true,
+          "de_pid": 30660
+        }
+      },
+      "settled": 253973.312,
+      "total_s": 0.031000000017229468,
+      "queue_s": 0.0,
+      "dispatch_to_settlement_s": 0.031000000017229468
+    },
+    {
+      "name": "cst_get_simulation_status",
+      "requested": 253975.328,
+      "state": "received",
+      "allowance_s": 120,
+      "dispatch": 253975.328,
+      "response": {
+        "status": "ok",
+        "running": true,
+        "active_solver": "HF Time Domain",
+        "run_info": {
+          "last_reported_state": "RUNNING",
+          "state_note": "Last state CST reported for a previous solver run/history update; it carries no timestamp and may be stale. Use 'running' for the current solver condition."
+        },
+        "target_checks": {
+          "filename_matches": true,
+          "sole_project_matches": true,
+          "de_pid": 30660
+        }
+      },
+      "settled": 253975.359,
+      "total_s": 0.030999999988125637,
+      "queue_s": 0.0,
+      "dispatch_to_settlement_s": 0.030999999988125637
+    },
+    {
+      "name": "cst_get_simulation_status",
+      "requested": 253977.375,
+      "state": "received",
+      "allowance_s": 120,
+      "dispatch": 253977.437,
+      "response": {
+        "status": "ok",
+        "running": false,
+        "active_solver": "HF Time Domain",
+        "run_info": {
+          "last_reported_state": "ERROR",
+          "state_note": "Last state CST reported for a previous solver run/history update; it carries no timestamp and may be stale. Use 'running' for the current solver condition. The solver is idle now."
+        },
+        "target_checks": {
+          "filename_matches": true,
+          "sole_project_matches": true,
+          "de_pid": 30660
+        }
+      },
+      "settled": 253977.453,
+      "total_s": 0.07800000000861473,
+      "queue_s": 0.062000000005355105,
+      "dispatch_to_settlement_s": 0.01600000000325963
+    },
+    {
+      "name": "cst_read_project_log",
+      "requested": 253977.468,
+      "state": "received",
+      "allowance_s": 120,
+      "dispatch": 253977.468,
+      "response": {
+        "status": "ok",
+        "owned_log_classification": {
+          "abort_or_cancel_mentioned": true,
+          "normal_completion_mentioned": false,
+          "owned_log_tail_retained": true,
+          "qualification": "Keyword hints only, not causal proof or timestamped attribution."
+        },
+        "target_checks": {
+          "filename_matches": true,
+          "sole_project_matches": true,
+          "de_pid": 30660
+        }
+      },
+      "settled": 253977.484,
+      "total_s": 0.01600000000325963,
+      "queue_s": 0.0,
+      "dispatch_to_settlement_s": 0.01600000000325963
+    },
+    {
+      "name": "fixture_close",
+      "requested": 253977.484,
+      "state": "received",
+      "allowance_s": 120,
+      "dispatch": 253977.5,
+      "response": {
+        "status": "closed",
+        "filename_matches": true,
+        "sole_project_matches": true,
+        "de_pid": 30660
+      },
+      "settled": 253982.578,
+      "total_s": 5.094000000011874,
+      "queue_s": 0.01600000000325963,
+      "dispatch_to_settlement_s": 5.078000000008615
+    }
+  ],
+  "processes": [
+    {
+      "pid": 30660,
+      "parent_pid": 8876,
+      "executable_basename": "CST DESIGN ENVIRONMENT_AMD64.exe",
+      "role": "owned_CST_instance",
+      "creation_filetime": 134370594323968579,
+      "in_any_job": true
+    },
+    {
+      "pid": 8876,
+      "parent_pid": 31256,
+      "executable_basename": "python.exe",
+      "role": "peer",
+      "creation_filetime": 134370594304941659,
+      "in_any_job": true
+    },
+    {
+      "pid": 31256,
+      "parent_pid": 20796,
+      "executable_basename": "python.exe",
+      "role": "launcher",
+      "creation_filetime": 134370594304783451,
+      "in_any_job": true
+    },
+    {
+      "pid": 20796,
+      "parent_pid": 23276,
+      "executable_basename": "uv.exe",
+      "role": "launcher",
+      "creation_filetime": 134370594304315111,
+      "in_any_job": true
+    },
+    {
+      "pid": 35716,
+      "parent_pid": 20796,
+      "executable_basename": "conhost.exe",
+      "role": "observed_descendant",
+      "creation_filetime": 134370594304409404,
+      "in_any_job": true
+    },
+    {
+      "pid": 18972,
+      "parent_pid": 30660,
+      "executable_basename": "DBStorageServer_AMD64.exe",
+      "role": "observed_descendant",
+      "creation_filetime": 134370594342580650,
+      "in_any_job": true
+    },
+    {
+      "pid": 2404,
+      "parent_pid": 30660,
+      "executable_basename": "modeler_AMD64.exe",
+      "role": "observed_descendant",
+      "creation_filetime": 134370594437059264,
+      "in_any_job": true
+    },
+    {
+      "pid": 25776,
+      "parent_pid": 30660,
+      "executable_basename": "schematic_AMD64.exe",
+      "role": "observed_descendant",
+      "creation_filetime": 134370594455733656,
+      "in_any_job": true
+    },
+    {
+      "pid": 14520,
+      "parent_pid": 30660,
+      "executable_basename": "SchematicEditor_AMD64.exe",
+      "role": "observed_descendant",
+      "creation_filetime": 134370594461186189,
+      "in_any_job": true
+    }
+  ],
+  "versions": {
+    "mcp": "2.3.0",
+    "anyio": "4.15.1"
+  },
+  "status": "completed",
+  "human_reconciliation_required": false,
+  "startup_s": 1.875,
+  "stop_intent": {
+    "monotonic": 253969.171,
+    "wait_pending": true
+  },
+  "independent_idle_observed": 253977.468,
+  "CST_alive_at_idle_observation": true,
+  "alive_before_orderly_close": {
+    "30660": true,
+    "8876": true,
+    "31256": true,
+    "20796": true,
+    "35716": true,
+    "18972": true,
+    "2404": true,
+    "25776": true,
+    "14520": true
+  },
+  "alive_after_orderly_close": {
+    "30660": false,
+    "8876": true,
+    "31256": true,
+    "20796": true,
+    "35716": true,
+    "18972": false,
+    "2404": false,
+    "25776": false,
+    "14520": false
+  },
+  "session_exit_returned": 253982.578,
+  "transport_exit_returned": 253983.125,
+  "cleanup_s": 0.5469999999913853,
+  "post_cleanup_samples": [
+    {
+      "after_observation_start_s": 0.0,
+      "alive": {
+        "30660": false,
+        "8876": false,
+        "31256": false,
+        "20796": false,
+        "35716": true,
+        "18972": false,
+        "2404": false,
+        "25776": false,
+        "14520": false
+      }
+    },
+    {
+      "after_observation_start_s": 0.062000000005355105,
+      "alive": {
+        "30660": false,
+        "8876": false,
+        "31256": false,
+        "20796": false,
+        "35716": false,
+        "18972": false,
+        "2404": false,
+        "25776": false,
+        "14520": false
+      }
+    }
+  ],
+  "all_tracked_terminated": true,
+  "total_driver_s": 37.28100000001723,
+  "saved_fixture_exists": true
+}

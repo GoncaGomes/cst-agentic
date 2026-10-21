@@ -1,0 +1,33 @@
+{
+  "passed": true,
+  "checks": [
+    "literal fixture extraction, fixed manifest length and real upstream schemas",
+    "authorization rejects enlarged scope",
+    "exclusive admission blocks replay/existing targets using private fixtures",
+    "actual event write works in a private temporary fixture",
+    "fixed order blocks early launch and hidden operations",
+    "call/time admission reserves complete operation plus cleanup",
+    "preexisting target is never overwritten",
+    "durable unresolved marker blocks dispatch",
+    "failed durable marker write prevents SDK dispatch",
+    "received failure retains marker and blocks dependent calls",
+    "synthetic interrupted attempt latches; no status/stop exception",
+    "queued stop waits for active request, without concurrent native dispatch",
+    "queued stop expiry does not cancel an already-dispatched wait",
+    "natural completion skips stop without latch reset or relaunch",
+    "finite verification and no close without observed idle",
+    "unobserved async startup cannot be mistaken for settled completion",
+    "event binding and raw-error/dialog output filtering"
+  ],
+  "source_sha256": {
+    "windows_solver_stop.py": "6919cd8e8beffcb2fd5db5c7a6a7ec3062c5eaa711ed2de00e88e902e3b5a7b9",
+    "windows_solver_stop_peer.py": "f7d702846929fae8d601fc1743dec0c80228dad6b682c580306102011e00f852",
+    "windows_solver_stop_plan.py": "4b1c6d2b8e78b3a9935825bcea14146c41750cb9864a0867648f1f0a08c0fb2b",
+    "windows_solver_stop_processes.py": "343af18fa7ed66bbc4e801cb395dd7d495033f1d0e34df72cef394bcf8efa1ee",
+    "windows_solver_stop_checks.py": "a42ff6117562115dfcb33171369e4cf343f88e78730f92910e1ba6382e7a885c"
+  },
+  "fixture_sha256": "1e253f404ded1092c60487c5a972041f0fc6ded1b8db9cab9e81f444dbbeea8f",
+  "catalogue_sha256": "d5eb5bd223c5b84616d33d7c150f87ccbc468921578bdb2672f8a634ed2b49c6",
+  "CST_or_peer_started": false,
+  "endpoint_requests": 0
+}

@@ -1,0 +1,37 @@
+{
+    "native_free_checks":  {
+                               "repeat_guards_valid":  true,
+                               "event_bindings_checked":  8,
+                               "repeat_300_second_budget_enforced":  true,
+                               "no_instance_close_in_repeat_plan":  true,
+                               "real_ledger_modified":  false,
+                               "native_api_calls":  0,
+                               "mcp_peers_started":  0
+                           },
+    "ruff_lint":  "passed",
+    "ruff_format_check":  "passed",
+    "powershell_wrapper_parse":  "passed",
+    "source_manifest":  [
+                            {
+                                "filename":  "windows_lifetime_native.py",
+                                "sha256":  "AB3F2B110C8E2B44D9195D10B8F44A4B1B352F782B5202D2D2565FD23097ECB2"
+                            },
+                            {
+                                "filename":  "windows_lifetime_native_peer.py",
+                                "sha256":  "0E67D2AF6EACA4241744F19B616E17F36435A414ABB90365E6BF0CB470C88379"
+                            },
+                            {
+                                "filename":  "native-lifetime-run-repeat.ps1",
+                                "sha256":  "B9B7601393B38D388DBEAB521B7AF6875E728AACF19A80C096FA0C803A3A6F81"
+                            },
+                            {
+                                "filename":  "native-lifetime-repeat-check.py",
+                                "sha256":  "6BB6586E9D14B2193BA86B05ADD83862702416850F366FFD066D08789DCC8F96"
+                            },
+                            {
+                                "filename":  "leave-open-repeat-authorization.json",
+                                "sha256":  "4514E97A53655EB4700801A0415F5A8F57694F4C5CCCC8CA8C1C8027463CCA66"
+                            }
+                        ],
+    "no_commits_pushes_or_tracker_changes":  true
+}

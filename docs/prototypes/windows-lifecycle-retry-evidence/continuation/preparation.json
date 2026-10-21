@@ -1,0 +1,20 @@
+{
+  "static_only": true,
+  "scenario_executions": 0,
+  "source_sha256": {
+    "windows_lifecycle_remaining.py": "7beac10dfbf5778faf0a6dde190e41f85cd23342eefc0fd91640b658143f4126",
+    "windows_lifecycle_final_processes.py": "1775dbfc16a7cb361c95053a28b9f09b80c63b3d3ebeb266363ba8c79ed837dd",
+    "windows_lifecycle_remaining_checks.py": "9de43db8d45f8e4580c1463e5cb8d3aa8bba578ddcbfd92e01741b7fb9ff91d7"
+  },
+  "regression_sha256": "24c7559a5ab5b7517d97fedd8097a7f1097803e4e0d75ab3553952394273c10c",
+  "versions": {
+    "mcp": "2.3.0",
+    "anyio": "4.15.1"
+  },
+  "installed_sdk_source_sha256": {
+    "mcp.client.stdio": "c4a9de7119f35366037dbf8d51ab5cb6438e15e120730f65f32cdacdeea9328a",
+    "mcp.os.win32.utilities": "98e87c776a14cf326e63f8da007119156d3ad643ae7fbf27e9b6e6ef1dc534bf"
+  },
+  "prior_files_fingerprinted": 203,
+  "guarded_call_tool_sites": 1
+}

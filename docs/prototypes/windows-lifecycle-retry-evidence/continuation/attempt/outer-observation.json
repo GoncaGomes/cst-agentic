@@ -1,0 +1,11 @@
+﻿{
+    "started_utc":  "2026-10-21T13:32:32.3844584Z",
+    "ended_utc":  "2026-10-21T13:32:45.7704686Z",
+    "outer_elapsed_s":  13.3858775,
+    "prior_execution_seconds":  9.1443602999999989,
+    "cumulative_outer_elapsed_s":  22.5302378,
+    "maximum_seconds":  300,
+    "exit_code":  0,
+    "invocation_error_type":  null,
+    "within_total_allowance":  true
+}

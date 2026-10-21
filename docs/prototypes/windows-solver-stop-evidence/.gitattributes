@@ -1,0 +1,3 @@
+# Preserve executed source/evidence bytes if publication is separately authorized.
+* -text whitespace=cr-at-eol
+**/* -text whitespace=cr-at-eol

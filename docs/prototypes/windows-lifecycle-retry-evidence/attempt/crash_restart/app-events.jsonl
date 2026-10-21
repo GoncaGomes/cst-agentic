@@ -1,0 +1,4 @@
+{"event": "context_entered", "monotonic": 257352.125, "context": "transport", "task_id": 3091497432448}
+{"event": "context_entered", "monotonic": 257352.14, "context": "session", "task_id": 3091497432448}
+{"event": "durable_marker_before_dispatch", "monotonic": 257353.359, "operation": "work"}
+{"event": "abrupt_application_exit", "monotonic": 257353.406, "code": 23}

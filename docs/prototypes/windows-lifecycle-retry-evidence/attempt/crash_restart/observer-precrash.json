@@ -1,0 +1,60 @@
+{
+  "processes": [
+    {
+      "pid": 18012,
+      "parent_pid": 8768,
+      "executable_basename": "uv.exe",
+      "creation_time": "2026-10-21T13:27:15.143000+00:00"
+    },
+    {
+      "pid": 16444,
+      "parent_pid": 18012,
+      "executable_basename": "python.exe",
+      "creation_time": "2026-10-21T13:27:15.184000+00:00"
+    },
+    {
+      "pid": 1896,
+      "parent_pid": 16444,
+      "executable_basename": "python.exe",
+      "creation_time": "2026-10-21T13:27:15.201000+00:00"
+    },
+    {
+      "pid": 36164,
+      "parent_pid": 1896,
+      "executable_basename": "uv.exe",
+      "creation_time": "2026-10-21T13:27:16.483000+00:00"
+    },
+    {
+      "pid": 18984,
+      "parent_pid": 36164,
+      "executable_basename": "conhost.exe",
+      "creation_time": "2026-10-21T13:27:16.492000+00:00"
+    },
+    {
+      "pid": 37692,
+      "parent_pid": 36164,
+      "executable_basename": "python.exe",
+      "creation_time": "2026-10-21T13:27:16.534000+00:00"
+    },
+    {
+      "pid": 34888,
+      "parent_pid": 37692,
+      "executable_basename": "python.exe",
+      "creation_time": "2026-10-21T13:27:16.549000+00:00"
+    }
+  ],
+  "alive": {
+    "18012": true,
+    "16444": true,
+    "1896": true,
+    "36164": true,
+    "18984": true,
+    "37692": true,
+    "34888": true
+  },
+  "central_marker": {
+    "state": "in_flight",
+    "operation": "work",
+    "target": "synthetic-only"
+  }
+}
