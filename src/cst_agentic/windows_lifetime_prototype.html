@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width">
+<title>Throwaway Controller lifetime sketch</title>
+<style>
+body{font:17px/1.5 system-ui;max-width:960px;margin:48px auto;padding:0 24px;color:#203044;background:#f5f7fa}
+h1,h2{line-height:1.2}section{background:white;border:1px solid #dce3ec;border-radius:12px;padding:22px;margin:20px 0}
+button{font:inherit;background:white;color:#245b94;border:1px solid #b5c5d8;border-radius:6px;padding:9px 13px;margin:4px;cursor:pointer}
+button[aria-selected=true]{background:#245b94;color:white}dt{font-weight:600}dd{margin:0 0 12px}small{color:#536378}
+#notice{border-left:4px solid #245b94;padding-left:16px}#changed{font-weight:600;color:#245b94}
+</style>
+<h1>When can the Controller safely let go?</h1>
+<p id="notice"><strong>THROWAWAY — a model to discuss, not a native test.</strong> Explore task interruption,
+queued solver stop, uncertain work and Windows stdio teardown. The fake-process observations live in the
+companion evidence report. No button accesses CST, a server, files, storage or a model endpoint.</p>
+<section><h2>Current state</h2><p id="changed"></p><dl id="state"></dl></section>
+<section><h2>Free play</h2><div id="actions"></div></section>
+<section><h2>Guided walkthroughs</h2><div id="tabs" role="tablist"></div><p id="explanation"></p><div id="steps"></div></section>
+<small>Single-session sketch only. Independent ownership is a candidate lifetime restriction, not a verified CST guarantee.
+Restart never proves that an uncertain operation was harmless. Times are deliberately not simulated.</small>
+<script>
+// Pure, disposable state model: no browser or I/O dependencies.
+const initial=()=>({permission:true,active:null,remaining:2,stopQueued:false,stopAccepted:false,
+  solver:'running (scenario assumption)',transport:'healthy',marker:false,owner:'stdio descendant',
+  session:'open',message:'Ready. This is an illustration, not an observation.'});
+function reduce(previous,action){
+  let s={...previous};s.message='';
+  const blocked=s.session!=='open'||s.transport!=='healthy'||s.marker;
+  switch(action){
+    case 'start':
+      if(blocked||!s.permission||s.active||!s.remaining){s.message='No ordinary dispatch is permitted.';break}
+      s.active='ordinary work';s.remaining--;s.marker=true;s.message='One operation dispatched; recovery marker written.';break;
+    case 'cancel':s.permission=false;s.remaining=0;s.message='Remaining permission revoked. Active operation is not cancelled; solver is not stopped.';break;
+    case 'stop':
+      if(s.session!=='open'||s.transport!=='healthy'){s.message='No stop dispatch: use CST itself when urgent.';break}
+      s.stopQueued=true;s.message='Explicit stop requested. It waits behind active work and can exhaust its total allowance.';break;
+    case 'settle':
+      if(!s.active){s.message='There is no active operation to settle.';break}
+      if(s.active==='solver stop'){s.stopAccepted=true;s.message='Stop request accepted, not termination evidence.'}
+      else s.message='Already-dispatched work settled normally.';
+      s.active=null;s.marker=false;break;
+    case 'admitStop':
+      if(blocked||s.active||!s.stopQueued){s.message='Stop cannot dispatch yet (or is blocked by uncertainty).';break}
+      s.active='solver stop';s.marker=true;s.stopQueued=false;s.message='Stop admitted through the same guarded serialized route.';break;
+    case 'stopExpired':
+      if(!s.stopQueued){s.message='No queued stop allowance to expire.';break}
+      s.stopQueued=false;s.message='Stop allowance exhausted while queued: not dispatched, no replay, no extra budget.';break;
+    case 'verify':
+      if(blocked||s.active||!s.stopAccepted){s.message='No supported termination readback available in this state.';break}
+      s.solver='stopped (illustrative independent readback)';s.message='Separate termination evidence, not inferred from stop acceptance.';break;
+    case 'uncertain':
+      if(!s.active){s.message='No dispatched operation to make uncertain.';break}
+      s.transport='permanently latched';s.active=null;s.marker=true;s.message='No further status or stop through this client. Human reconciliation required.';break;
+    case 'crash':
+      s.session='abruptly exited';s.message=s.marker?'In-flight marker survives; restart must block.':'No in-flight work in this illustrative crash.';break;
+    case 'restart':
+      s.session=s.marker?'recovery blocked':'open';s.message=s.marker?'New client does not bypass central recovery.':'New session; permissions and target must be established again.';
+      s.permission=false;s.remaining=0;break;
+    case 'reset':return initial();
+    case 'independent':
+      if(s.active||s.marker){s.message='Lifetime ownership cannot be changed during active or uncertain work.';break}
+      s.owner='independently owned';s.message='Candidate separate ownership selected for discussion, NOT verified on CST.';break;
+    case 'leave':
+      if(s.active){s.message='Normal quit waits for settlement; it does not cancel active work.';break}
+      s.permission=false;s.remaining=0;s.session='closed';
+      s.message=s.owner==='stdio descendant'?'Danger: Windows transport cleanup may kill descendants; leave-open is not guaranteed.':'Separate ownership removes that specific lifetime coupling, not every CST cleanup risk.';break;
+    default:s.message='Unknown action.';
+  }return s;
+}
+const labels={start:'Dispatch next step',cancel:'Cancel task',stop:'Request solver stop',settle:'Receive active outcome',
+  admitStop:'Admit queued stop',stopExpired:'Expire queued stop allowance',verify:'Receive separate stopped evidence',
+  uncertain:'Lose active outcome',crash:'Abrupt application exit',restart:'Restart application',
+  independent:'Choose independent ownership (hypothesis)',leave:'Quit, leave CST open',reset:'Reset'};
+const scenarios=[
+  ['Task interruption','Cancel remaining steps while allowing the active step to settle.',['start','cancel','settle','start']],
+  ['Stop behind work','Stop intent, dispatch, acceptance and termination evidence are separate events.',['start','stop','admitStop','settle','admitStop','settle','verify']],
+  ['Stop budget','An allowance can expire entirely in the serialized queue.',['start','stop','stopExpired','settle']],
+  ['Uncertainty','No status/stop exception bypasses the latch; restart also blocks.',['start','uncertain','stop','crash','restart']],
+  ['Crash marker','An unresolved dispatch survives a new application session.',['start','crash','restart']],
+  ['Windows lifetime','Compare a descendant and a separately owned process. Neither is connected CST evidence.',['leave','reset','independent','leave']]
+];
+let state=initial(),selected=0,step=0;
+function render(){
+  document.querySelector('#changed').textContent=state.message;
+  const names={permission:'Ordinary task permission',active:'Currently dispatched work',remaining:'Remaining proposed steps',
+    stopQueued:'Stop intent waiting',stopAccepted:'Stop acceptance received',solver:'Solver evidence',transport:'Client health',
+    marker:'Unresolved central recovery marker',owner:'Process lifetime assumption',session:'Application session'};
+  const panel=document.querySelector('#state');panel.replaceChildren();
+  for(const [key,label] of Object.entries(names)){let dt=document.createElement('dt'),dd=document.createElement('dd');
+    dt.textContent=label;dd.textContent=state[key]===null?'None':String(state[key]);panel.append(dt,dd)}
+  document.querySelector('#explanation').textContent=scenarios[selected][1];
+  document.querySelectorAll('#tabs button').forEach((b,i)=>b.setAttribute('aria-selected',String(i===selected)));
+  const steps=document.querySelector('#steps');steps.replaceChildren();
+  scenarios[selected][2].forEach((action,i)=>{const b=document.createElement('button');
+    b.textContent=`${i+1}. ${labels[action]}`;b.disabled=i!==step;
+    b.onclick=()=>{state=reduce(state,action);step++;render()};steps.append(b)});
+}
+for(const [action,label] of Object.entries(labels)){let b=document.createElement('button');b.textContent=label;
+  b.onclick=()=>{state=reduce(state,action);render()};document.querySelector('#actions').append(b)}
+scenarios.forEach(([title],i)=>{let b=document.createElement('button');b.textContent=title;b.setAttribute('role','tab');
+  b.onclick=()=>{selected=i;step=0;state=initial();render()};document.querySelector('#tabs').append(b)});
+render();
+</script></html>
