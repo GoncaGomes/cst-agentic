@@ -2,6 +2,10 @@
 
 **THROWAWAY / NOT A RESOLUTION / NOT PRODUCTION.**
 
+Later, separately authorized evidence: [two follow-up lifetime probes](windows-lifetime-followup.md)
+observed delayed fake-descendant termination after both normal and escalated
+cleanup. The first-round observations below are retained unchanged as history.
+
 Question: which public Windows transport/lifetime strategy can preserve CST on
 leave-open exit while retaining bounded, guarded interruption and solver-stop
 behavior?
