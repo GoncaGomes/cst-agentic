@@ -1,0 +1,19 @@
+{
+    "case":  "authorized-close",
+    "exit_code":  0,
+    "native_invocation_error_type":  null,
+    "driver_process_exit_observed":  true,
+    "outer_uv_seconds":  20.820878,
+    "inner_driver_seconds":  20.375,
+    "outer_overhead_seconds":  0.445878,
+    "wrapper_reserve_seconds":  30,
+    "wrapper_reserve_exceeded":  false,
+    "startup_with_all_outer_overhead_upper_seconds":  2.5398779,
+    "cleanup_with_all_outer_overhead_upper_seconds":  0.7898779,
+    "complete_allowance_exceeded":  false,
+    "ledger_matches":  true,
+    "round_ceiling_exceeded":  false,
+    "cumulative_calls":  9,
+    "cumulative_charged_seconds":  374.703,
+    "qualification":  "Prior attempt charged conservatively, not retrospectively timed. All outer uv overhead is included in each startup/cleanup upper bound. Evidence-writing time is covered by retained reserve, not separately measured."
+}

@@ -1,0 +1,9 @@
+{
+  "tool_calls": 1,
+  "active_seconds": 3.89,
+  "cases": {
+    "leave-open": "blocked_reconciliation"
+  },
+  "maximum_calls": 12,
+  "maximum_active_seconds": 900
+}

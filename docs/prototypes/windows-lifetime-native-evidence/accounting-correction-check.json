@@ -1,0 +1,19 @@
+{
+    "native_free_actual_expression_check_passed":  true,
+    "old_expression_seconds":  1,
+    "corrected_expression_seconds":  0.55947799999999859,
+    "native_operations":  0,
+    "corrected_wrapper_sha256":  "904F1F28966660B09F70AC0E005AF4E0B5F4F8FE6500C838B7DFAF2F3E30D00B",
+    "first_case_recomputed":  {
+                                  "source":  "leave-open-logging-fix-1/outer-observation.json; original file retained unchanged",
+                                  "outer_uv_seconds":  114.887478,
+                                  "inner_driver_seconds":  114.328,
+                                  "outer_overhead_seconds":  0.55947799999999859,
+                                  "startup_with_all_outer_overhead_upper_seconds":  3.6694779999999985,
+                                  "cleanup_with_all_outer_overhead_upper_seconds":  0.93447799999999859,
+                                  "native_replay":  false,
+                                  "reserve_or_ledger_change_required":  false,
+                                  "complete_allowances_still_satisfied":  true
+                              },
+    "deterministic_guard_check":  "passed using preserved initial ledger, no live ledger mutation or peer"
+}

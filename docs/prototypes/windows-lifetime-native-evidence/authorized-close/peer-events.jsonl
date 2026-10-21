@@ -1,0 +1,13 @@
+{"event": "operation_entered", "monotonic": 243445.578, "name": "native_connect"}
+{"event": "operation_returned", "monotonic": 243453.765, "name": "native_connect"}
+{"event": "operation_entered", "monotonic": 243453.812, "name": "native_create"}
+{"event": "save_entered", "monotonic": 243457.468}
+{"event": "save_returned", "monotonic": 243458.328}
+{"event": "operation_returned", "monotonic": 243458.359, "name": "native_create"}
+{"event": "operation_entered", "monotonic": 243458.375, "name": "native_status"}
+{"event": "operation_returned", "monotonic": 243458.39, "name": "native_status"}
+{"event": "operation_entered", "monotonic": 243458.406, "name": "native_close"}
+{"event": "instance_close_entered", "monotonic": 243458.421}
+{"event": "instance_close_returned", "monotonic": 243463.437}
+{"event": "operation_returned", "monotonic": 243463.437, "name": "native_close"}
+{"event": "server_eof_returned", "monotonic": 243463.437}

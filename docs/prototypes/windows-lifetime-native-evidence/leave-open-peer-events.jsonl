@@ -1,0 +1,2 @@
+{"event": "peer_halted", "monotonic": 240719.515, "error_type": "TypeError"}
+{"event": "server_eof_returned", "monotonic": 240719.531}

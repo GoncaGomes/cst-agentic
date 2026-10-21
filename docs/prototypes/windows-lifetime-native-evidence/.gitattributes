@@ -1,0 +1,3 @@
+# Preserve exact evidence bytes and recognize CRLF as EOL, not trailing whitespace.
+# Keep Git's default whitespace checks as well as the CR-at-EOL allowance.
+* -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

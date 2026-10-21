@@ -1,0 +1,32 @@
+{
+  "case": "leave-open",
+  "target": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\opencode\\cst-lifetime-native\\leave-open.cst",
+  "attempts": [
+    {
+      "name": "native_connect",
+      "admitted": 240719.515,
+      "state": "received",
+      "dispatch": 240719.515,
+      "response": {
+        "status": "error",
+        "error_type": "TypeError"
+      },
+      "is_error": true,
+      "error_type": "RuntimeError",
+      "settled": 240719.531,
+      "total_s": 0.016
+    }
+  ],
+  "versions": {
+    "mcp": "2.3.0",
+    "anyio": "4.15.1"
+  },
+  "source_sha256": {
+    "windows_lifetime_native.py": "5A921EAB5C98EDF2FAE2BFB1FD99BB8E07D6D0D3E70C03253F2EB2FE6E40D7FD",
+    "windows_lifetime_native_peer.py": "D2B06784B27B9AFF33E8BE9D8CD85090130231B2E37725BE1289B1ECB6416446"
+  },
+  "manual_confirmation_required": true,
+  "startup_s": 3.515,
+  "error_type": "ExceptionGroup",
+  "total_s": 3.89
+}

@@ -1,0 +1,32 @@
+{
+    "case":  "authorized-close",
+    "utc":  "2026-10-21T09:35:27.5341529Z",
+    "driver_sha256":  "64299B19BDCDCA80CB357B8A4BE4A0ECC71F52979A10B460FF56FBF22BB3CFCE",
+    "peer_sha256":  "8368E88FC856767E4F197CF9BE732A41912B4B3EBB1D2801373ED89AAF20E8E5",
+    "wrapper_sha256":  "904F1F28966660B09F70AC0E005AF4E0B5F4F8FE6500C838B7DFAF2F3E30D00B",
+    "ledger_before":  {
+                          "tool_calls":  5,
+                          "active_seconds":  324.328,
+                          "cases":  {
+                                        "leave-open":  "completed"
+                                    },
+                          "maximum_calls":  12,
+                          "maximum_active_seconds":  900,
+                          "continuation":  {
+                                               "id":  "logging-fix-1",
+                                               "authorization_sha256":  "b71ea4d61f0c96f146ec7cc23cf00c85b20d6d33c3e8b9bbea7c30e93f83d43f",
+                                               "failed_evidence_directory":  "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\opencode\\cst-lifetime-native\\evidence\\leave-open",
+                                               "failed_ledger":  {
+                                                                     "tool_calls":  1,
+                                                                     "active_seconds":  3.89,
+                                                                     "cases":  {
+                                                                                   "leave-open":  "blocked_reconciliation"
+                                                                               },
+                                                                     "maximum_calls":  12,
+                                                                     "maximum_active_seconds":  900
+                                                                 },
+                                               "prior_attempt_charge_seconds":  180,
+                                               "qualification":  "Conservative charge, not retrospective proof of unmeasured overhead."
+                                           }
+                      }
+}

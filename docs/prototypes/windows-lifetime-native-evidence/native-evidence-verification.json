@@ -1,0 +1,22 @@
+{
+  "original_failure_and_marker_unchanged": true,
+  "executed_source_snapshots_match": true,
+  "all_successful_calls_received_and_within_120_seconds": true,
+  "one_save_per_successful_case": true,
+  "native_close_absent_in_leave_open_and_once_in_close_case": true,
+  "all_tracked_process_handles_terminated_in_both_cases": true,
+  "manual_confirmation_needed": false,
+  "tool_calls_including_initial_failure": 9,
+  "conservative_charged_seconds_after_gap_review": 521.245152,
+  "accounting": {
+    "source": "Both wrapper-start UTC timestamps and outer uv stopwatch observations",
+    "between_case_seconds_charged": 146.542152,
+    "new_round_utc_envelope_seconds": 282.250508,
+    "new_driver_plus_wrapper_stopwatch_seconds": 135.708356,
+    "ledger_before_gap_charge_seconds": 374.703,
+    "retained_wrapper_reserve_seconds": 60,
+    "prior_attempt_conservative_charge_seconds": 180,
+    "qualification": "Gap charged after evidence review; both cases would still have passed the 155-second admission reserve with that gap included. UTC envelope is not independently protected against wall-clock adjustment. Original failed-path overhead remains unmeasured; no retrospective complete-budget guarantee."
+  },
+  "native_api_calls_by_this_check": 0
+}

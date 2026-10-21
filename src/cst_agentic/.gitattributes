@@ -1,0 +1,3 @@
+# Keep only these throwaway executed-source fingerprints stable on Windows checkout.
+windows_lifetime_native.py text eol=lf
+windows_lifetime_native_peer.py text eol=lf

@@ -1,0 +1,49 @@
+{
+    "binding_check":  {
+                          "event_argument_binding_valid":  true,
+                          "native_api_calls":  0
+                      },
+    "focused_checks":  {
+                           "all_event_call_bindings_valid":  true,
+                           "checked_event_calls":  8,
+                           "logging_write_valid":  true,
+                           "continuation_guards_valid":  true,
+                           "native_api_calls":  0,
+                           "mcp_peers_started":  0,
+                           "real_ledger_modified":  false
+                       },
+    "ruff_lint":  "passed",
+    "ruff_format_check":  "passed",
+    "powershell_wrapper_parse":  "passed",
+    "historical_peer_pids_absent_at_preflight":  [
+                                                     14396,
+                                                     35404
+                                                 ],
+    "historical_exit_timing":  "unmeasured; current absence is not an exact historical exit observation",
+    "source_manifest":  [
+                            {
+                                "filename":  "windows_lifetime_native.py",
+                                "sha256":  "64299B19BDCDCA80CB357B8A4BE4A0ECC71F52979A10B460FF56FBF22BB3CFCE"
+                            },
+                            {
+                                "filename":  "windows_lifetime_native_peer.py",
+                                "sha256":  "8368E88FC856767E4F197CF9BE732A41912B4B3EBB1D2801373ED89AAF20E8E5"
+                            },
+                            {
+                                "filename":  "native-lifetime-binding-check.py",
+                                "sha256":  "2A4F32848EDE83D3A310E00705D50D90889633E28060E81820971240EB89708C"
+                            },
+                            {
+                                "filename":  "native-lifetime-continuation-check.py",
+                                "sha256":  "12607BD796CE8D9DA8DCDD382BBA06A3541103FF1E0817D768652122193D56B3"
+                            },
+                            {
+                                "filename":  "native-lifetime-run-case.ps1",
+                                "sha256":  "D36D7F9750057435E8FC33096C2AD9A601FFF9D327F90E7DEC04CC8138B0C412"
+                            },
+                            {
+                                "filename":  "logging-fix-continuation.json",
+                                "sha256":  "B71EA4D61F0C96F146EC7CC23CF00C85B20D6D33C3E8B9BBEA7C30E93F83D43F"
+                            }
+                        ]
+}

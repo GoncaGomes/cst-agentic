@@ -1,0 +1,25 @@
+{
+  "tool_calls": 1,
+  "active_seconds": 210,
+  "cases": {
+    "leave-open": "in_flight"
+  },
+  "maximum_calls": 12,
+  "maximum_active_seconds": 900,
+  "continuation": {
+    "id": "logging-fix-1",
+    "authorization_sha256": "b71ea4d61f0c96f146ec7cc23cf00c85b20d6d33c3e8b9bbea7c30e93f83d43f",
+    "failed_evidence_directory": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\opencode\\cst-lifetime-native\\evidence\\leave-open",
+    "failed_ledger": {
+      "tool_calls": 1,
+      "active_seconds": 3.89,
+      "cases": {
+        "leave-open": "blocked_reconciliation"
+      },
+      "maximum_calls": 12,
+      "maximum_active_seconds": 900
+    },
+    "prior_attempt_charge_seconds": 180,
+    "qualification": "Conservative charge, not retrospective proof of unmeasured overhead."
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "id": "logging-fix-1",
+  "user_authorized": true,
+  "user_message": "Go ahead.",
+  "approved_proposal": "Fix only the disposable harness; verify without CST; explicitly reconcile the pre-native failure; guarded leave-open retry at the unchanged target, then review before authorized-close. No production changes.",
+  "human_observation": "No cst window appeared.",
+  "failure_classification": "Received native_connect failure before native API entry, corroborated by executed source and native-free binding check; not an uncertain transport effect.",
+  "prior_attempt_charge_seconds": 180,
+  "timing_qualification": "The original driver measured 3.890 seconds, but outer uv overhead and exact failed-path process exit were not independently timed. Charge 180 seconds conservatively (startup 120 + cleanup 30 + overhead reserve 30). This is accounting policy, not retrospective validation of a measured upper bound.",
+  "maximum_calls": 12,
+  "maximum_active_seconds": 900,
+  "targets_unchanged": true,
+  "manual_confirmation_if_inconclusive": true,
+  "save_attempts_per_case": 1,
+  "existing_instance_attachment": false,
+  "solver_or_model_requests": false
+}

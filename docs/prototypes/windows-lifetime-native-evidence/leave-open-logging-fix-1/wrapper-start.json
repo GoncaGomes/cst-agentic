@@ -1,0 +1,15 @@
+{
+    "case":  "leave-open",
+    "utc":  "2026-10-21T09:31:06.1045224Z",
+    "driver_sha256":  "64299B19BDCDCA80CB357B8A4BE4A0ECC71F52979A10B460FF56FBF22BB3CFCE",
+    "peer_sha256":  "8368E88FC856767E4F197CF9BE732A41912B4B3EBB1D2801373ED89AAF20E8E5",
+    "ledger_before":  {
+                          "tool_calls":  1,
+                          "active_seconds":  3.89,
+                          "cases":  {
+                                        "leave-open":  "blocked_reconciliation"
+                                    },
+                          "maximum_calls":  12,
+                          "maximum_active_seconds":  900
+                      }
+}
