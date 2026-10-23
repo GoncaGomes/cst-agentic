@@ -2,8 +2,9 @@
 
 This builds on local recovery foundation `b02d6b1`, not a replacement for it.
 The production lifecycle factory is `create_controller_session`; the terminal
-uses that same factory. This is not the conversational loop (#19), live target
-support (#24), production isolation evidence, or native acceptance.
+uses that same factory. The [conversation coordinator](controller-conversation.md)
+now owns terminal policy and the offline-tested model/tool loop (#19). Live target
+support (#24), production isolation evidence and native acceptance remain unavailable.
 
 ## Configuration and entry
 
@@ -49,21 +50,23 @@ The connection-only server setting does not grant attachment authority.
 
 The configured provider client and OpenAI Agents SDK model are initialized without
 making model requests. Global tracing/export processors are disabled and the
-prepared SDK `RunConfig` disables tracing. There are no direct model calls in
-this slice; future direct calls must explicitly use `ModelTracing.DISABLED`.
+prepared SDK `RunConfig` disables tracing. The shared coordinator uses direct
+model requests with `ModelTracing.DISABLED` only after request admission; production
+admission remains blocked pending reviewed discovery/context prerequisites.
 Server stderr is captured in a local temporary stream from process startup,
 never automatically forwarded, and discarded on cleanup.
 
 ## Interaction and exit
 
-`help` describes this lifecycle-only interface. Other work requests are refused
-pending #19/#24; there is no native launch, attachment, status, stop, save,
-disconnect or close tool route. Existing-instance attachment remains excluded.
+`help`, historical `status`, `continue`, stop-simulation intent and exit confirmation
+are handled by the shared coordinator. Production work requests report the missing
+discovery/context/target prerequisites; no native launch, attachment, status, stop,
+save, disconnect or close route is activated. Existing-instance attachment remains excluded.
 
 `quit`/`exit` warns about unsaved work, active simulations and unknown live state;
 the user must type `exit` again to confirm. Declining keeps the session open.
-These are conservative warnings, not live dirty/run-state readbacks. This slice
-cannot own a CST instance because it cannot dispatch tools. Future native task
+These are conservative warnings, not live dirty/run-state readbacks. The production
+runtime cannot own a CST instance while dispatch prerequisites are blocked. Future native task
 integration must add target-specific applicable save/run confirmations; this
 generic confirmation cannot authorize saving, stopping or closing native work.
 Task completion in the inherited session still leaves transport/CST alone.
@@ -101,8 +104,9 @@ Run offline checks with `uv run pytest -q`, `uv run ruff format --check .`,
 
 **#17 remains open, with all requirements intact.** In particular, this refusal
 does not demonstrate its allowed isolated B route. Production typed isolation,
-runtime dispatch/settlement/reconciliation integration, additional abrupt-death
+production dispatch/settlement/reconciliation acceptance, additional abrupt-death
 windows and the persistence-plus-temporary-cleanup compound-error regression
-remain outstanding. The existing permanent client latch and no-replay rules are
+remain outstanding. Coordinator-level dispatch and compound cancellation/persistence
+are tested offline as described in the conversation document. The permanent client latch and no-replay rules are
 unchanged. No endpoint, configured-model behavioral, native CST/isolation or
 power-loss evidence is supplied, and no connected experiment is authorized.
