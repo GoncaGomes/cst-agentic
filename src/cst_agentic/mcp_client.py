@@ -7,9 +7,10 @@ handshake, discovers tools following pagination, serializes every
 admitted invocation, and always tears the subprocess down (bounded, and safe
 under cancellation).
 
-Every request to the server is bounded by ``request_timeout_s``: each
-``tools/list`` page and each ``tools/call`` (queueing plus SDK execution) must
-complete within it. A timeout raises :class:`McpError`/:class:`McpCallError`
+Each ``tools/list`` page uses ``request_timeout_s``. Each ``tools/call`` uses
+that default or its explicit ``timeout_s`` allowance, including queueing, the
+final synchronous admission guard and SDK execution. A timeout raises
+:class:`McpError`/:class:`McpCallError`
 with a diagnostic instead of hanging, so a server that initializes and then
 stalls cannot keep the caller alive indefinitely.
 
@@ -25,12 +26,14 @@ a new client does not reconcile the previous one.
 from __future__ import annotations
 
 import asyncio
+import inspect
 import json
 import logging
 import math
 import time
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from contextlib import suppress
+from copy import deepcopy
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -38,6 +41,7 @@ from typing import Any
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.extension import UnexpectedClaimedResult
 from mcp.client.stdio import stdio_client
+from mcp.types import ContentBlock, PaginatedRequestParams, Tool
 from pydantic import ValidationError as PydanticValidationError
 
 logger = logging.getLogger(__name__)
@@ -64,6 +68,8 @@ DIAG_TRANSPORT_FAILURE = "transport_failure"
 DIAG_SDK_VALIDATION_FAILURE = "sdk_validation_failure"
 DIAG_CANCELLED_AFTER_DISPATCH = "cancelled_after_dispatch"
 DIAG_RECEIVED = "received"
+DIAG_GUARD_REJECTED = "guard_rejected"
+DIAG_GUARD_FAILED = "guard_failed"
 
 # SDK failures that reject an otherwise well-formed transport response because
 # its shape or structured content does not validate.
@@ -84,13 +90,23 @@ class McpCallError(McpError):
 
 @dataclass
 class McpToolCall:
-    """A single recorded ``tools/call`` and its decoded response."""
+    """A received response with complete evidence and legacy convenience fields.
+
+    ``text`` and ``payload`` still refer only to the first text block. They are
+    not a complete account of effects. Client-created records retain every
+    content block and structured content without truncation; ``evidence_complete``
+    distinguishes these from older manually constructed records. This flag says
+    nothing about evidence the server itself omitted or native success.
+    """
 
     name: str
     arguments: dict[str, Any]
     is_error: bool
     text: str | None
     payload: dict[str, Any] | None
+    content: list[ContentBlock] = field(default_factory=list)
+    structured_content: dict[str, Any] | None = None
+    evidence_complete: bool = False
 
 
 @dataclass
@@ -164,8 +180,8 @@ class CstMcpClient:
             completions (see :class:`McpAttempt`).
 
     ``tools/call`` dispatch is serialized: at most one call is active per
-    client, and concurrent callers queue until the shared
-    ``request_timeout_s`` deadline (measured from each invocation's entry,
+    client, and concurrent callers queue until their individual
+    allowance expires (measured from each invocation's entry,
     covering queueing plus SDK execution) expires. Once any attempt ends
     uncertain, every later dispatch on this instance is blocked before it
     reaches the SDK.
@@ -249,37 +265,52 @@ class CstMcpClient:
             McpError: when the transport fails mid-discovery, or when a page
                 does not complete within ``request_timeout_s``.
         """
-        names: list[str] = []
+        return [tool.name for tool in await self.discover_tool_definitions()]
+
+    async def discover_tool_definitions(self) -> list[Tool]:
+        """Return detached canonical definitions, following every catalogue page.
+
+        Preserve discovery order, duplicates, schemas and metadata without any
+        strict-schema conversion. Each page uses the existing request allowance.
+        This is catalogue access, not tool activation or execution permission.
+        """
+        tools: list[Tool] = []
         cursor: str | None = None
         while True:
             try:
                 result = await asyncio.wait_for(
                     self._session.list_tools(
-                        params={"cursor": cursor} if cursor is not None else None
+                        params=PaginatedRequestParams(cursor=cursor) if cursor is not None else None
                     ),
                     timeout=self.request_timeout_s,
                 )
             except TimeoutError:
-                raise McpError(
-                    f"tools/list timed out after {self.request_timeout_s:g}s (cursor={cursor!r})."
-                ) from None
-            except Exception as exc:
-                raise McpError(f"tools/list failed: {_describe(exc)}") from exc
+                raise McpError("tools/list timed out within the request budget.") from None
+            except Exception:
+                raise McpError("tools/list failed: transport_failure") from None
             for tool in result.tools:
-                names.append(tool.name)
-                if len(names) > _MAX_DISCOVERED_TOOLS:
+                tools.append(tool.model_copy(deep=True))
+                if len(tools) > _MAX_DISCOVERED_TOOLS:
                     raise McpError("Aborted tools/list: too many tools returned.")
             cursor = result.next_cursor
             if cursor is None:
-                return names
+                return tools
 
-    async def call_tool(self, name: str, arguments: Mapping[str, Any] | None) -> McpToolCall:
+    async def call_tool(
+        self,
+        name: str,
+        arguments: Mapping[str, Any] | None,
+        *,
+        timeout_s: float | None = None,
+        dispatch_guard: Callable[[], bool] | None = None,
+    ) -> McpToolCall:
         """Issue one serialized ``tools/call`` and record the attempt.
 
         At most one ``tools/call`` is active per client. Concurrent callers
-        queue on an instance lock; the shared ``request_timeout_s`` deadline
-        starts at this invocation's entry and covers both queueing and SDK
-        execution, so a queued caller cannot wait indefinitely. Every
+        queue on an instance lock. ``timeout_s`` overrides ``request_timeout_s``
+        for this invocation only. Its deadline starts at entry and covers
+        queueing, the guard and SDK execution. The caller, not the model or this
+        transport, owns operation-specific maximum-allowance policy. Every
         admitted invocation appends an :class:`McpAttempt` to ``attempts``
         before any SDK work; only a returned response is appended to
         ``calls``, preserving its response-only meaning. The recorded and
@@ -287,12 +318,21 @@ class CstMcpClient:
         so later mutation of the caller's mapping (at any depth) cannot alter
         them.
 
+        ``dispatch_guard`` is an optional synchronous, no-argument callback
+        supplied by the execution gateway. It rechecks current prerequisites
+        (and may persist required recovery metadata) after acquiring the lock,
+        only on a healthy, ready client with budget remaining. Only literal
+        ``True`` admits dispatch. False, non-boolean/async results and exceptions
+        fail closed as not dispatched. No await occurs between the decision
+        and the dispatch marker. Keep the callback short and nonblocking; the
+        client checks its elapsed time but cannot preempt synchronous code.
+
         Raises:
-            ValueError: when ``request_timeout_s`` is not a finite positive
-                number. Rejected before dispatch; no attempt is recorded.
+            ValueError: when the selected allowance is not a finite positive
+                number (booleans excluded). No attempt is recorded.
             McpCallError: when the request cannot be completed (transport
-                failure, timeout, or no response within ``request_timeout_s``),
-                or when no active MCP session exists. In the session case the
+                failure, timeout, or no response within the allowance), when
+                the final guard refuses, or when no active session exists. In the session case the
                 attempt is recorded ``not_ready`` and the client is not
                 poisoned, so later calls with a live session still work.
                 A tool that returns a payload error does NOT raise; it is
@@ -305,9 +345,10 @@ class CstMcpClient:
         ``uncertain`` and every later dispatch on this instance is blocked
         before it reaches the SDK. Caller cancellation always propagates.
         """
-        self._check_request_timeout()
+        allowance = self.request_timeout_s if timeout_s is None else timeout_s
+        _validate_timeout(allowance)
         started = time.monotonic()
-        deadline = started + self.request_timeout_s
+        deadline = started + allowance
         attempt = McpAttempt(
             name=name,
             arguments=_freeze_arguments(arguments),
@@ -352,6 +393,37 @@ class CstMcpClient:
                     f"tools/call {name!r} was not dispatched: no active MCP session."
                 ) from None
 
+            if dispatch_guard is not None:
+                try:
+                    allowed = dispatch_guard()
+                    # A mistaken async guard must never be treated as truthy
+                    # approval. Close bare coroutines without running them.
+                    if inspect.iscoroutine(allowed):
+                        allowed.close()
+                    diagnostic = DIAG_GUARD_REJECTED if allowed is False else DIAG_GUARD_FAILED
+                except asyncio.CancelledError:
+                    attempt.finalize(
+                        ATTEMPT_NOT_DISPATCHED, DIAG_QUEUED_CANCELLED, time.monotonic()
+                    )
+                    raise
+                except Exception:
+                    allowed = False
+                    diagnostic = DIAG_GUARD_FAILED
+                if allowed is not True:
+                    attempt.finalize(ATTEMPT_NOT_DISPATCHED, diagnostic, time.monotonic())
+                    raise McpCallError(
+                        f"tools/call {name!r} was not dispatched: final dispatch guard refused."
+                    ) from None
+
+            # The guard may consume synchronous time (e.g. persisting a marker).
+            # No await is allowed between its decision and the dispatch marker.
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                attempt.finalize(ATTEMPT_NOT_DISPATCHED, DIAG_QUEUED_TIMEOUT, time.monotonic())
+                raise McpCallError(
+                    f"tools/call {name!r} was not dispatched: the request budget "
+                    "expired before the call could start."
+                ) from None
             attempt.dispatched = True
             try:
                 result = await asyncio.wait_for(
@@ -385,6 +457,9 @@ class CstMcpClient:
                 is_error=bool(getattr(result, "is_error", False)),
                 text=_first_text(result),
                 payload=_decode_payload(result),
+                content=deepcopy(result.content),
+                structured_content=deepcopy(result.structured_content),
+                evidence_complete=True,
             )
             attempt.finalize(ATTEMPT_RECEIVED, DIAG_RECEIVED, time.monotonic(), result=record)
             self.calls.append(record)
@@ -417,9 +492,7 @@ class CstMcpClient:
             ValueError: when ``request_timeout_s`` is not a finite positive
                 number. The message never echoes the configured value.
         """
-        bound = self.request_timeout_s
-        if not isinstance(bound, (int, float)) or not math.isfinite(bound) or bound <= 0:
-            raise ValueError("request_timeout_s must be a finite positive number.")
+        _validate_timeout(self.request_timeout_s)
 
     async def _aclose(self) -> None:
         if self._session_cm is not None:
@@ -437,6 +510,16 @@ class CstMcpClient:
                     timeout=self.shutdown_timeout_s,
                 )
             self._stdio_cm = None
+
+
+def _validate_timeout(bound: float) -> None:
+    if (
+        isinstance(bound, bool)
+        or not isinstance(bound, (int, float))
+        or not math.isfinite(bound)
+        or bound <= 0
+    ):
+        raise ValueError("The request allowance must be a finite positive number.")
 
 
 def _freeze_arguments(arguments: Mapping[str, Any] | None) -> dict[str, Any]:

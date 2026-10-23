@@ -12,7 +12,14 @@ from typing import Any
 import pydantic
 import pytest
 from mcp.client.extension import UnexpectedClaimedResult
-from mcp.types import CallToolResult, ListToolsResult, TextContent, Tool
+from mcp.types import (
+    CallToolResult,
+    ImageContent,
+    ListToolsResult,
+    PaginatedRequestParams,
+    TextContent,
+    Tool,
+)
 from pydantic import ValidationError as PydanticValidationError
 
 from cst_agentic.mcp_client import (
@@ -51,8 +58,8 @@ class FakeListSession:
                 self._by_cursor[cursor] = index + 1
         self.requested_cursors: list[str | None] = []
 
-    async def list_tools(self, params: dict[str, Any] | None = None) -> ListToolsResult:
-        cursor = (params or {}).get("cursor")
+    async def list_tools(self, *, params: PaginatedRequestParams | None = None) -> ListToolsResult:
+        cursor = params.cursor if params is not None else None
         self.requested_cursors.append(cursor)
         page = self._pages[self._by_cursor[cursor]]
         return ListToolsResult(tools=page["tools"], next_cursor=page.get("next_cursor"))
@@ -93,6 +100,49 @@ async def test_discovery_single_page(tmp_path: Path) -> None:
     assert session.requested_cursors == [None]
 
 
+@pytest.mark.asyncio
+async def test_definition_discovery_preserves_canonical_schemas_across_pages(
+    tmp_path: Path,
+) -> None:
+    schema = {
+        "type": "object",
+        "properties": {
+            "size": {"anyOf": [{"type": "number"}, {"type": "string"}]},
+            "material": {"type": ["string", "null"], "default": None},
+            "enabled": {"type": "boolean", "default": True},
+            "points": {"type": "array", "items": {"type": "integer"}},
+        },
+        "required": ["size"],
+    }
+    tool = Tool(
+        name="shape",
+        description="Canonical description",
+        input_schema=schema,
+        output_schema={"type": "object"},
+    )
+    session = FakeListSession(
+        [
+            {"tools": [tool], "next_cursor": "more"},
+            {"tools": [_tool("other"), tool], "next_cursor": None},
+        ]
+    )
+    client = _client(tmp_path)
+    client._session = session
+
+    definitions = await client.discover_tool_definitions()
+
+    assert [item.name for item in definitions] == ["shape", "other", "shape"]
+    assert definitions[0].input_schema == schema
+    assert definitions[0].description == "Canonical description"
+    assert definitions[0].output_schema == {"type": "object"}
+    assert session.requested_cursors == [None, "more"]
+    # The returned catalogue must not alias the SDK's mutable schema objects.
+    definitions[0].input_schema["required"].append("material")
+    assert tool.input_schema["required"] == ["size"]
+    assert definitions[2].input_schema["required"] == ["size"]
+    assert await client.discover_tools() == ["shape", "other", "shape"]
+
+
 class FakeCallSession:
     def __init__(self, result: CallToolResult | Exception) -> None:
         self._result = result
@@ -108,7 +158,7 @@ class FakeCallSession:
 class HangSession:
     """A session whose requests block until cancelled (simulates a hung server)."""
 
-    async def list_tools(self, params: dict[str, Any] | None = None) -> None:
+    async def list_tools(self, *, params: PaginatedRequestParams | None = None) -> None:
         await asyncio.sleep(3600)
 
     async def call_tool(self, name: str, arguments: dict[str, Any] | None = None) -> None:
@@ -205,6 +255,35 @@ async def test_call_tool_records_success(tmp_path: Path) -> None:
     assert attempt.dispatched is True
     assert attempt.result is record
     assert attempt.started_monotonic <= attempt.ended_monotonic
+
+
+@pytest.mark.asyncio
+async def test_call_retains_all_content_and_structured_evidence(tmp_path: Path) -> None:
+    result = CallToolResult(
+        content=[
+            TextContent(type="text", text='{"status": "updated"}'),
+            TextContent(type="text", text="Rebuild failed after results were deleted."),
+            ImageContent(type="image", data="AA==", mime_type="image/png"),
+        ],
+        structured_content={"deleted_results": True, "rebuilt": False},
+        is_error=True,
+    )
+    client = _client(tmp_path)
+    client._session = FakeCallSession(result)
+
+    record = await client.call_tool("edit", {})
+
+    assert record.text == '{"status": "updated"}'
+    assert record.payload == {"status": "updated"}
+    assert record.is_error is True
+    assert record.content == result.content
+    assert record.structured_content == {"deleted_results": True, "rebuilt": False}
+    assert record.evidence_complete is True
+    result.content[1].text = "changed"
+    result.structured_content["deleted_results"] = False
+    assert record.content[1].text == "Rebuild failed after results were deleted."
+    assert record.structured_content["deleted_results"] is True
+    assert client.attempts[0].state == ATTEMPT_RECEIVED
 
 
 @pytest.mark.asyncio
@@ -332,6 +411,65 @@ async def test_call_tool_queue_timeout_records_not_dispatched_and_stays_usable(
 
 
 @pytest.mark.asyncio
+async def test_per_call_allowance_expires_in_queue_without_cancelling_active_call(
+    tmp_path: Path,
+) -> None:
+    session = GateCallSession(_text_result({"ok": True}))
+    client = _client(tmp_path, request_timeout_s=5.0)
+    client._session = session
+    first = asyncio.create_task(client.call_tool("launch", {}))
+    await _wait_until(lambda: session.entered == ["launch"])
+    try:
+        with pytest.raises(McpCallError, match="not dispatched"):
+            await client.call_tool("stop", {}, timeout_s=0.05)
+        assert not first.done()
+        assert session.entered == ["launch"]
+        assert client.request_timeout_s == 5.0
+        assert client.attempts[1].state == ATTEMPT_NOT_DISPATCHED
+        assert client.attempts[1].diagnostic == DIAG_QUEUED_TIMEOUT
+    finally:
+        session.gate.set()
+        await first
+    assert (await client.call_tool("status", {})).payload == {"ok": True}
+
+
+@pytest.mark.asyncio
+async def test_final_guard_rechecks_changed_prerequisites_after_queueing(tmp_path: Path) -> None:
+    session = GateCallSession(_text_result({"ok": True}))
+    client = _client(tmp_path, request_timeout_s=5.0)
+    client._session = session
+    target_current = True
+    observations: list[bool] = []
+
+    def guard() -> bool:
+        observations.append(target_current)
+        return target_current
+
+    first = asyncio.create_task(client.call_tool("first", {}))
+    await _wait_until(lambda: session.entered == ["first"])
+    queued = asyncio.create_task(client.call_tool("edit", {}, dispatch_guard=guard))
+    try:
+        await _wait_until(lambda: len(client.attempts) == 2)
+        assert observations == []
+        target_current = False
+        session.gate.set()
+        await first
+        with pytest.raises(McpCallError, match="guard"):
+            await queued
+    finally:
+        session.gate.set()
+        await asyncio.gather(first, queued, return_exceptions=True)
+
+    assert observations == [False]
+    assert session.entered == ["first"]
+    assert client.attempts[1].state == ATTEMPT_NOT_DISPATCHED
+    assert client.attempts[1].diagnostic == "guard_rejected"
+    assert client.attempts[1].dispatched is False
+    target_current = True
+    assert (await client.call_tool("edit", {}, dispatch_guard=guard)).payload == {"ok": True}
+
+
+@pytest.mark.asyncio
 async def test_call_tool_queue_cancellation_records_not_dispatched_and_stays_usable(
     tmp_path: Path,
 ) -> None:
@@ -450,6 +588,23 @@ def _assert_not_leaked(text: str) -> None:
     # The failure message does not echo the sentinel, so a failing check does
     # not print it either.
     assert _FAKE_SENSITIVE not in text, "the fake sensitive sentinel leaked into failure output"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("method", ["discover_tools", "discover_tool_definitions"])
+async def test_catalogue_failure_does_not_expose_raw_sdk_error(tmp_path: Path, method: str) -> None:
+    class FailingListSession:
+        async def list_tools(self, *, params: PaginatedRequestParams | None = None) -> None:
+            raise RuntimeError(_FAKE_SENSITIVE)
+
+    client = _client(tmp_path)
+    client._session = FailingListSession()
+    with pytest.raises(McpError):
+        try:
+            await getattr(client, method)()
+        except McpError:
+            _assert_not_leaked(traceback.format_exc())
+            raise
 
 
 def _pydantic_validation_error(value: str = "not-an-int") -> PydanticValidationError:
@@ -607,6 +762,109 @@ async def test_call_tool_rejects_invalid_bound_before_dispatch(tmp_path: Path) -
         await client.call_tool("first", {})
     assert client.attempts == []
     assert session.calls == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("bound", [0, -1, float("inf"), float("nan"), True, "120"])
+async def test_invalid_per_call_allowance_is_rejected_before_admission(
+    tmp_path: Path,
+    bound: Any,
+) -> None:
+    session = FakeCallSession(_text_result({"ok": True}))
+    client = _client(tmp_path)
+    client._session = session
+    with pytest.raises(ValueError):
+        await client.call_tool("edit", {}, timeout_s=bound)
+    assert client.attempts == []
+    assert session.calls == []
+
+
+@pytest.mark.asyncio
+async def test_final_guard_does_not_yield_before_dispatch_marker(tmp_path: Path) -> None:
+    client = _client(tmp_path)
+    client._session = FakeCallSession(_text_result({"ok": True}))
+    observations: list[bool] = []
+
+    def guard() -> bool:
+        asyncio.get_running_loop().call_soon(
+            lambda: observations.append(client.attempts[0].dispatched)
+        )
+        return True
+
+    await client.call_tool("edit", {}, dispatch_guard=guard)
+    await asyncio.sleep(0)
+    assert observations == [True]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("behavior", ["exception", "async", "truthy"])
+async def test_failed_or_invalid_guard_fails_closed_without_poisoning_client(
+    tmp_path: Path,
+    behavior: str,
+) -> None:
+    session = FakeCallSession(_text_result({"ok": True}))
+    client = _client(tmp_path)
+    client._session = session
+
+    async def async_guard() -> bool:
+        raise AssertionError("an asynchronous guard must not run")
+
+    def guard() -> Any:
+        if behavior == "exception":
+            raise RuntimeError(_FAKE_SENSITIVE)
+        if behavior == "async":
+            return async_guard()
+        return "yes"
+
+    with pytest.raises(McpCallError, match="guard"):
+        try:
+            await client.call_tool("edit", {}, dispatch_guard=guard)
+        except McpCallError:
+            _assert_not_leaked(traceback.format_exc())
+            raise
+    assert session.calls == []
+    assert client.attempts[0].state == ATTEMPT_NOT_DISPATCHED
+    assert client.attempts[0].diagnostic == "guard_failed"
+    assert (await client.call_tool("status", {})).payload == {"ok": True}
+
+
+@pytest.mark.asyncio
+async def test_guard_time_counts_against_allowance_before_sdk_entry(tmp_path: Path) -> None:
+    session = FakeCallSession(_text_result({"ok": True}))
+    client = _client(tmp_path)
+    client._session = session
+
+    def guard() -> bool:
+        time.sleep(0.06)
+        return True
+
+    with pytest.raises(McpCallError, match="not dispatched"):
+        await client.call_tool("edit", {}, timeout_s=0.03, dispatch_guard=guard)
+    assert session.calls == []
+    assert client.attempts[0].diagnostic == DIAG_QUEUED_TIMEOUT
+    assert (await client.call_tool("status", {})).payload == {"ok": True}
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("name", ["cst_connection_status", "cst_stop_simulation"])
+async def test_new_call_options_cannot_bypass_uncertainty(tmp_path: Path, name: str) -> None:
+    session = FakeCallSession(RuntimeError("transport failed"))
+    client = _client(tmp_path)
+    client._session = session
+    with pytest.raises(McpCallError):
+        await client.call_tool("edit", {})
+    guard_ran = False
+
+    def guard() -> bool:
+        nonlocal guard_ran
+        guard_ran = True
+        return True
+
+    with pytest.raises(McpCallError, match="uncertain"):
+        await client.call_tool(name, {}, timeout_s=10, dispatch_guard=guard)
+    assert guard_ran is False
+    assert session.calls == [("edit", {})]
+    assert client.attempts[-1].diagnostic == DIAG_BLOCKED_UNCERTAIN
 
 
 def test_client_rejects_invalid_request_bound_at_construction(tmp_path: Path) -> None:

@@ -17,13 +17,9 @@ The planned architecture will contain:
 
 ## Project layout and installation
 
-Application code lives in `src/cst_agentic/`, offline tests and helpers in `tests/`,
-and the thin CLI entry point in root `main.py`. The distribution is named
-`cst-agentic`; Python imports use `cst_agentic`.
+Application code lives in `src/cst_agentic/`, offline tests and helpers in `tests/`, and the thin CLI entry point in root `src/cst_agentic/cli.py`. The distribution is named `cst-agentic`; Python imports use `cst_agentic`.
 
-Run `uv sync` from the repository root to install dependencies and the application
-package. Hatchling explicitly packages `src/cst_agentic`; imports use the installed
-package without path overrides.
+Run `uv sync` from the repository root to install dependencies and the application package. Hatchling explicitly packages `src/cst_agentic`; imports use the installed package without path overrides.
 
 ## Connectivity check (milestone 1)
 
@@ -56,11 +52,10 @@ endpoint and `SKYNET_API_KEY` are always used explicitly.
 Run from the repository root (after `uv sync`):
 
 ```powershell
-uv run python main.py verify-connectivity
+uv run cst-agentic verify-connectivity
 ```
 
-The check starts only when the subcommand is invoked; importing the project has no side
-effects. It:
+The check starts only when the subcommand is invoked; importing the project has no side effects. It:
 
 1. Starts the configured MCP subprocess with `CST_CONNECT_MODE=disabled` forced,
    `CST_WORK_DIR` pinned to a client-owned work directory
