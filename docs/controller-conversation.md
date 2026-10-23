@@ -42,7 +42,16 @@ settlement failure pause dependent work. Earlier effects and all trustworthy
 call/result pairs survive. Full received content blocks and structured content
 remain detached in memory, including when settlement persistence fails. No
 error category implies rollback. Abnormal caller cancellation retains uncertain
-and skipped pairs and then propagates to lifecycle cleanup.
+and skipped pairs and then propagates to lifecycle cleanup, preserving any
+simultaneous persistence failure in its original exception aggregate. Malformed
+response projections produce matched bounded failure data while keeping full
+received evidence in memory and pausing dependent work. Repetition comparison
+normalizes JSON object key order.
+
+Scoped admission remains the session's responsibility. An unresolved incident in
+A does not impose a second global gate over an independently admitted isolated B
+route. Controlled tests retain A's incident while admitting synthetic B evidence;
+production still has no isolation adapter and remains blocked.
 
 Each complete model request is bounded by at most 120 seconds (a smaller injected
 allowance is supported). The production provider retains `max_retries=0`.

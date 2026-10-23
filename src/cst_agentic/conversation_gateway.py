@@ -31,14 +31,28 @@ class CallOutcome:
             "state": self.state,
             "reason": self.reason,
         }
-        if self.result is not None:
-            data.update(
-                is_error=self.result.is_error,
-                evidence_complete=self.result.evidence_complete,
-                content=[block.model_dump(mode="json") for block in self.result.content],
-                structured_content=self.result.structured_content,
+        try:
+            if self.result is not None:
+                data.update(
+                    is_error=self.result.is_error,
+                    evidence_complete=self.result.evidence_complete,
+                    content=[block.model_dump(mode="json") for block in self.result.content],
+                    structured_content=self.result.structured_content,
+                )
+            return json.dumps(data, allow_nan=False, sort_keys=True)
+        except (TypeError, ValueError, OverflowError):
+            return json.dumps(
+                {
+                    "provenance": "application projection failure; full evidence retained",
+                    "state": self.state,
+                    "reason": "Response projection unavailable; work paused.",
+                    "projection_available": False,
+                },
             )
-        return json.dumps(data, allow_nan=False)
+
+    @property
+    def projection_available(self) -> bool:
+        return json.loads(self.model_data()).get("projection_available", True) is True
 
 
 class ProtocolPause(RecoveryError):
@@ -94,7 +108,7 @@ class ConversationGateway:
         self._allowlist = allowlist
         self._interpreters = dict(interpreters)
         self._used_ids: set[str] = set()
-        self.interrupted = False
+        self.pending_error: BaseException | None = None
 
     async def settle(
         self,
@@ -104,7 +118,7 @@ class ConversationGateway:
         admit: Callable[[], bool] = lambda: True,
         observe: Callable[[ResponseFunctionToolCall, CallOutcome], bool] | None = None,
     ) -> tuple[CallOutcome, ...]:
-        self.interrupted = False
+        self.pending_error = None
         ids = [call.call_id for call in calls]
         if any(not value or not value.strip() for value in ids) or len(set(ids)) != len(ids):
             raise ProtocolPause("Missing or conflicting call identifiers; no calls dispatched.")
@@ -165,9 +179,11 @@ class ConversationGateway:
             def settled(
                 result: McpToolCall,
                 interpret: Callable[[McpToolCall], bool] | None = interpreter,
+                call_id: str = call.call_id,
             ) -> bool:
                 return (
                     not result.is_error
+                    and CallOutcome(call_id, "received", "", result).projection_available
                     and interpret is not None
                     and interpret(deepcopy(result)) is True
                 )
@@ -192,13 +208,8 @@ class ConversationGateway:
                     )
                 )
             except (Exception, BaseExceptionGroup, asyncio.CancelledError) as error:
-
-                def cancelled(error: BaseException) -> bool:
-                    if isinstance(error, BaseExceptionGroup):
-                        return any(cancelled(child) for child in error.exceptions)
-                    return isinstance(error, asyncio.CancelledError)
-
-                self.interrupted = cancelled(error)
+                if isinstance(error, (BaseExceptionGroup, asyncio.CancelledError)):
+                    self.pending_error = error
                 attempts = self._connection.attempts
                 attempt = attempts[before] if len(attempts) > before else None
                 state = attempt.state if attempt is not None else "not_dispatched"

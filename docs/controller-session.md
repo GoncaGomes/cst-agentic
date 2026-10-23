@@ -104,8 +104,9 @@ Run offline checks with `uv run pytest -q`, `uv run ruff format --check .`,
 
 **#17 remains open, with all requirements intact.** In particular, this refusal
 does not demonstrate its allowed isolated B route. Production typed isolation,
-runtime dispatch/settlement/reconciliation integration, additional abrupt-death
+production dispatch/settlement/reconciliation acceptance, additional abrupt-death
 windows and the persistence-plus-temporary-cleanup compound-error regression
-remain outstanding. The existing permanent client latch and no-replay rules are
+remain outstanding. Coordinator-level dispatch and compound cancellation/persistence
+are tested offline as described in the conversation document. The permanent client latch and no-replay rules are
 unchanged. No endpoint, configured-model behavioral, native CST/isolation or
 power-loss evidence is supplied, and no connected experiment is authorized.

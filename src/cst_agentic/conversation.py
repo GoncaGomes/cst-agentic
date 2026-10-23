@@ -145,7 +145,7 @@ class ConversationCoordinator:
         if call.name in {"cst_get_simulation_status", "cst_wait_for_simulation"}:
             return False
         signature = json.dumps(
-            [call.name, json.loads(call.arguments), outcome.model_data()],
+            [call.name, json.loads(call.arguments), json.loads(outcome.model_data())],
             sort_keys=True,
         )
         self._repetitions = self._repetitions + 1 if signature == self._repetition else 1
@@ -223,10 +223,13 @@ class ConversationCoordinator:
             if command == "continue" and self._objective is None:
                 return self._reply("There is no agreed task to continue.", "paused")
             try:
-                incidents = self._store.incidents(unresolved_only=True)
+                self._store.incidents(unresolved_only=True)
             except RecoveryError:
                 return self._reply("Central recovery state unavailable; work blocked.", "paused")
-            if incidents or self._connection.paused:
+            # Project/instance scope is enforced by the recovery-aware session,
+            # including independently admitted isolated routes. Never reinstate
+            # a global incident gate above that central authority.
+            if self._connection.paused:
                 self._emit(
                     "incident",
                     "Unresolved work remains; human reconciliation and "
@@ -383,8 +386,8 @@ class ConversationCoordinator:
                 self._emit(
                     "incident", "Central recovery state is unavailable; further work blocked."
                 )
-            if self._gateway.interrupted:
-                raise asyncio.CancelledError
+            if self._gateway.pending_error is not None:
+                raise self._gateway.pending_error
             if any(outcome.state != "received" for outcome in outcomes) or self._connection.paused:
                 return self._reply(
                     "Work paused after a rejected, failed or unresolved operation. "

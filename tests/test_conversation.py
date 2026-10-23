@@ -531,6 +531,165 @@ async def test_incomplete_message_keeps_entire_malformed_batch_out_of_history(tm
 
 
 @pytest.mark.asyncio
+async def test_compound_cancellation_and_persistence_failure_survives_pair_recording(
+    tmp_path, monkeypatch
+):
+    import asyncio
+    import os
+
+    from cst_agentic.recovery import RecoveryError
+
+    entered = asyncio.Event()
+
+    class HangingPeer(Peer):
+        async def call_tool(self, name, arguments):
+            entered.set()
+            await asyncio.Event().wait()
+
+    model = ScriptedModel([[function_call(STATUS.name, {}, call_id="compound")]])
+    async with conversation(tmp_path, model, peer=HangingPeer()) as (coordinator, store, peer):
+        task = asyncio.create_task(coordinator.submit("Read status"))
+        await entered.wait()
+
+        def refuse(*args):
+            raise OSError("synthetic-private-persistence-failure")
+
+        monkeypatch.setattr(os, "replace", refuse)
+        task.cancel()
+        with pytest.raises(BaseExceptionGroup) as caught:
+            await task
+        leaves = caught.value.exceptions
+        assert any(isinstance(error, asyncio.CancelledError) for error in leaves)
+        assert any(isinstance(error, RecoveryError) for error in leaves)
+        assert coordinator.history[-1]["call_id"] == "compound"
+        assert json.loads(coordinator.history[-1]["output"])["state"] == "uncertain"
+
+
+@pytest.mark.asyncio
+async def test_coordinator_retains_incident_a_while_session_admits_isolated_b(tmp_path):
+    from cst_agentic.project_storage import ProjectLocation
+
+    store, peer = RecoveryStore(tmp_path / "state"), Peer()
+    a, b = tmp_path / "a", tmp_path / "b"
+    a.mkdir()
+    b.mkdir()
+    path_b = b / "b.cst"
+    model = ScriptedModel(
+        [
+            [function_call(STATUS.name, {}, call_id="isolated-b")],
+            [assistant_message("Controlled B status received.")],
+        ]
+    )
+    async with ControllerSession(
+        store,
+        lambda: Client(peer),
+        inventory=frozenset({STATUS.name}),
+        dispatch_check=lambda *args: DispatchEvidence("controlled-b-created-2"),
+        isolation_check=lambda project, incidents: (
+            Path(project.path) == path_b.resolve()
+            and len(incidents) == 1
+            and incidents[0].instance_id == "controlled-a-created-1"
+        ),
+    ) as session:
+        incident = store.prepare(
+            "00000000-0000-0000-0000-000000000001",
+            STATUS.name,
+            ProjectLocation.inspect(a / "a.cst"),
+            "controlled-a-created-1",
+        )
+        store.finish(incident, "uncertain")
+        await session.start_task(path_b, "Read controlled isolated B")
+        coordinator = ConversationCoordinator(
+            model=model,
+            connection=session,
+            store=store,
+            tools=[STATUS],
+            allowlist=frozenset({STATUS.name}),
+            request_admission=lambda request: None,
+            interpreters={
+                STATUS.name: lambda result: result.structured_content == {"mode": "offline"}
+            },
+        )
+        reply = await coordinator.submit("Read B status")
+        assert reply.text == "Controlled B status received."
+        assert peer.seen == [STATUS.name]
+        assert store.incidents(unresolved_only=True)[0].id == incident
+
+
+@pytest.mark.asyncio
+async def test_malformed_received_projection_keeps_evidence_and_pairs_and_skips_dependents(
+    tmp_path,
+):
+    class MalformedPeer(Peer):
+        async def call_tool(self, name, arguments):
+            self.seen.append(name)
+            return CallToolResult(content=[], structured_content={"metric": float("nan")})
+
+    model = ScriptedModel(
+        [
+            [
+                function_call(STATUS.name, {}, call_id="malformed"),
+                function_call(STATUS.name, {}, call_id="skip"),
+            ]
+        ]
+    )
+    async with conversation(tmp_path, model, peer=MalformedPeer()) as (coordinator, store, peer):
+        reply = await coordinator.submit("Read malformed peer")
+        assert reply.state == "paused"
+        assert peer.seen == [STATUS.name]
+        assert coordinator.evidence[0].result.structured_content is not None
+        outputs = [
+            json.loads(item["output"])
+            for item in coordinator.history
+            if item.get("type") == "function_call_output"
+        ]
+        assert outputs[0]["state"] == "received"
+        assert outputs[0]["projection_available"] is False
+        assert outputs[1]["state"] == "skipped"
+
+
+@pytest.mark.asyncio
+async def test_repetition_comparison_ignores_result_dictionary_key_order(tmp_path):
+    class ReorderedPeer(Peer):
+        async def call_tool(self, name, arguments):
+            self.seen.append(name)
+            values = {"mode": "offline", "project_open": False}
+            if len(self.seen) % 2:
+                values = dict(reversed(list(values.items())))
+            return CallToolResult(content=[], structured_content=values)
+
+    model = ScriptedModel(
+        [[function_call(STATUS.name, {}, call_id=f"order-{i}")] for i in range(5)]
+    )
+    store, peer = RecoveryStore(tmp_path / "state"), ReorderedPeer()
+    async with ControllerSession(
+        store,
+        lambda: Client(peer),
+        inventory=frozenset({STATUS.name}),
+        dispatch_check=lambda *args: DispatchEvidence("controlled-created-1"),
+    ) as session:
+        directory = tmp_path / "project"
+        directory.mkdir()
+        await session.start_task(directory / "a.cst", "Read status")
+        coordinator = ConversationCoordinator(
+            model=model,
+            connection=session,
+            store=store,
+            tools=[STATUS],
+            allowlist=frozenset({STATUS.name}),
+            request_admission=lambda request: None,
+            interpreters={
+                STATUS.name: lambda result: (
+                    result.structured_content == {"mode": "offline", "project_open": False}
+                )
+            },
+        )
+        assert (await coordinator.submit("Read repeatedly")).state == "paused"
+        assert peer.seen == [STATUS.name] * 3
+        assert len(model.calls) == 3
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize("bad", ["schema", "hidden", "json", "duplicate", "reused", "missing"])
 async def test_bad_batches_never_execute_and_keep_only_trustworthy_pairs(tmp_path: Path, bad: str):
     store, peer = RecoveryStore(tmp_path / "state"), Peer()

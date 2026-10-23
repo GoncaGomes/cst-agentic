@@ -1,4 +1,4 @@
-"""Production manual-session factory, shared by terminal and future coordinator."""
+"""Production manual-session factory and thin coordinator terminal adapter."""
 
 from __future__ import annotations
 
@@ -24,8 +24,8 @@ from .recovery import RecoveryError, RecoveryStore
 def admit_manual_catalogue(tools: list[Tool]) -> None:
     """Check bootstrap definitions, not model-visible inventory admission.
 
-    No tools are exposed/dispatched by this lifecycle slice. #19/#24 must review
-    schemas and enforcement before admitting any model-visible inventory.
+    Production exposes no tools until reviewed discovery/context and live-target
+    prerequisites are available. Bootstrap admission never grants execution.
     """
     names = [tool.name for tool in tools]
     required = {"cst_connect", "cst_disconnect", "cst_connection_status"}
