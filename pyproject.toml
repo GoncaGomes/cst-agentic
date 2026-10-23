@@ -14,6 +14,7 @@ requires-python = ">=3.12"
 dependencies = [
     "mcp>=2.3.0",
     "openai-agents>=0.24.0",
+    "pyright>=1.1.414",
     "python-dotenv>=1.2.4",
     "ruff>=0.17.0",
 ]
@@ -23,6 +24,7 @@ cst-agentic = "cst_agentic.cli:main"
 
 [dependency-groups]
 dev = [
+    "pyright>=1.1.414",
     "pytest>=9.1.1",
     "pytest-asyncio>=1.4.0",
 ]
@@ -40,3 +42,8 @@ select = ["E", "F", "I", "UP", "B"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["cst_agentic", "fakes"]
+
+[tool.pyright]
+include = ["src"]
+pythonVersion = "3.12"
+typeCheckingMode = "standard"

@@ -84,7 +84,7 @@ def _is_credential_key(key: str) -> bool:
 
 
 def _resolve(
-    env_file: Mapping[str, str],
+    env_file: Mapping[str, str | None],
     key: str,
     override: str | None,
 ) -> str | None:
@@ -101,7 +101,7 @@ def _resolve(
 
 
 def _require(
-    env_file: Mapping[str, str],
+    env_file: Mapping[str, str | None],
     key: str,
     override: str | None,
 ) -> str:
