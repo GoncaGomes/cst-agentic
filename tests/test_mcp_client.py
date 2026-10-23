@@ -254,6 +254,7 @@ async def test_call_tool_records_success(tmp_path: Path) -> None:
     assert attempt.diagnostic == DIAG_RECEIVED
     assert attempt.dispatched is True
     assert attempt.result is record
+    assert attempt.ended_monotonic is not None
     assert attempt.started_monotonic <= attempt.ended_monotonic
 
 
@@ -279,9 +280,14 @@ async def test_call_retains_all_content_and_structured_evidence(tmp_path: Path) 
     assert record.content == result.content
     assert record.structured_content == {"deleted_results": True, "rebuilt": False}
     assert record.evidence_complete is True
-    result.content[1].text = "changed"
+    second = result.content[1]
+    assert isinstance(second, TextContent)
+    second.text = "changed"
     result.structured_content["deleted_results"] = False
-    assert record.content[1].text == "Rebuild failed after results were deleted."
+    recorded_second = record.content[1]
+    assert isinstance(recorded_second, TextContent)
+    assert recorded_second.text == "Rebuild failed after results were deleted."
+    assert record.structured_content is not None
     assert record.structured_content["deleted_results"] is True
     assert client.attempts[0].state == ATTEMPT_RECEIVED
 
@@ -607,7 +613,7 @@ async def test_catalogue_failure_does_not_expose_raw_sdk_error(tmp_path: Path, m
             raise
 
 
-def _pydantic_validation_error(value: str = "not-an-int") -> PydanticValidationError:
+def _pydantic_validation_error(value: Any = "not-an-int") -> PydanticValidationError:
     class _Strict(pydantic.BaseModel):
         value: int
 
