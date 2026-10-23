@@ -108,8 +108,11 @@ complete startup (including catalogue) and one total cleanup allowance. It captu
 server stderr in a local temporary stream rather than forwarding it. Cleanup
 failures remain visible alongside the primary error. SDK-shielded cleanup may
 overshoot; this is reported rather than described as hard real-time behavior.
-The future production factory must supply separately validated manual-mode,
-credential-safe child settings. This slice adds no connected CLI configuration.
+The [manual-session production factory](controller-session.md) now supplies
+separately validated manual-mode, credential-safe child settings and uses this
+central lease/admission before transport construction. It refuses unresolved
+routes until production typed isolation evidence is available; this does not
+complete #17 or its allowed isolated B-route requirement.
 It admits ordinary calls up to 120 seconds; launch/wait/stop-specific runtime
 policy and interactive exit warnings belong to the remaining Controller runtime,
 not an implicit live route supplied by these helpers. Newly owned CST instances

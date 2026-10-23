@@ -20,6 +20,7 @@ from typing import Any, TextIO, cast
 
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
+from mcp.types import Tool
 
 from .mcp_client import CstMcpClient, McpStartupError, McpToolCall, _validate_timeout
 from .project_storage import ProjectLocation
@@ -39,6 +40,7 @@ class DispatchEvidence:
     project_scoped: bool = True
 
 
+@dataclass
 class ControllerMcpClient(CstMcpClient):
     """Public SDK contexts enter/exit in one owner task, with visible failures.
 
@@ -47,6 +49,9 @@ class ControllerMcpClient(CstMcpClient):
     shielded cleanup may overshoot; report that instead of claiming hard real
     time. The legacy connectivity lifecycle remains unchanged.
     """
+
+    catalogue_admission: Callable[[list[Tool]], None] | None = None
+    cleanup_deadline: float | None = None
 
     async def __aenter__(self) -> ControllerMcpClient:
         _validate_timeout(self.startup_timeout_s)
@@ -71,6 +76,8 @@ class ControllerMcpClient(CstMcpClient):
                 self.server_version = init.server_info.version
                 self.instructions = init.instructions
                 self.catalogue = await self.discover_tool_definitions()
+                if self.catalogue_admission is not None:
+                    self.catalogue_admission(self.catalogue)
         except BaseException as error:
             primary = (
                 error
@@ -102,13 +109,21 @@ class ControllerMcpClient(CstMcpClient):
             raise RecoveryError("Controller transport must close in its lifecycle owner task.")
         errors: list[BaseException] = []
         loop = asyncio.get_running_loop()
-        deadline = loop.time() + self.shutdown_timeout_s
+        deadline = (
+            self.cleanup_deadline
+            if self.cleanup_deadline is not None
+            else loop.time() + self.shutdown_timeout_s
+        )
         for attribute in ("_session_cm", "_stdio_cm"):
             context = getattr(self, attribute)
             if context is not None:
                 try:
-                    async with asyncio.timeout_at(deadline):
-                        await context.__aexit__(None, None, None)
+                    # Do not inject native asyncio cancellation into public SDK
+                    # context unwinding. In particular an already-expired timer
+                    # can interrupt ClientSession's cancel-scope exit and leave
+                    # the outer stdio exit hung. The SDK bounds its own process
+                    # shutdown waits; report a shared-allowance overrun below.
+                    await context.__aexit__(None, None, None)
                 except BaseException:
                     errors.append(RecoveryError("Controller SDK context cleanup failed."))
                 finally:
@@ -255,10 +270,39 @@ class ControllerSession:
         self._task_complete = False
         self._readback_used = False
         self._project = project
+        await self._open_client()
+
+    async def _open_client(self) -> None:
         if self._client is None:
             client = self._factory()
             await client.__aenter__()
             self._client = client
+
+    async def open_manual_transport(self) -> None:
+        """Open a disconnected manual session, without inventing a project route.
+
+        Production isolation support belongs to #24. Until it exists this route
+        refuses every unresolved incident before even constructing the client.
+        No task or dispatch authorization is created by opening the transport.
+        """
+        if not self._entered or self._closing or asyncio.current_task() is not self._owner:
+            raise RecoveryError("Manual startup requires the active lifecycle owner.")
+        if self.store.incidents(unresolved_only=True):
+            raise RecoveryError(
+                "Unresolved recovery requires trustworthy isolation evidence (#24)."
+            )
+        await self._open_client()
+
+    def begin_cleanup(self, deadline: float) -> None:
+        """Revoke new work and share the provider's deadline without exposing SDK dispatch."""
+        if (
+            not self._entered
+            or asyncio.current_task() is not self._owner
+            or not isinstance(self._client, ControllerMcpClient)
+        ):
+            raise RecoveryError("Cleanup requires the active Controller lifecycle owner.")
+        self._closing = True
+        self._client.cleanup_deadline = deadline
 
     def finish_task(self) -> None:
         """Completion does not close CST, release the lease or start another task."""
