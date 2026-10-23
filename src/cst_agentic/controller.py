@@ -22,7 +22,7 @@ from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 from mcp.types import Tool
 
-from .mcp_client import CstMcpClient, McpStartupError, McpToolCall, _validate_timeout
+from .mcp_client import CstMcpClient, McpAttempt, McpStartupError, McpToolCall, _validate_timeout
 from .project_storage import ProjectLocation
 from .recovery import Incident, RecoveryError, RecoveryStore
 
@@ -316,6 +316,16 @@ class ControllerSession:
             raise RecoveryError("Task cannot complete with pending or unresolved work.")
         self._task_complete = True
 
+    @property
+    def attempts(self) -> tuple[McpAttempt, ...]:
+        """Detached admission/receipt evidence, without exposing a dispatch bypass."""
+        return tuple(deepcopy(self._client.attempts)) if self._client is not None else ()
+
+    @property
+    def paused(self) -> bool:
+        """A received unresolved outcome or uncertain attempt requires a handoff."""
+        return self._paused
+
     async def dispatch(
         self,
         name: str,
@@ -324,6 +334,7 @@ class ControllerSession:
         timeout_s: float = 120,
         settled: Callable[[McpToolCall], bool] | None = None,
         save_destination: Path | None = None,
+        admission_check: Callable[[], bool] | None = None,
     ) -> McpToolCall:
         """Dispatch through the real protected client's final synchronous guard.
 
@@ -340,6 +351,7 @@ class ControllerSession:
             settled=settled,
             save_destination=save_destination,
             readback=False,
+            admission_check=admission_check,
         )
 
     async def readback(
@@ -363,6 +375,7 @@ class ControllerSession:
             settled=settled,
             save_destination=None,
             readback=True,
+            admission_check=None,
         )
 
     async def _dispatch(
@@ -374,6 +387,7 @@ class ControllerSession:
         settled: Callable[[McpToolCall], bool] | None,
         save_destination: Path | None,
         readback: bool,
+        admission_check: Callable[[], bool] | None,
     ) -> McpToolCall:
         if (
             not self._entered
@@ -427,6 +441,8 @@ class ControllerSession:
             def guard() -> bool:
                 nonlocal incident_id
                 if self._closing or not self._entered:
+                    return False
+                if admission_check is not None and admission_check() is not True:
                     return False
                 current = ProjectLocation.inspect(Path(project.path))
                 if current.directory_id != project.directory_id or (

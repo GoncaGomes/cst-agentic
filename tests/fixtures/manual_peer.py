@@ -75,7 +75,15 @@ def main() -> None:
             data = json.loads(Path(observation).read_text(encoding="utf-8"))
             data["calls"].append(method)
             Path(observation).write_text(json.dumps(data), encoding="utf-8")
-            result = {}
+            result = (
+                {
+                    "content": [{"type": "text", "text": '{"mode":"offline"}'}],
+                    "structuredContent": {"mode": "offline"},
+                    "isError": False,
+                }
+                if mode == "conversation" and method == "tools/call"
+                else {}
+            )
         print(json.dumps({"jsonrpc": "2.0", "id": request["id"], "result": result}), flush=True)
     if mode == "eof_refusal":
         time.sleep(30)

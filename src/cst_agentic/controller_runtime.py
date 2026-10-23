@@ -17,6 +17,7 @@ from openai import AsyncOpenAI
 
 from .controller import ControllerMcpClient, ControllerSession
 from .controller_config import ControllerConfig
+from .conversation import EXIT_WARNING, ConversationCoordinator
 from .recovery import RecoveryError, RecoveryStore
 
 
@@ -36,20 +37,11 @@ def admit_manual_catalogue(tools: list[Tool]) -> None:
 
 @dataclass(frozen=True)
 class ManualController:
-    """Lifecycle-only runtime; no dispatch or attachment interface is authorized."""
+    """Shared runtime; unavailable production prerequisites remain blocked."""
 
     model: OpenAIChatCompletionsModel
     run_config: RunConfig
-
-
-EXIT_WARNING = (
-    "Controller-launched CST instances are session-bound: no survival guarantee "
-    "after exit or a crash. Unsaved work may be lost and active simulations may "
-    "be interrupted. Live save/run state is unknown, not verified idle. "
-    "Task completion never authorizes closing CST. This lifecycle-only session "
-    "has not launched or attached to CST; exit does not dispatch save, stop, "
-    "disconnect or close tools. Check CST directly if intervention is needed."
-)
+    coordinator: ConversationCoordinator | None = None
 
 
 async def terminal_input(prompt: str) -> str:
@@ -102,32 +94,30 @@ async def run_controller_terminal(
     write_line: Callable[[str], None] = print,
     state_directory: Path | None = None,
 ) -> int:
-    """Lifecycle front end only; conversational dispatch belongs to #19/#24."""
-    async with create_controller_session(config, state_directory=state_directory):
+    """Thin input/output adapter; the shared coordinator owns conversation policy."""
+    async with create_controller_session(config, state_directory=state_directory) as runtime:
+        coordinator = runtime.coordinator
+        if coordinator is None:
+            raise RecoveryError("Controller conversation coordinator is unavailable.")
         write_line(
             "Controller ready in manual mode; CST was not launched or attached. "
-            "Commands: help, quit. Modeling requires #19/#24; no tools are exposed."
+            "Enter a request or help. Live work requires reviewed prerequisites (#24)."
         )
+        prompt = "Controller> "
         while True:
             try:
-                command = (await read_line("Controller> ")).strip().lower()
-                if command in {"quit", "exit"}:
-                    write_line(EXIT_WARNING)
-                    confirmation = await read_line(
-                        "Type exit to confirm, or anything else to stay: "
-                    )
-                    if confirmation.strip().lower() == "exit":
-                        return 0
-                    write_line("Exit cancelled.")
-                elif command == "help":
-                    write_line(
-                        "Commands: help, quit. Work and attachment remain blocked pending #19/#24."
-                    )
-                elif command:
-                    write_line(
-                        "No work dispatched: conversational/target prerequisites "
-                        "(#19/#24) are unavailable."
-                    )
+                reply = await coordinator.submit(
+                    await read_line(prompt),
+                    on_event=lambda event: write_line(event.text),
+                )
+                write_line(reply.text)
+                if reply.state == "exit":
+                    return 0
+                prompt = (
+                    "Type exit to confirm, or anything else to stay: "
+                    if reply.state == "confirm_exit"
+                    else "Controller> "
+                )
             except EOFError:
                 write_line(EXIT_WARNING)
                 write_line(
@@ -175,6 +165,7 @@ async def create_controller_session(
             yield ManualController(
                 model,
                 RunConfig(model=model, tracing_disabled=True, trace_include_sensitive_data=False),
+                ConversationCoordinator(model=model, connection=session, store=store),
             )
         finally:
             primary = sys.exception()
