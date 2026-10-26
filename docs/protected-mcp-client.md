@@ -9,7 +9,10 @@ client without enabling connected Controller behavior in the connectivity comman
   including duplicates.
 - `await client.discover_tool_definitions()` returns detached SDK `Tool` objects
   across all pages. Input/output schemas and metadata are canonical, not converted
-  into stricter schemas. Catalogue access does not grant execution permission.
+   into stricter schemas. Catalogue access does not grant execution permission.
+  Catalogue pages share the dispatch serialization lock, include queueing in each
+  page allowance, and refuse access after permanent client uncertainty. The
+  Controller session further restricts refresh to settled lifecycle-owner points.
 - `McpToolCall.text` and `.payload` retain their first-text-block meanings.
   `.content` retains **all** returned content blocks; `.structured_content` retains
   the returned structured data. These are detached from the SDK response.

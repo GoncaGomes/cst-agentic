@@ -322,6 +322,28 @@ class ControllerSession:
         return tuple(deepcopy(self._client.attempts)) if self._client is not None else ()
 
     @property
+    def catalogue(self) -> tuple[Tool, ...]:
+        """Detached canonical startup definitions, never a dispatch handle."""
+        return tuple(deepcopy(self._client.catalogue)) if self._client is not None else ()
+
+    async def refresh_catalogue(self) -> tuple[Tool, ...]:
+        """Read definitions only at a settled, healthy lifecycle-owner boundary."""
+        if (
+            not self._entered
+            or self._closing
+            or self._paused
+            or self._client is None
+            or self._dispatch_lock.locked()
+            or asyncio.current_task() is not self._owner
+        ):
+            raise RecoveryError("Catalogue refresh requires a settled healthy lifecycle owner.")
+        async with self._dispatch_lock:
+            async with asyncio.timeout(120):
+                tools = await self._client.discover_tool_definitions()
+            self._client.catalogue = deepcopy(tools)
+            return tuple(deepcopy(tools))
+
+    @property
     def paused(self) -> bool:
         """A received unresolved outcome or uncertain attempt requires a handoff."""
         return self._paused
@@ -440,7 +462,7 @@ class ControllerSession:
 
             def guard() -> bool:
                 nonlocal incident_id
-                if self._closing or not self._entered:
+                if self._closing or not self._entered or name not in self._inventory:
                     return False
                 if admission_check is not None and admission_check() is not True:
                     return False

@@ -203,6 +203,7 @@ class CstMcpClient:
     instructions: str | None = None
     calls: list[McpToolCall] = field(default_factory=list)
     attempts: list[McpAttempt] = field(default_factory=list)
+    catalogue: list[Tool] = field(default_factory=list, init=False)
 
     _stdio_cm: Any = field(default=None, init=False, repr=False)
     _session_cm: Any = field(default=None, init=False, repr=False)
@@ -278,12 +279,19 @@ class CstMcpClient:
         cursor: str | None = None
         while True:
             try:
-                result = await asyncio.wait_for(
-                    self._session.list_tools(
-                        params=PaginatedRequestParams(cursor=cursor) if cursor is not None else None
-                    ),
-                    timeout=self.request_timeout_s,
-                )
+                async with asyncio.timeout(self.request_timeout_s):
+                    async with self._call_lock:
+                        if self._uncertain:
+                            raise McpError(
+                                "Catalogue access blocked: this client is permanently uncertain."
+                            )
+                        result = await self._session.list_tools(
+                            params=PaginatedRequestParams(cursor=cursor)
+                            if cursor is not None
+                            else None
+                        )
+            except McpError:
+                raise
             except TimeoutError:
                 raise McpError("tools/list timed out within the request budget.") from None
             except Exception:

@@ -40,7 +40,10 @@ def test_controller_configuration_is_separate_and_allowlists_child_environment(
     assert child == {
         "PATH": "safe-path",
         "CST_CONNECT_MODE": "manual",
-        "CST_TOOLSETS": "connection",
+        "CST_TOOLSETS": (
+            "connection,official,project,geometry,boolean,transforms,materials,ports,boundaries,"
+            "mesh,solvers,simulation,results,import_export,parameters,diagnostics,pcb,workflows"
+        ),
         "CST_WORK_DIR": str(config.work_dir),
     }
     assert config.model == "Qwen-configured"
@@ -128,6 +131,12 @@ async def test_actual_factory_manual_environment_no_dispatch_and_lease(
     async with create_controller_session(config, state_directory=state) as runtime:
         assert runtime.model.model == "Qwen"
         assert runtime.run_config.tracing_disabled
+        assert runtime.coordinator is not None
+        assert {tool.name for tool in runtime.coordinator.active_tools} == {
+            "cst_connection_status",
+            "cst_project_info",
+            "discover_tools",
+        }
         with pytest.raises(RecoveryError):
             with RecoveryStore(state).session():
                 pytest.fail("second lease admitted")
@@ -259,7 +268,9 @@ async def test_terminal_interruption_while_console_waits_warns_and_releases_leas
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("mode", ["refusal", "timeout", "catalogue_timeout", "bad_catalogue"])
+@pytest.mark.parametrize(
+    "mode", ["refusal", "timeout", "catalogue_timeout", "bad_catalogue", "missing_info"]
+)
 async def test_production_startup_failure_releases_lease_and_owner_tasks(tmp_path: Path, mode: str):
     import asyncio
     from dataclasses import replace

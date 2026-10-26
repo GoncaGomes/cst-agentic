@@ -6,7 +6,7 @@ import asyncio
 import json
 import math
 import time
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Awaitable, Callable, Mapping, Sequence
 from copy import deepcopy
 from dataclasses import dataclass
 from enum import Enum
@@ -21,6 +21,7 @@ from openai.types.responses import ResponseFunctionToolCall
 
 from .controller import ControllerSession
 from .conversation_gateway import CallOutcome, ConversationGateway, ProtocolPause
+from .discovery import GROUP_GUIDANCE, ToolDiscovery
 from .mcp_client import McpToolCall
 from .recovery import RecoveryError, RecoveryStore
 
@@ -47,6 +48,7 @@ class ControlIntent(Enum):
     HELP = "help"
     STATUS = "status"
     CONTINUE = "continue"
+    REFRESH_TOOLS = "refresh tools"
     STOP_SIMULATION = "stop simulation"
     QUIT = "quit"
     CONFIRM_EXIT = "exit"
@@ -107,6 +109,8 @@ class ConversationCoordinator:
         connection: ControllerSession,
         store: RecoveryStore,
         tools: Sequence[Tool] = (),
+        discovery: ToolDiscovery | None = None,
+        catalogue_loader: Callable[[], Awaitable[Sequence[Tool]]] | None = None,
         allowlist: frozenset[str] = frozenset(),
         request_admission: Callable[[ModelRequest], str | None] | None = None,
         interpreters: Mapping[str, Callable[[McpToolCall], bool]] | None = None,
@@ -122,12 +126,14 @@ class ConversationCoordinator:
             )
         self._store = store
         self._tools = tuple(deepcopy(tools))
+        self._discovery = discovery
+        self._catalogue_loader = catalogue_loader
         self._request_admission = request_admission
         self._interpreters = dict(interpreters or {})
         self._clock = clock
         self._history: list[TResponseInputItem] = []
         self._evidence: list[Observation] = []
-        self._gateway = ConversationGateway(connection, allowlist, self._interpreters)
+        self._gateway = ConversationGateway(connection, allowlist, self._interpreters, discovery)
         self._on_event = on_event
         self._events: list[ConversationEvent] = []
         if not math.isfinite(model_timeout_s) or not 0 < model_timeout_s <= 120:
@@ -139,6 +145,7 @@ class ConversationCoordinator:
         self._busy = False
         self._confirm_exit = False
         self._objective: str | None = None
+        self._pending_message: str | None = None
         self._event_sink = on_event
 
     def _observe(self, call: ResponseFunctionToolCall, outcome: CallOutcome) -> bool:
@@ -167,8 +174,44 @@ class ConversationCoordinator:
         return deepcopy(self._history)
 
     @property
+    def active_tools(self) -> tuple[Tool, ...]:
+        """Detached definitions; model visibility is not execution permission."""
+        return (
+            self._discovery.tools if self._discovery is not None else tuple(deepcopy(self._tools))
+        )
+
+    @property
     def evidence(self) -> tuple[Observation, ...]:
         return tuple(deepcopy(self._evidence))
+
+    async def _refresh_catalogue(self) -> str:
+        assert self._discovery is not None and self._catalogue_loader is not None
+        try:
+            async with asyncio.timeout(120):
+                catalogue = await self._catalogue_loader()
+            return self._discovery.refresh(catalogue)
+        except Exception:
+            return self._discovery.block_refresh()
+        except asyncio.CancelledError:
+            self._discovery.block_refresh()
+            raise
+
+    async def refresh_catalogue(self, *, explicitly_authorized: bool = False) -> ConversationReply:
+        """Application control, not a model tool or implicit reconnect permission."""
+        if self._busy or self._connection.paused:
+            return ConversationReply(
+                "Catalogue refresh requires a settled, healthy task boundary.", "paused"
+            )
+        if explicitly_authorized is not True:
+            return ConversationReply("Catalogue refresh requires explicit authorization.", "paused")
+        if self._discovery is None or self._catalogue_loader is None:
+            return ConversationReply("Catalogue refresh adapter unavailable.", "paused")
+        self._busy = True
+        try:
+            reason = await self._refresh_catalogue()
+            return ConversationReply(reason, "paused" if self._discovery.blocker else "reply")
+        finally:
+            self._busy = False
 
     async def submit(
         self,
@@ -191,6 +234,11 @@ class ConversationCoordinator:
                 else (message.text if isinstance(message, UserMessage) else message)
             )
             command = text.strip().lower()
+            if command.startswith(("new task:", "same task:")):
+                new_objective = command.startswith("new task:")
+                text = text.split(":", 1)[1].strip()
+                message = UserMessage(text, new_objective=new_objective)
+                command = text.lower()
             if self._confirm_exit:
                 self._confirm_exit = False
                 if command == "exit":
@@ -202,7 +250,8 @@ class ConversationCoordinator:
             if command == "help":
                 return self._reply(
                     "Commands: help, status (last observation only), continue, "
-                    "stop simulation, quit. "
+                    "new task: <objective>, same task: <clarification>, "
+                    "refresh tools, stop simulation, quit. "
                     "Ordinary messages wait for a settled reply; no mid-task cancel command. "
                     "CST work requires reviewed discovery/context and "
                     "live-target prerequisites (#24)."
@@ -240,15 +289,48 @@ class ConversationCoordinator:
                     "including status/stop tool calls.",
                     "paused",
                 )
+            if command == "refresh tools":
+                if self._discovery is None or self._catalogue_loader is None:
+                    return self._reply("Catalogue refresh adapter unavailable.", "paused")
+                reason = await self._refresh_catalogue()
+                return self._reply(reason, "paused" if self._discovery.blocker else "reply")
+            if command in {"same task", "new task"}:
+                if self._pending_message is None:
+                    return self._reply(
+                        "No pending follow-up; use same task: or new task: with text."
+                    )
+                text = self._pending_message
+                message = UserMessage(text, new_objective=command == "new task")
+                command = text.strip().lower()
+            if isinstance(message, UserMessage):
+                self._pending_message = None
+            elif self._objective is not None and (
+                command not in {"continue", "stop simulation"} or self._pending_message is not None
+            ):
+                if self._pending_message is None:
+                    self._pending_message = text
+                return self._reply(
+                    "Does this follow-up continue the same task or start a new task? "
+                    "Reply 'same task' or 'new task'; no model request or tools called.",
+                    "clarification",
+                )
             if isinstance(message, UserMessage) and message.new_objective:
                 self._objective = text
                 self._repetitions, self._repetition = 0, None
-            elif self._objective is None or (
-                not isinstance(message, UserMessage) and command != "continue"
-            ):
+                if self._discovery is not None:
+                    if self._catalogue_loader is not None:
+                        await self._refresh_catalogue()
+                    self._discovery.reset_task()
+            elif self._objective is None:
                 # This is conversational intent, never independent proof of
                 # target identity or an authorization bypass at dispatch.
                 self._objective = text
+            if self._discovery is not None and self._discovery.pause_reason is not None:
+                if command == "continue":
+                    return self._reply(
+                        self._discovery.pause_reason + " Provide guidance first.", "paused"
+                    )
+                self._discovery.resume_with_guidance()
             return await self._converse(text)
         finally:
             self._busy = False
@@ -259,6 +341,8 @@ class ConversationCoordinator:
         self._repeat_pause = False
         self._history.append({"role": "user", "content": message})
         while True:
+            if self._discovery is not None and self._discovery.blocker is not None:
+                return self._reply(self._discovery.blocker, "paused")
             if requests >= 30 or self._clock() - started >= 1200 or self._repeat_pause:
                 return self._reply(
                     "Autonomous work limit reached or three repeated operations made no progress. "
@@ -280,14 +364,19 @@ class ConversationCoordinator:
                 "notes": "No approved decision-memory adapter available",
             }
             request = ModelRequest(
-                INSTRUCTIONS,
+                INSTRUCTIONS + (" " + GROUP_GUIDANCE if self._discovery is not None else ""),
                 [{"role": "user", "content": json.dumps(context)}, *deepcopy(self._history)],
-                tuple(deepcopy(self._tools)),
+                self.active_tools,
             )
             if self._request_admission is None:
                 return self._reply(
-                    "Model request blocked: reviewed discovery/context prerequisites "
-                    "(#20/#21/#23) are unavailable; live target support requires #24.",
+                    "Model request blocked: context/endpoint prerequisites (#21/#23) "
+                    "are unavailable; live target support requires #24."
+                    + (
+                        " Reviewed discovery (#20) is also unavailable."
+                        if self._discovery is None
+                        else ""
+                    ),
                     "paused",
                 )
             try:
@@ -388,7 +477,20 @@ class ConversationCoordinator:
                 )
             if self._gateway.pending_error is not None:
                 raise self._gateway.pending_error
-            if any(outcome.state != "received" for outcome in outcomes) or self._connection.paused:
+            if self._discovery is not None and self._discovery.pause_reason is not None:
+                return self._reply(
+                    self._discovery.pause_reason
+                    + " Current selection: "
+                    + ", ".join(tool.name for tool in self._discovery.tools)
+                    + ". Provide guidance before continuing.",
+                    "paused",
+                )
+            discovery_batch = self._discovery is not None and any(
+                call.name == "discover_tools" for call in calls
+            )
+            if (
+                not discovery_batch and any(outcome.state != "received" for outcome in outcomes)
+            ) or self._connection.paused:
                 return self._reply(
                     "Work paused after a rejected, failed or unresolved operation. "
                     "Completed effects are retained; no rollback is implied.",

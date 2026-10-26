@@ -1,4 +1,4 @@
-# Application-owned conversation coordinator (#19)
+# Application-owned conversation coordinator (#19 / #20)
 
 `ConversationCoordinator.submit(...)` is the shared interface for terminal input
 and deterministic tests. It accepts text, `UserMessage` (including explicit new
@@ -31,8 +31,59 @@ JSON object parsing and canonical JSON Schema validation. Invalid batches have
 no effects. Trustworthy IDs receive matched rejected/skipped outcomes; missing,
 conflicting or reused IDs cause a protocol pause without replaying broken output
 or inventing IDs. Unsupported/incomplete output never enters replay history.
-Discovery calls never pass through MCP; their dedicated adapter belongs to #20,
-and discovery batches remain refused until it is implemented.
+Discovery calls never pass through MCP. The catalogue/selection adapter now
+implements [#9's final resolution](https://github.com/GoncaGomes/cst-agentic/issues/9#issuecomment-6301794077)
+through this same coordinator, not the historical discovery proposal.
+
+## Progressive discovery
+
+`ToolDiscovery` accepts a detached canonical MCP catalogue. The exact eighteen
+operational groups cover seventy eligible unique MCP tools. Startup exposes
+exactly `cst_connection_status`, `cst_project_info` and application-owned
+`discover_tools`. Every selection replaces the entire group set, deduplicates
+startup/overlap, and enforces sixteen active unique functions. Invalid arguments,
+unknown groups, missing/unsupported canonical schemas or excess counts preserve
+the prior selection and return matched, concrete explanations. A discovery batch
+must contain one discovery call and nothing else; mixed/multiple-discovery batches
+have no effects or selection changes. Accepted definitions activate on the next
+internal request, with complete prior paired history and no extra user go-ahead.
+
+Canonical schemas are passed unchanged with strict conversion disabled. Local
+validation supports the reviewed JSON Schema dialects and local JSON-pointer
+references. Unsupported assertions, dialects or reference scopes fail activation;
+they are never silently removed or narrowed. Endpoint acceptance is a separate gate.
+The gateway independently intersects its execution allowlist with the approved
+inventory and rechecks originating definitions/inventory at final dispatch
+admission. Selection never grants target, consequence or execution permission.
+
+`UserMessage(..., new_objective=False)` or terminal `same task: <clarification>`
+keeps the current objective/selection. Use `new_objective=True` or terminal
+`new task: <objective>` for a separate objective; this resets selection/tracking,
+not history, authorization, evidence or uncertainty. Plain follow-ups with no
+explicit boundary ask whether this is the `same task` or a `new task` before
+sending any model request, rather than guessing from engineering prose. The
+pending message is retained and submitted once the user answers that question.
+
+Snapshots remain frozen during tasks. A new explicit objective refreshes through
+the injected catalogue loader; `refresh_catalogue(explicitly_authorized=True)` or
+terminal `refresh tools` permits a settled explicit refresh without reconnecting.
+Busy or unresolved connections refuse refresh. Refresh resets selection, disables
+whole optional groups with missing/unfaithful tools, and refuses same-name schema
+drift against previously accepted schemas, including removed/reintroduced names.
+Unavailable required startup tools block requests rather than shrink startup.
+New unapproved server names remain excluded. Production startup requires faithful
+startup schemas within the wrapper's complete startup allowance.
+
+Three consecutive rejected selections or a repeated normalized effective group
+set without successful non-discovery work pauses with a concrete blocker and asks
+for guidance. Accepted selection breaks the rejection streak; only successful
+non-discovery work clears cycle tracking. Explicit refresh does not reset these
+task-local safeguards. Bare `continue` cannot bypass a discovery pause; guidance
+or a new explicit objective is needed, with ordinary safety gates still intact.
+
+The `tools=` constructor seam remains available for existing controlled callers;
+production always supplies `ToolDiscovery`. A custom visible definition never
+bypasses the independently approved execution inventory.
 
 Ordinary calls execute sequentially only via `ControllerSession.dispatch`.
 The session's final synchronous guard rechecks admission after queueing, along
@@ -65,7 +116,7 @@ These bounds neither authorize a retry after uncertainty nor stop a solver.
 
 The production factory now supplies this same coordinator. It does **not** install
 unconditional request-admission, target-evidence or outcome-settlement callbacks.
-Until reviewed discovery (#20), bounded context (#21), configured endpoint
+Until bounded context (#21), configured endpoint
 validation (#23) and live target support (#24) are available, the terminal reports
 the missing prerequisites before a model request or tool dispatch. It still
 starts the manual-mode transport under the existing lease and recovery admission,
@@ -78,11 +129,12 @@ native capability or readiness of the complete Controller. The actual public
 stdio wrapper is also exercised with a separate local peer that never imports
 CST or requests the institutional endpoint.
 
-Progressive selection/reset/refresh, endpoint context counting and compaction,
-decision memory, native status/stop interpretation, operation-specific simulation
+Endpoint context counting and compaction, decision memory, native status/stop
+interpretation, operation-specific simulation
 policy, and the positive isolated-project recovery route remain their owning
-tickets' work. #17 still owns integrated recovery acceptance. No new model-visible
-inventory/group is activated in production. The disabled/status-only connectivity
+tickets' work. #17 still owns integrated recovery acceptance. Production installs
+the approved discovery selection, but model requests/dispatch remain gated as above.
+The disabled/status-only connectivity
 command and its SDK Runner path remain unchanged.
 
 ## Verification
@@ -93,6 +145,12 @@ Offline checks use `uv run pytest -q`, `uv run pyright`,
 canonical snapshots, malformed batches and ID history, work limits, persistence
 refusal, domain/transport/settlement failure, central incident handoff, final
 queued admission, abnormal cancellation, and the actual public stdio path.
+`tests/test_discovery.py` additionally exercises exact group memberships/counts,
+next-request activation, atomic selection/batch rejection, canonical arguments,
+task boundaries, refresh/drift/startup loss, independent execution gates and
+bounded escape. Its stdio case uses actual `tools/list` definitions and refresh
+with a controlled local peer, not CST. Protected-client tests also prove that
+catalogue reads cannot pass the permanent uncertainty latch.
 
 Evidence categories:
 

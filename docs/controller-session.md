@@ -27,8 +27,15 @@ also be absolute existing paths. Configuration file values take precedence over
 ambient values; dotenv interpolation is disabled. Errors name variables or safe
 categories, not their values. The existing connectivity configuration is unchanged.
 
-The public SDK child uses forced `CST_CONNECT_MODE=manual`,
-`CST_TOOLSETS=connection` and the explicit `CST_WORK_DIR`. Only reviewed OS/runtime
+The public SDK child uses forced `CST_CONNECT_MODE=manual`, the explicit
+`CST_WORK_DIR`, and the fixed category superset in `CONTROLLER_TOOLSETS`:
+connection, official, project, geometry, boolean, transforms, materials, ports,
+boundaries, mesh, solvers, simulation, results, import_export, parameters,
+diagnostics, pcb and workflows. Category spellings/membership were inspected at
+server `a4a177aeb0856dbf0f668f2dc5a8ca06e20ac8c2`; no server rewrite is needed.
+Some categories advertise excluded functions; only the exact approved inventory
+can be activated or dispatched. Server toolsets are availability, not authority.
+Only reviewed OS/runtime
 environment names are forwarded. Model credentials, Python environment overrides
 and arbitrary token/config variables are excluded. Because the SDK merges its
 own default environment, its inherited-name list is checked against the reviewed
@@ -43,16 +50,17 @@ The lease remains held through provider and transport cleanup.
 
 Public stdio, SDK session, initialization, paginated catalogue discovery and
 bootstrap catalogue admission run in one lifecycle-owner task within the complete
-120-second MCP startup allowance. Bootstrap checks reject duplicate names,
-missing connection definitions and non-object input schemas. They are **not** a
-reviewed model-visible inventory: zero tools are exposed or dispatched here.
-The connection-only server setting does not grant attachment authority.
+120-second MCP startup allowance. Bootstrap checks block missing, duplicate or
+unfaithful required status/project-info schemas; affected optional groups are
+disabled. The coordinator installs the approved startup/discovery selection
+described in [the conversation documentation](controller-conversation.md).
+Neither bootstrap admission nor schema availability grants attachment authority.
 
 The configured provider client and OpenAI Agents SDK model are initialized without
 making model requests. Global tracing/export processors are disabled and the
 prepared SDK `RunConfig` disables tracing. The shared coordinator uses direct
 model requests with `ModelTracing.DISABLED` only after request admission; production
-admission remains blocked pending reviewed discovery/context prerequisites.
+admission remains blocked pending validated context/endpoint prerequisites.
 Server stderr is captured in a local temporary stream from process startup,
 never automatically forwarded, and discarded on cleanup.
 
@@ -60,7 +68,7 @@ never automatically forwarded, and discarded on cleanup.
 
 `help`, historical `status`, `continue`, stop-simulation intent and exit confirmation
 are handled by the shared coordinator. Production work requests report the missing
-discovery/context/target prerequisites; no native launch, attachment, status, stop,
+context/endpoint/target prerequisites; no native launch, attachment, status, stop,
 save, disconnect or close route is activated. Existing-instance attachment remains excluded.
 
 `quit`/`exit` warns about unsaved work, active simulations and unknown live state;
