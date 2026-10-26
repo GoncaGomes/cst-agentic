@@ -9,11 +9,12 @@ from copy import deepcopy
 from dataclasses import dataclass
 from typing import Any
 
-from jsonschema import validators
 from mcp.types import Tool
 from openai.types.responses import ResponseFunctionToolCall
 
+from .canonical_schema import canonical_validator, json_object
 from .controller import ControllerSession
+from .discovery import APPROVED_MCP_TOOLS, ToolDiscovery
 from .mcp_client import McpToolCall
 from .recovery import RecoveryError
 
@@ -24,6 +25,7 @@ class CallOutcome:
     state: str
     reason: str
     result: McpToolCall | None = None
+    selection: dict[str, Any] | None = None
 
     def model_data(self) -> str:
         data: dict[str, Any] = {
@@ -32,6 +34,8 @@ class CallOutcome:
             "reason": self.reason,
         }
         try:
+            if self.selection is not None:
+                data["selection"] = self.selection
             if self.result is not None:
                 data.update(
                     is_error=self.result.is_error,
@@ -59,53 +63,17 @@ class ProtocolPause(RecoveryError):
     """Malformed output cannot be paired safely or replayed."""
 
 
-def _json_object(raw: str) -> dict[str, Any]:
-    def pairs(items):
-        result = {}
-        for key, value in items:
-            if key in result:
-                raise ValueError("Duplicate JSON key")
-            result[key] = value
-        return result
-
-    def invalid_constant(value):
-        raise ValueError("Non-JSON constant")
-
-    value = json.loads(raw, object_pairs_hook=pairs, parse_constant=invalid_constant)
-    if not isinstance(value, dict):
-        raise ValueError("Arguments must be an object")
-    return value
-
-
-def _local_schema(value: Any) -> None:
-    """Never retrieve remote references during schema validation."""
-    if isinstance(value, dict):
-        for key, item in value.items():
-            if key in {"$ref", "$dynamicRef"} and (
-                not isinstance(item, str) or not item.startswith("#")
-            ):
-                raise RecoveryError("Nonlocal schema references require reviewed support.")
-            if key == "$schema" and item not in {
-                "https://json-schema.org/draft/2020-12/schema",
-                "https://json-schema.org/draft/2019-09/schema",
-                "http://json-schema.org/draft-07/schema#",
-            }:
-                raise RecoveryError("Unsupported schema dialect.")
-            _local_schema(item)
-    elif isinstance(value, list):
-        for item in value:
-            _local_schema(item)
-
-
 class ConversationGateway:
     def __init__(
         self,
         connection: ControllerSession,
         allowlist: frozenset[str],
         interpreters: Mapping[str, Callable[[McpToolCall], bool]],
+        discovery: ToolDiscovery | None = None,
     ) -> None:
         self._connection = connection
-        self._allowlist = allowlist
+        self._allowlist = allowlist & APPROVED_MCP_TOOLS
+        self._discovery = discovery
         self._interpreters = dict(interpreters)
         self._used_ids: set[str] = set()
         self.pending_error: BaseException | None = None
@@ -117,6 +85,7 @@ class ConversationGateway:
         *,
         admit: Callable[[], bool] = lambda: True,
         observe: Callable[[ResponseFunctionToolCall, CallOutcome], bool] | None = None,
+        reject_reason: str | None = None,
     ) -> tuple[CallOutcome, ...]:
         self.pending_error = None
         ids = [call.call_id for call in calls]
@@ -125,7 +94,43 @@ class ConversationGateway:
         if self._used_ids.intersection(ids):
             raise ProtocolPause("Reused call identifiers; no calls dispatched or replayed.")
         self._used_ids.update(ids)
+        if reject_reason is not None:
+            return tuple(CallOutcome(call.call_id, "rejected", reject_reason) for call in calls)
         definitions = {tool.name: tool for tool in deepcopy(snapshot)}
+        if (
+            any(call.name == "discover_tools" for call in calls)
+            and self._discovery is not None
+            and len(calls) != 1
+        ):
+            reason = "Discovery must be the only call in a batch; no effects or selection update."
+            selection = self._discovery.reject(reason)
+            return tuple(
+                CallOutcome(call.call_id, "rejected", reason, selection=selection) for call in calls
+            )
+        if (
+            len(calls) == 1
+            and calls[0].name == "discover_tools"
+            and "discover_tools" in definitions
+            and self._discovery is not None
+        ):
+            try:
+                if calls[0].status not in {None, "completed"} or not admit():
+                    raise ValueError("Discovery not admitted")
+                values = json_object(calls[0].arguments)
+            except Exception:
+                selection = self._discovery.reject(
+                    "Invalid discovery JSON object or call admission."
+                )
+            else:
+                selection = self._discovery.select(values)
+            return (
+                CallOutcome(
+                    calls[0].call_id,
+                    "selected" if selection["accepted"] else "rejected",
+                    selection["reason"],
+                    selection=selection,
+                ),
+            )
         arguments: list[dict[str, Any]] = []
         errors: dict[int, str] = {}
         for index, call in enumerate(calls):
@@ -135,18 +140,15 @@ class ConversationGateway:
                 if call.name not in definitions or call.name not in self._allowlist:
                     raise RecoveryError("Tool is not visible and independently approved.")
                 schema = definitions[call.name].input_schema
-                _local_schema(schema)
-                validator = validators.validator_for(schema)
-                validator.check_schema(schema)
-                values = _json_object(call.arguments)
-                validator(schema).validate(values)
+                values = json_object(call.arguments)
+                canonical_validator(schema).validate(values)
                 arguments.append(values)
             except Exception:
                 errors[index] = "Invalid name, JSON arguments or canonical schema; not dispatched."
                 arguments.append({})
         if any(call.name == "discover_tools" for call in calls):
-            # #20 supplies discovery-only settlement. Never dispatch this
-            # application function through MCP, or execute mixed discovery work.
+            # Legacy controlled callers may omit the application selector.
+            # Never route application discovery through MCP in that case either.
             errors.update(
                 {
                     index: "Discovery requires its reviewed #20 adapter; batch not dispatched."
@@ -189,13 +191,30 @@ class ConversationGateway:
                 )
 
             try:
+
+                def dispatch_admission(
+                    name: str = call.name,
+                    definition: Tool = definitions[call.name],
+                ) -> bool:
+                    return (
+                        admit()
+                        and name in self._allowlist
+                        and name in definitions
+                        and (
+                            self._discovery is None
+                            or self._discovery.accepts_definition(definition)
+                        )
+                    )
+
                 result = await self._connection.dispatch(
                     call.name,
                     values,
                     settled=settled,
-                    admission_check=admit,
+                    admission_check=dispatch_admission,
                 )
                 failed = self._connection.paused
+                if not failed and self._discovery is not None:
+                    self._discovery.successful_work()
                 outcomes.append(
                     CallOutcome(
                         call.call_id,

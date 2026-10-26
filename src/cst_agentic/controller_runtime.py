@@ -18,21 +18,15 @@ from openai import AsyncOpenAI
 from .controller import ControllerMcpClient, ControllerSession
 from .controller_config import ControllerConfig
 from .conversation import EXIT_WARNING, ConversationCoordinator
+from .discovery import APPROVED_MCP_TOOLS, ToolDiscovery
 from .recovery import RecoveryError, RecoveryStore
 
 
 def admit_manual_catalogue(tools: list[Tool]) -> None:
-    """Check bootstrap definitions, not model-visible inventory admission.
-
-    Production exposes no tools until reviewed discovery/context and live-target
-    prerequisites are available. Bootstrap admission never grants execution.
-    """
-    names = [tool.name for tool in tools]
-    required = {"cst_connect", "cst_disconnect", "cst_connection_status"}
-    if len(set(names)) != len(names) or not required <= set(names):
-        raise RecoveryError("Controller bootstrap catalogue is incompatible.")
-    if any(tool.input_schema.get("type") != "object" for tool in tools):
-        raise RecoveryError("Controller bootstrap schemas are incompatible.")
+    """Require faithful startup; unavailable optional groups do not block startup."""
+    discovery = ToolDiscovery(tools)
+    if discovery.blocker is not None:
+        raise RecoveryError(discovery.blocker)
 
 
 @dataclass(frozen=True)
@@ -150,7 +144,7 @@ async def create_controller_session(
         )
 
     async with ControllerSession(
-        store, client_factory, inventory=frozenset(), dispatch_check=lambda *args: None
+        store, client_factory, inventory=APPROVED_MCP_TOOLS, dispatch_check=lambda *args: None
     ) as session:
         await session.open_manual_transport()
         provider: AsyncOpenAI | None = None
@@ -165,7 +159,14 @@ async def create_controller_session(
             yield ManualController(
                 model,
                 RunConfig(model=model, tracing_disabled=True, trace_include_sensitive_data=False),
-                ConversationCoordinator(model=model, connection=session, store=store),
+                ConversationCoordinator(
+                    model=model,
+                    connection=session,
+                    store=store,
+                    discovery=ToolDiscovery(session.catalogue),
+                    catalogue_loader=session.refresh_catalogue,
+                    allowlist=APPROVED_MCP_TOOLS,
+                ),
             )
         finally:
             primary = sys.exception()

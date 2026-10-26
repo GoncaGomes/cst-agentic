@@ -165,6 +165,25 @@ class HangSession:
         await asyncio.sleep(3600)
 
 
+@pytest.mark.asyncio
+async def test_uncertain_client_refuses_catalogue_refresh_before_sdk_entry(tmp_path):
+    class Peer(FakeCallSession):
+        listed = False
+
+        async def list_tools(self, **kwargs):
+            self.listed = True
+            return ListToolsResult(tools=[_tool("cst_connection_status")])
+
+    peer = Peer(RuntimeError("synthetic-private-transport-error"))
+    client = _client(tmp_path)
+    client._session = peer
+    with pytest.raises(McpCallError):
+        await client.call_tool("cst_connection_status", {})
+    with pytest.raises(McpError, match="uncertain"):
+        await client.discover_tool_definitions()
+    assert peer.listed is False
+
+
 class GateCallSession:
     """A session that holds each call body on an event gate.
 

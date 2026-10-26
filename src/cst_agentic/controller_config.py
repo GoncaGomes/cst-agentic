@@ -13,6 +13,13 @@ from mcp.client import stdio
 
 from .config import ConfigError
 
+# Reviewed category spellings at cst-mcp a4a177a; availability only, not authority.
+# Some categories also advertise excluded tools, which discovery/gateway never approve.
+CONTROLLER_TOOLSETS = (
+    "connection,official,project,geometry,boolean,transforms,materials,ports,boundaries,"
+    "mesh,solvers,simulation,results,import_export,parameters,diagnostics,pcb,workflows"
+)
+
 # Reviewed against public SDK environment merging. New SDK defaults require review
 # rather than silently expanding the child's inherited environment.
 CHILD_OS_KEYS = frozenset(
@@ -59,7 +66,9 @@ class ControllerConfig:
             if key in CHILD_OS_KEYS and not value.startswith("()")
         }
         env.update(
-            CST_CONNECT_MODE="manual", CST_TOOLSETS="connection", CST_WORK_DIR=str(self.work_dir)
+            CST_CONNECT_MODE="manual",
+            CST_TOOLSETS=CONTROLLER_TOOLSETS,
+            CST_WORK_DIR=str(self.work_dir),
         )
         return env
 

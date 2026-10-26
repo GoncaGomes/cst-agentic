@@ -164,6 +164,11 @@ def scripted_model(steps: list[list[Any]]) -> ScriptedModel:
     return ScriptedModel(steps)
 
 
+def conversation_message(text: str, *, new_objective: str | None = None):
+    """A scripted coordinator reply using its typed conversational output contract."""
+    return assistant_message(json.dumps({"text": text, "new_objective": new_objective}))
+
+
 def success_steps() -> list[list[Any]]:
     """A model that calls the status tool once, then summarizes the result."""
     return [

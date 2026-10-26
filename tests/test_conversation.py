@@ -8,13 +8,14 @@ from pathlib import Path
 
 import pytest
 from agents.models.interface import ModelTracing
-from agents.testing import ScriptedModel, assistant_message, function_call
+from agents.testing import ScriptedModel, function_call
 from mcp.types import CallToolResult, TextContent, Tool
 
 from cst_agentic.controller import ControllerSession, DispatchEvidence
 from cst_agentic.conversation import ConversationCoordinator
 from cst_agentic.mcp_client import CstMcpClient
 from cst_agentic.recovery import RecoveryStore
+from fakes import conversation_message as assistant_message
 
 
 class Peer:

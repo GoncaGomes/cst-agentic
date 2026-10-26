@@ -16,7 +16,11 @@ def main() -> None:
         json.dumps(
             {
                 "manual": os.environ.get("CST_CONNECT_MODE") == "manual",
-                "toolsets": os.environ.get("CST_TOOLSETS") == "connection",
+                "toolsets": os.environ.get("CST_TOOLSETS")
+                == (
+                    "connection,official,project,geometry,boolean,transforms,materials,ports,boundaries,"
+                    "mesh,solvers,simulation,results,import_export,parameters,diagnostics,pcb,workflows"
+                ),
                 "work": bool(os.environ.get("CST_WORK_DIR")),
                 "forbidden": [
                     key
@@ -35,6 +39,7 @@ def main() -> None:
         encoding="utf-8",
     )
     print("synthetic-private-server-stderr", file=sys.stderr, flush=True)
+    catalogue_reads = 0
     for line in sys.stdin:
         request = json.loads(line)
         if "id" not in request:
@@ -61,16 +66,37 @@ def main() -> None:
                 "serverInfo": {"name": "manual-peer", "version": "1"},
             }
         elif method == "tools/list":
+            catalogue_reads += 1
             if mode == "catalogue_timeout":
                 time.sleep(30)
             names = (
                 []
                 if mode == "bad_catalogue"
                 else ["cst_connect", "cst_disconnect", "cst_connection_status"]
+                if mode == "missing_info"
+                else ["cst_connect", "cst_disconnect", "cst_connection_status", "cst_project_info"]
             )
+            if mode == "discovery":
+                names.extend(["cst_get_parameter", "cst_list_parameters", "cst_execute_vba"])
+                if catalogue_reads == 1:
+                    names.append("cst_set_parameter")
             result = {
                 "tools": [{"name": name, "inputSchema": {"type": "object"}} for name in names]
             }
+            if mode == "discovery":
+                deletions = json.loads(
+                    Path(__file__).with_name("canonical_deletions.json").read_text(encoding="utf-8")
+                )["tools"]
+                result["tools"].extend(
+                    tool for tool in deletions if tool["name"] == "cst_delete_parameter"
+                )
+                for tool in result["tools"]:
+                    if tool["name"] == "cst_get_parameter":
+                        tool["inputSchema"] = {
+                            "type": "object",
+                            "properties": {"value": {"type": ["number", "null"], "default": None}},
+                            "additionalProperties": False,
+                        }
         else:
             data = json.loads(Path(observation).read_text(encoding="utf-8"))
             data["calls"].append(method)
@@ -81,7 +107,7 @@ def main() -> None:
                     "structuredContent": {"mode": "offline"},
                     "isError": False,
                 }
-                if mode == "conversation" and method == "tools/call"
+                if mode in {"conversation", "discovery"} and method == "tools/call"
                 else {}
             )
         print(json.dumps({"jsonrpc": "2.0", "id": request["id"], "result": result}), flush=True)
