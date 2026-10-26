@@ -128,6 +128,10 @@ async def run_controller_terminal(
 async def create_controller_session(
     config: ControllerConfig, *, state_directory: Path | None = None
 ) -> AsyncIterator[ManualController]:
+    if config.context_budget is not None and not config.context_budget.matches(
+        config.base_url, config.model
+    ):
+        raise RecoveryError("Controller context validation does not match the configured provider.")
     set_tracing_disabled(True)
     set_trace_processors([])
     store = RecoveryStore(state_directory)
@@ -166,6 +170,7 @@ async def create_controller_session(
                     discovery=ToolDiscovery(session.catalogue),
                     catalogue_loader=session.refresh_catalogue,
                     allowlist=APPROVED_MCP_TOOLS,
+                    context_budget=config.context_budget,
                 ),
             )
         finally:

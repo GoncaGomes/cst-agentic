@@ -18,6 +18,16 @@ from .discovery import APPROVED_MCP_TOOLS, ToolDiscovery
 from .mcp_client import McpToolCall
 from .recovery import RecoveryError
 
+MAX_OUTCOME_BYTES = 16_384
+
+
+@dataclass(frozen=True)
+class OutcomeProjection:
+    model_data: str
+    reason: str
+    observation: McpToolCall | None
+    support_available: bool
+
 
 @dataclass(frozen=True)
 class CallOutcome:
@@ -43,7 +53,33 @@ class CallOutcome:
                     content=[block.model_dump(mode="json") for block in self.result.content],
                     structured_content=self.result.structured_content,
                 )
-            return json.dumps(data, allow_nan=False, sort_keys=True)
+            projected = json.dumps(data, allow_nan=False, sort_keys=True)
+            size = len(projected.encode("utf-8"))
+            if size > MAX_OUTCOME_BYTES:
+                # Omit complete payload fields rather than presenting clipped
+                # text/JSON as enough support for a native fact. Full dispatch
+                # records remain separate from bounded conversation context.
+                data.update(
+                    content=[],
+                    structured_content=None,
+                    evidence_complete=False,
+                    support_available=False,
+                    reason="Outcome details exceeded the model-facing allowance; "
+                    "see explicit omissions. No omitted content supports a fact.",
+                    omissions={
+                        "reason": "Outcome exceeded the model-facing byte allowance; "
+                        "payload unavailable, not evidence of current facts.",
+                        "original_bytes": size,
+                        "content_blocks": len(self.result.content) if self.result else 0,
+                        "structured_content": self.result is not None
+                        and self.result.structured_content is not None,
+                        "selection": self.selection is not None,
+                        "original_reason": True,
+                    },
+                )
+                data.pop("selection", None)
+                return json.dumps(data, allow_nan=False, sort_keys=True)
+            return projected
         except (TypeError, ValueError, OverflowError):
             return json.dumps(
                 {
@@ -57,6 +93,41 @@ class CallOutcome:
     @property
     def projection_available(self) -> bool:
         return json.loads(self.model_data()).get("projection_available", True) is True
+
+    def project(self) -> OutcomeProjection:
+        """Bound both replay data and retained observation copies in one place."""
+        model_data = self.model_data()
+        data = json.loads(model_data)
+        support_available = data.get("support_available", True) and data.get(
+            "projection_available", True
+        )
+        result = self.result
+        if result is not None:
+            try:
+                # Legacy convenience fields and arguments must not bypass the
+                # observation bound. Nonfinite received values may be retained
+                # as failure evidence, but never projected as supported facts.
+                retained_size = len(
+                    json.dumps(
+                        {
+                            "arguments": result.arguments,
+                            "text": result.text,
+                            "payload": result.payload,
+                            "structured": result.structured_content,
+                            "content": [block.model_dump(mode="json") for block in result.content],
+                        }
+                    ).encode("utf-8")
+                )
+            except Exception:
+                retained_size = MAX_OUTCOME_BYTES + 1
+            if retained_size > MAX_OUTCOME_BYTES:
+                result = McpToolCall(
+                    result.name, {}, result.is_error, None, None, evidence_complete=False
+                )
+                support_available = False
+        return OutcomeProjection(
+            model_data, data["reason"], deepcopy(result), bool(support_available)
+        )
 
 
 class ProtocolPause(RecoveryError):

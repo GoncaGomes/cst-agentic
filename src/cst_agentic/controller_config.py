@@ -12,6 +12,7 @@ from dotenv import dotenv_values
 from mcp.client import stdio
 
 from .config import ConfigError
+from .context_budget import ContextBudget, load_context_budget
 
 # Reviewed category spellings at cst-mcp a4a177a; availability only, not authority.
 # Some categories also advertise excluded tools, which discovery/gateway never approve.
@@ -56,6 +57,7 @@ class ControllerConfig:
     work_dir: Path
     startup_timeout_s: float = 120
     shutdown_timeout_s: float = 30
+    context_budget: ContextBudget | None = None
 
     def child_env(self, parent_env: Mapping[str, str]) -> dict[str, str]:
         if not set(stdio.DEFAULT_INHERITED_ENV_VARS) <= CHILD_OS_KEYS:
@@ -106,8 +108,26 @@ def load_controller_config(*, env_path: str | Path = ".env") -> ControllerConfig
         if not work.is_absolute():
             raise ConfigError("CST_CONTROLLER_WORK_DIR must identify an absolute directory.")
         work.mkdir(parents=True, exist_ok=True)
+        model = required("AGENT")
+        validation_file = values.get("CST_CONTROLLER_CONTEXT_VALIDATION_FILE") or os.environ.get(
+            "CST_CONTROLLER_CONTEXT_VALIDATION_FILE"
+        )
+        budget = None
+        if validation_file is not None:
+            try:
+                budget = load_context_budget(Path(validation_file), endpoint=base_url, model=model)
+            except ValueError:
+                raise ConfigError(
+                    "Controller context validation is unavailable or mismatched."
+                ) from None
         return ControllerConfig(
-            base_url, required("SKYNET_API_KEY"), required("AGENT"), executable, cwd, work.resolve()
+            base_url,
+            required("SKYNET_API_KEY"),
+            model,
+            executable,
+            cwd,
+            work.resolve(),
+            context_budget=budget,
         )
     except (OSError, ValueError):
         raise ConfigError("Controller configuration or filesystem is unavailable.") from None
