@@ -24,7 +24,7 @@ from pydantic import BaseModel, ConfigDict
 from .canonical_schema import json_object
 from .context_budget import ContextBudget
 from .controller import ControllerSession
-from .conversation_gateway import MAX_OUTCOME_BYTES, CallOutcome, ConversationGateway, ProtocolPause
+from .conversation_gateway import CallOutcome, ConversationGateway, ProtocolPause
 from .discovery import GROUP_GUIDANCE, ToolDiscovery
 from .mcp_client import McpToolCall
 from .recovery import RecoveryError, RecoveryStore
@@ -114,9 +114,9 @@ class ConversationReply:
     events: tuple[ConversationEvent, ...] = ()
 
 
-@dataclass(frozen=True)
+@dataclass
 class _SettledBatch:
-    size: int
+    items: tuple[TResponseInputItem, ...]
     objective_generation: int
     has_calls: bool
     has_discussion: bool
@@ -166,7 +166,6 @@ class ConversationCoordinator:
         self._context_budget = context_budget
         self._interpreters = dict(interpreters or {})
         self._clock = clock
-        self._history: list[TResponseInputItem] = []
         self._history_batches: list[_SettledBatch] = []
         self._objective_generation = 0
         self._omitted_batches = 0
@@ -210,7 +209,7 @@ class ConversationCoordinator:
 
     @property
     def history(self) -> list[TResponseInputItem]:
-        return deepcopy(self._history)
+        return deepcopy([item for batch in self._history_batches for item in batch.items])
 
     @property
     def active_tools(self) -> tuple[Tool, ...]:
@@ -223,16 +222,15 @@ class ConversationCoordinator:
     def evidence(self) -> tuple[Observation, ...]:
         return tuple(deepcopy(self._evidence))
 
-    def _append_settled(self, items: list[TResponseInputItem]) -> None:
-        self._history.extend(items)
-        self._history_batches.append(
-            _SettledBatch(
-                len(items),
-                self._objective_generation,
-                any(item.get("type") == "function_call" for item in items),
-                any(item.get("role") in {"user", "assistant"} for item in items),
-            )
+    def _append_settled(self, items: list[TResponseInputItem]) -> _SettledBatch:
+        batch = _SettledBatch(
+            tuple(deepcopy(items)),
+            self._objective_generation,
+            any(item.get("type") == "function_call" for item in items),
+            any(item.get("role") in {"user", "assistant"} for item in items),
         )
+        self._history_batches.append(batch)
+        return batch
 
     def _compact_old_batch(self) -> bool:
         """Only settled batches are recorded. Keep recent and current discussion.
@@ -241,7 +239,6 @@ class ConversationCoordinator:
         questions/engineering choices; we do not ask a model which permissions
         or questions it thinks can be forgotten. If that cannot fit, pause.
         """
-        offset = 0
         for index, batch in enumerate(self._history_batches):
             old_objective = batch.objective_generation != self._objective_generation
             old_tool_batch = (
@@ -250,16 +247,14 @@ class ConversationCoordinator:
                 and index < len(self._history_batches) - 4
             )
             if old_objective or old_tool_batch:
-                removed = self._history[offset : offset + batch.size]
                 removed_ids = {
                     item.get("call_id")
-                    for item in removed
+                    for item in batch.items
                     if item.get("type") == "function_call_output"
                 }
                 retained = [e for e in self._evidence if e.call_id not in removed_ids]
                 self._omitted_observations += len(self._evidence) - len(retained)
                 self._evidence = retained
-                del self._history[offset : offset + batch.size]
                 del self._history_batches[index]
                 self._omitted_batches += 1
                 self._emit(
@@ -269,7 +264,6 @@ class ConversationCoordinator:
                     "Current discussion and recent pairs retained.",
                 )
                 return True
-            offset += batch.size
         return False
 
     def _build_request(self, allow_transition: bool) -> ModelRequest:
@@ -311,7 +305,7 @@ class ConversationCoordinator:
         }
         return ModelRequest(
             INSTRUCTIONS + (" " + GROUP_GUIDANCE if self._discovery is not None else ""),
-            [{"role": "user", "content": json.dumps(context)}, *deepcopy(self._history)],
+            [{"role": "user", "content": json.dumps(context)}, *self.history],
             self.active_tools,
             AgentOutputSchema(ConversationDecision),
         )
@@ -345,10 +339,17 @@ class ConversationCoordinator:
         finally:
             self._busy = False
 
-    async def _start_objective(self, objective: str) -> None:
+    async def _start_objective(
+        self, objective: str, *, retain: tuple[_SettledBatch, ...] = ()
+    ) -> None:
         """Change conversational intent only; retain all execution/recovery state."""
         self._objective = objective
         self._objective_generation += 1
+        for batch in retain:
+            # The user's exact transition request (including restrictions) and
+            # the complete paired transition response belong to the new task.
+            # A model's shorter objective label cannot replace either one.
+            batch.objective_generation = self._objective_generation
         self._repetitions, self._repetition = 0, None
         self._repeat_pause = False
         if self._discovery is not None:
@@ -463,7 +464,7 @@ class ConversationCoordinator:
         started = self._clock()
         requests = 0
         self._repeat_pause = False
-        self._append_settled([{"role": "user", "content": message}])
+        user_batch = self._append_settled([{"role": "user", "content": message}])
         while True:
             if self._discovery is not None and self._discovery.blocker is not None:
                 return self._reply(self._discovery.blocker, "paused")
@@ -592,11 +593,11 @@ class ConversationCoordinator:
                 )
             transitioning = decision is not None and decision.new_objective is not None
             if not calls:
-                self._append_settled(response.to_input_items())
+                response_batch = self._append_settled(response.to_input_items())
                 assert decision is not None
                 if transitioning:
                     assert objective is not None
-                    await self._start_objective(objective)
+                    await self._start_objective(objective, retain=(user_batch, response_batch))
                     allow_transition = False
                     if decision.text:
                         self._emit("progress", decision.text)
@@ -619,54 +620,26 @@ class ConversationCoordinator:
             except ProtocolPause as error:
                 return self._reply(str(error), "paused")
             settled_items = response.to_input_items()
-            for call, outcome in zip(calls, outcomes, strict=True):
-                if outcome.result is not None:
-                    projected = json.loads(outcome.model_data())
-                    support_available = projected.get("support_available", True) and projected.get(
-                        "projection_available", True
-                    )
-                    result = deepcopy(outcome.result)
-                    try:
-                        # Include legacy convenience fields/arguments as well;
-                        # none may bypass the retained-working-context bound.
-                        retained_size = len(
-                            json.dumps(
-                                {
-                                    "arguments": result.arguments,
-                                    "text": result.text,
-                                    "payload": result.payload,
-                                    "structured": result.structured_content,
-                                    "content": [
-                                        block.model_dump(mode="json") for block in result.content
-                                    ],
-                                }
-                            ).encode("utf-8")
-                        )
-                    except Exception:
-                        retained_size = MAX_OUTCOME_BYTES + 1
-                    if retained_size > MAX_OUTCOME_BYTES:
-                        result = McpToolCall(
-                            result.name, {}, result.is_error, None, None, evidence_complete=False
-                        )
-                        support_available = False
+            projections = [outcome.project() for outcome in outcomes]
+            for call, projection in zip(calls, projections, strict=True):
+                if projection.observation is not None:
                     self._evidence.append(
                         Observation(
                             call.call_id,
                             self._clock(),
-                            result,
-                            support_available=bool(support_available),
+                            projection.observation,
+                            support_available=projection.support_available,
                             objective_at_observation=self._objective,
                         )
                     )
-                settled_items.append(ItemHelpers.tool_call_output_item(call, outcome.model_data()))
-            self._append_settled(settled_items)
-            for call, outcome in zip(calls, outcomes, strict=True):
-                reason = json.loads(outcome.model_data())["reason"]
-                self._emit("outcome", f"{outcome.state}: {reason}", call.call_id)
+                settled_items.append(ItemHelpers.tool_call_output_item(call, projection.model_data))
+            response_batch = self._append_settled(settled_items)
+            for call, outcome, projection in zip(calls, outcomes, projections, strict=True):
+                self._emit("outcome", f"{outcome.state}: {projection.reason}", call.call_id)
             allow_transition = False
             if transitioning:
                 assert objective is not None
-                await self._start_objective(objective)
+                await self._start_objective(objective, retain=(user_batch, response_batch))
                 continue
             try:
                 for incident in self._store.incidents(unresolved_only=True):

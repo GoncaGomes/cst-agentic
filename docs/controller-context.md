@@ -92,6 +92,11 @@ still cannot fit, `context_pause` explains the blocker. A smaller explicit new
 task can retire oversized earlier-task discussion; it grants no new native target
 or execution permission.
 
+For model-recognized transitions, the exact triggering user message (including
+restrictions) and the complete transition response/pairs belong to the new
+objective. A shorter model objective label cannot replace them or make them
+eligible for old-task compaction. Oversized essential transition discussion pauses.
+
 Compaction emits `context_compacted`, counts omitted batches/observations and
 retains a bounded discussion-context omission summary, explicitly **not verified
 facts or authority**. Observation references whose supporting pairs were removed

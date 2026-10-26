@@ -312,6 +312,49 @@ async def test_compaction_retains_unanswered_questions_inside_tool_responses(tmp
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("co_returned_calls", [False, True])
+async def test_model_led_transition_cannot_compact_away_new_task_restrictions(
+    tmp_path, co_returned_calls
+):
+    transition = [
+        assistant_message("Transition explanation. " * 1000, new_objective="Inspect project B")
+    ]
+    if co_returned_calls:
+        transition.append(function_call(STATUS.name, {}, call_id="stale-task"))
+    model = ScriptedModel(
+        [
+            [assistant_message("A request noted; no native authority established.")],
+            transition,
+            [assistant_message("This request must not be admitted by dropping task restrictions.")],
+        ]
+    )
+    async with conversation(tmp_path, model, context_budget=validated_budget(9_000, 1000)) as (
+        coordinator,
+        store,
+        peer,
+    ):
+        await coordinator.submit("Save project A only")
+        restriction = "Switch to inspect project B only. Never save or simulate B."
+        reply = await coordinator.submit(restriction)
+        assert reply.state == "paused"
+        assert any(e.kind == "context_pause" for e in reply.events)
+        assert len(model.calls) == 2
+        assert any(item.get("content") == restriction for item in coordinator.history)
+        if co_returned_calls:
+            assert [
+                item["call_id"]
+                for item in coordinator.history
+                if item.get("type") == "function_call"
+            ] == ["stale-task"]
+            assert [
+                item["call_id"]
+                for item in coordinator.history
+                if item.get("type") == "function_call_output"
+            ] == ["stale-task"]
+        assert peer.seen == []
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize("failure", ["domain", "transport", "persistence"])
 async def test_failure_preserves_prior_effects_skips_dependents_and_emits_incident(
     tmp_path,

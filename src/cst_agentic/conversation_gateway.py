@@ -22,6 +22,14 @@ MAX_OUTCOME_BYTES = 16_384
 
 
 @dataclass(frozen=True)
+class OutcomeProjection:
+    model_data: str
+    reason: str
+    observation: McpToolCall | None
+    support_available: bool
+
+
+@dataclass(frozen=True)
 class CallOutcome:
     call_id: str
     state: str
@@ -85,6 +93,41 @@ class CallOutcome:
     @property
     def projection_available(self) -> bool:
         return json.loads(self.model_data()).get("projection_available", True) is True
+
+    def project(self) -> OutcomeProjection:
+        """Bound both replay data and retained observation copies in one place."""
+        model_data = self.model_data()
+        data = json.loads(model_data)
+        support_available = data.get("support_available", True) and data.get(
+            "projection_available", True
+        )
+        result = self.result
+        if result is not None:
+            try:
+                # Legacy convenience fields and arguments must not bypass the
+                # observation bound. Nonfinite received values may be retained
+                # as failure evidence, but never projected as supported facts.
+                retained_size = len(
+                    json.dumps(
+                        {
+                            "arguments": result.arguments,
+                            "text": result.text,
+                            "payload": result.payload,
+                            "structured": result.structured_content,
+                            "content": [block.model_dump(mode="json") for block in result.content],
+                        }
+                    ).encode("utf-8")
+                )
+            except Exception:
+                retained_size = MAX_OUTCOME_BYTES + 1
+            if retained_size > MAX_OUTCOME_BYTES:
+                result = McpToolCall(
+                    result.name, {}, result.is_error, None, None, evidence_complete=False
+                )
+                support_available = False
+        return OutcomeProjection(
+            model_data, data["reason"], deepcopy(result), bool(support_available)
+        )
 
 
 class ProtocolPause(RecoveryError):
