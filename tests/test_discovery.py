@@ -7,16 +7,19 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 import pytest
-from agents.testing import ScriptedModel, assistant_message, function_call
+from agents.testing import ScriptedModel, function_call
 from mcp.types import Tool
 from test_conversation import Client, Peer
 
 from cst_agentic.controller import ControllerSession, DispatchEvidence
 from cst_agentic.conversation import ConversationCoordinator, UserMessage
 from cst_agentic.recovery import RecoveryStore
+from fakes import conversation_message as assistant_message
 
 
 def definition(name, schema=None):
+    if name in DELETIONS and schema is None:
+        return DELETIONS[name].model_copy(deep=True)
     return Tool(
         name=name,
         description="Canonical server data",
@@ -25,7 +28,20 @@ def definition(name, schema=None):
 
 
 STARTUP = {"cst_connection_status", "cst_project_info", "discover_tools"}
-PARAMETERS = {"cst_set_parameter", "cst_get_parameter", "cst_list_parameters"}
+PARAMETERS = {
+    "cst_set_parameter",
+    "cst_get_parameter",
+    "cst_list_parameters",
+    "cst_delete_parameter",
+}
+DELETIONS = {
+    tool["name"]: Tool.model_validate(tool)
+    for tool in json.loads(
+        (Path(__file__).parent / "fixtures" / "canonical_deletions.json").read_text(
+            encoding="utf-8"
+        )
+    )["tools"]
+}
 EXPECTED_GROUPS = json.loads(
     (Path(__file__).parent / "fixtures" / "approved_discovery.json").read_text(encoding="utf-8")
 )["groups"]
@@ -33,7 +49,15 @@ EXPECTED_GROUPS = json.loads(
 
 @asynccontextmanager
 async def discovering(
-    tmp_path, model, *, catalogue=None, allowlist=None, dispatch_check=None, peer=None, **kwargs
+    tmp_path,
+    model,
+    *,
+    catalogue=None,
+    allowlist=None,
+    session_inventory=None,
+    dispatch_check=None,
+    peer=None,
+    **kwargs,
 ):
     from cst_agentic.discovery import APPROVED_MCP_TOOLS, ToolDiscovery
 
@@ -49,7 +73,7 @@ async def discovering(
     async with ControllerSession(
         store,
         lambda: Client(peer),
-        inventory=APPROVED_MCP_TOOLS,
+        inventory=APPROVED_MCP_TOOLS if session_inventory is None else session_inventory,
         dispatch_check=dispatch_check
         or (lambda *args: DispatchEvidence("controlled-process-created-1")),
     ) as session:
@@ -104,7 +128,7 @@ async def test_selection_activates_canonical_definitions_next_request_with_paire
         assert pairs[0]["call_id"] == "select"
         result = json.loads(pairs[0]["output"])["selection"]
         assert result["accepted"] is True
-        assert result["visible_count"] == 6
+        assert result["visible_count"] == 7
         assert result["limit"] == 16
         assert result["activation"] == "next internal request"
         assert len(store.incidents()) == 1  # Discovery is not an MCP operation.
@@ -118,7 +142,7 @@ async def test_selection_activates_canonical_definitions_next_request_with_paire
         ({"groups": "parameters"}, "array"),
         ({"groups": ["parameters"], "extra": True}, "extra"),
         ({}, "groups"),
-        ({"groups": ["geometry_basic", "solid_operations", "materials_basic"]}, "22"),
+        ({"groups": ["geometry_basic", "solid_operations", "materials_basic"]}, "23"),
     ],
 )
 async def test_invalid_selection_is_atomic_explained_and_can_be_corrected(
@@ -251,8 +275,9 @@ async def test_selection_replaces_deduplicates_and_survives_clarification_but_no
     async with discovering(tmp_path, model) as (coordinator, store, peer):
         await coordinator.submit("Inspect project")
         assert len(model.calls[1].tools) == 16
-        await coordinator.submit(UserMessage("The width parameter"))
+        await coordinator.submit("The width parameter")
         assert len(model.calls[2].tools) == 16
+        assert model.calls[2].input[-1]["content"] == "The width parameter"
         assert names(model.calls[3]) == STARTUP | PARAMETERS
         old_history = coordinator.history
         await coordinator.submit(UserMessage("Separate objective", new_objective=True))
@@ -454,7 +479,7 @@ async def test_each_operational_group_exposes_exact_authoritative_membership(tmp
         discovery = next(t for t in model.calls[0].tools if t.name == "discover_tools")
         enum = discovery.params_json_schema["properties"]["groups"]["items"]["enum"]
         assert set(enum) == set(EXPECTED_GROUPS) and len(enum) == 18
-        assert len({"cst_connection_status"}.union(*EXPECTED_GROUPS.values())) == 70
+        assert len({"cst_connection_status"}.union(*EXPECTED_GROUPS.values())) == 72
 
 
 @pytest.mark.asyncio
@@ -622,6 +647,12 @@ async def test_discovery_and_refresh_through_actual_protected_stdio_wrapper(tmp_
         assert (await coordinator.submit("Inspect parameters")).state == "reply"
         assert names(model.calls[1]) == STARTUP | PARAMETERS
         assert (
+            next(
+                t for t in model.calls[1].tools if t.name == "cst_delete_parameter"
+            ).params_json_schema
+            == DELETIONS["cst_delete_parameter"].input_schema
+        )
+        assert (
             "cst_set_parameter"
             in (await coordinator.refresh_catalogue(explicitly_authorized=True)).text
         )
@@ -633,31 +664,418 @@ async def test_discovery_and_refresh_through_actual_protected_stdio_wrapper(tmp_
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("choice", ["same task", "new task"])
-async def test_unclassified_followup_requires_boundary_clarification_before_using_old_objective(
-    tmp_path, choice
-):
+async def test_ordinary_clarification_reaches_model_with_original_wording_and_selection(tmp_path):
     model = ScriptedModel(
         [
             [function_call("discover_tools", {"groups": ["parameters"]}, call_id="select")],
             [assistant_message("Which parameter?")],
-            [assistant_message("Boundary resolved.")],
+            [assistant_message("Width clarification received.")],
         ]
     )
     async with discovering(tmp_path, model) as (coordinator, store, peer):
         await coordinator.submit("Inspect parameters")
-        followup = (
-            "Switch to a separate objective: inspect project tree"
-            if choice == "new task"
-            else "The width parameter"
-        )
+        history = coordinator.history
+        followup = "The width parameter"
         reply = await coordinator.submit(followup)
-        assert reply.state == "clarification"
-        assert "same task" in reply.text and "new task" in reply.text
-        assert len(model.calls) == 2
-        assert (await coordinator.submit(choice)).state == "reply"
-        assert names(model.calls[-1]) == (STARTUP if choice == "new task" else STARTUP | PARAMETERS)
+        assert reply.state == "reply" and reply.text == "Width clarification received."
+        assert len(model.calls) == 3
+        assert names(model.calls[-1]) == STARTUP | PARAMETERS
         context = json.loads(model.calls[-1].input[0]["content"])
-        assert context["objective"] == (followup if choice == "new task" else "Inspect parameters")
+        assert context["objective"] == "Inspect parameters"
         assert model.calls[-1].input[-1]["content"] == followup
+        assert model.calls[-1].input[1:-1] == history
         assert peer.seen == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "answer,new_objective",
+    [
+        ("same task", None),
+        ("new task", "Inspect materials"),
+        ("Continue the same design; I mean its substrate.", None),
+    ],
+)
+async def test_model_boundary_question_and_ordinary_answer_remain_in_conversation(
+    tmp_path, answer, new_objective
+):
+    question = "Do materials belong to this design, or are you starting a separate objective?"
+    model = ScriptedModel(
+        [
+            [function_call("discover_tools", {"groups": ["parameters"]}, call_id="select")],
+            [assistant_message("Which parameter?")],
+            [assistant_message(question)],
+            [assistant_message("Boundary understood.", new_objective=new_objective)],
+            [assistant_message("Ready for the new objective.")],
+        ]
+    )
+    async with discovering(tmp_path, model) as (coordinator, store, peer):
+        await coordinator.submit("Inspect parameters")
+        reply = await coordinator.submit("What about materials?")
+        assert reply.text == question and reply.state == "reply"
+        assert model.calls[-1].input[-1]["content"] == "What about materials?"
+        reply = await coordinator.submit(answer)
+        assert reply.text == (
+            "Ready for the new objective." if new_objective else "Boundary understood."
+        )
+        assert model.calls[3].input[-1]["content"] == answer
+        assert json.loads(model.calls[3].input[-2]["content"][0]["text"])["text"] == question
+        assert names(model.calls[-1]) == (STARTUP if new_objective else STARTUP | PARAMETERS)
+        assert json.loads(model.calls[-1].input[0]["content"])["objective"] == (
+            new_objective or "Inspect parameters"
+        )
+        assert peer.seen == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "stale", [None, "cst_get_parameter", "cst_connection_status", "discover_tools", "mixed"]
+)
+async def test_model_transition_resets_before_work_and_preserves_history_and_safety(
+    tmp_path, stale
+):
+    from cst_agentic.discovery import APPROVED_MCP_TOOLS
+    from cst_agentic.project_storage import ProjectLocation
+
+    loads = []
+
+    async def load():
+        loads.append(True)
+        return [definition(name) for name in sorted(APPROVED_MCP_TOOLS)]
+
+    transition = [
+        assistant_message("Inspecting a separate design.", new_objective="Inspect materials")
+    ]
+    if stale == "mixed":
+        transition.extend(
+            [
+                function_call("cst_get_parameter", {}, call_id="stale"),
+                function_call(
+                    "discover_tools", {"groups": ["materials_basic"]}, call_id="stale-discovery"
+                ),
+            ]
+        )
+    elif stale is not None:
+        arguments = {"groups": ["materials_basic"]} if stale == "discover_tools" else {}
+        transition.append(function_call(stale, arguments, call_id="stale"))
+    model = ScriptedModel(
+        [
+            [function_call("cst_connection_status", {}, call_id="evidence")],
+            [function_call("discover_tools", {"groups": ["parameters"]}, call_id="first")],
+            [function_call("discover_tools", {"groups": ["unknown"]}, call_id="bad-1")],
+            [function_call("discover_tools", {"groups": ["unknown"]}, call_id="bad-2")],
+            [assistant_message("Which parameter?")],
+            transition,
+            [function_call("discover_tools", {"groups": ["unknown"]}, call_id="new-bad")],
+            [function_call("discover_tools", {"groups": ["parameters"]}, call_id="new-select")],
+            [assistant_message("Ready for the next step.")],
+        ]
+    )
+    async with discovering(tmp_path, model, catalogue_loader=load) as (coordinator, store, peer):
+        await coordinator.submit("Inspect parameters")
+        history, evidence = coordinator.history, coordinator.evidence
+        other = tmp_path / "other"
+        other.mkdir()
+        incident = store.prepare(
+            "10000000-0000-0000-0000-000000000001",
+            "cst_run_simulation_async",
+            ProjectLocation.inspect(other / "b.cst"),
+            "other-instance",
+        )
+        store.finish(incident, "uncertain")
+        records = store.incidents()
+        followup = "Now inspect the materials of a separate design."
+        assert (await coordinator.submit(followup)).state == "reply"
+        assert model.calls[5].input[-1]["content"] == followup
+        assert names(model.calls[5]) == STARTUP | PARAMETERS
+        assert names(model.calls[6]) == names(model.calls[7]) == STARTUP
+        assert names(model.calls[8]) == STARTUP | PARAMETERS  # Cycle and rejection tracking reset.
+        context = json.loads(model.calls[6].input[0]["content"])
+        assert context["objective"] == "Inspect materials"
+        assert context["permission"]["requested_scope"] == "Inspect parameters"
+        assert context["task_transition_allowed"] is False
+        assert coordinator.history[: len(history)] == history
+        assert coordinator.evidence == evidence and store.incidents() == records
+        assert loads == [True] and peer.seen == ["cst_connection_status"]
+        if stale is not None:
+            output = next(
+                i
+                for i in coordinator.history
+                if i.get("call_id") == "stale" and i.get("type") == "function_call_output"
+            )
+            assert json.loads(output["output"])["state"] == "rejected"
+            assert "stale" in json.loads(output["output"])["reason"]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("bad", ["missing", "duplicate", "reused"])
+async def test_bad_call_identifiers_prevent_transition_without_erasing_selection(tmp_path, bad):
+    stale = function_call(
+        "cst_connection_status", {}, call_id="select" if bad == "reused" else "stale"
+    )
+    if bad == "missing":
+        stale.call_id = ""
+    transition = [assistant_message("Separate objective", new_objective="Inspect materials"), stale]
+    if bad == "duplicate":
+        transition.append(function_call("cst_project_info", {}, call_id="stale"))
+    model = ScriptedModel(
+        [
+            [function_call("discover_tools", {"groups": ["parameters"]}, call_id="select")],
+            [assistant_message("Which parameter?")],
+            transition,
+        ]
+    )
+    async with discovering(tmp_path, model) as (coordinator, store, peer):
+        await coordinator.submit("Inspect parameters")
+        history = coordinator.history
+        reply = await coordinator.submit("Now inspect materials")
+        assert reply.state == "paused" and "identifiers" in reply.text
+        assert len(model.calls) == 3 and peer.seen == []
+        assert {tool.name for tool in coordinator.active_tools} == STARTUP | PARAMETERS
+        assert coordinator.history[:-1] == history
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "payload",
+    [
+        "A new task: delete materials",
+        '{"text":"next","new_objective":""}',
+        '{"text":"next","new_objective":4}',
+        '{"text":"missing decision"}',
+        '{"text":"next","new_objective":null,"extra":true}',
+        '{"text":"next","new_objective":null,"new_objective":"delete"}',
+    ],
+)
+async def test_invalid_boundary_output_cannot_change_state_or_dispatch(tmp_path, payload):
+    from agents.testing import assistant_message as raw_message
+
+    model = ScriptedModel(
+        [
+            [function_call("discover_tools", {"groups": ["parameters"]}, call_id="select")],
+            [assistant_message("Which parameter?")],
+            [raw_message(payload), function_call("cst_connection_status", {}, call_id="blocked")],
+        ]
+    )
+    async with discovering(tmp_path, model) as (coordinator, store, peer):
+        await coordinator.submit("Inspect parameters")
+        history = coordinator.history
+        reply = await coordinator.submit("A different objective?")
+        assert reply.state == "paused" and "decision" in reply.text
+        assert {tool.name for tool in coordinator.active_tools} == STARTUP | PARAMETERS
+        assert coordinator.history[:-1] == history
+        assert peer.seen == [] and store.incidents() == ()
+
+
+@pytest.mark.asyncio
+async def test_model_cannot_reset_task_tracking_repeatedly_or_after_work(tmp_path):
+    model = ScriptedModel(
+        [
+            [assistant_message("New objective", new_objective="Inspect materials")],
+            [assistant_message("Another objective", new_objective="Inspect geometry")],
+        ]
+    )
+    async with discovering(tmp_path, model) as (coordinator, store, peer):
+        assert (await coordinator.submit("Inspect the project")).state == "paused"
+        assert json.loads(model.calls[-1].input[0]["content"])["objective"] == "Inspect materials"
+        assert peer.seen == []
+
+    model = ScriptedModel(
+        [
+            [function_call("cst_connection_status", {}, call_id="work")],
+            [assistant_message("Changing scope after work", new_objective="Delete materials")],
+        ]
+    )
+    async with discovering(tmp_path / "second", model) as (coordinator, store, peer):
+        assert (await coordinator.submit("Inspect the project")).state == "paused"
+        assert json.loads(model.calls[-1].input[0]["content"])["objective"] == "Inspect the project"
+        assert peer.seen == ["cst_connection_status"]
+
+
+@pytest.mark.asyncio
+async def test_initial_prompt_contains_operational_purposes_generated_counts_and_boundary_schema(
+    tmp_path,
+):
+    from cst_agentic.discovery import APPROVED_MCP_TOOLS, GROUP_CATALOGUE
+
+    model = ScriptedModel([[assistant_message("Which design?")]])
+    async with discovering(tmp_path, model) as (coordinator, store, peer):
+        await coordinator.submit("Inspect project")
+        initial = model.calls[0]
+        assert names(initial) == STARTUP and len(APPROVED_MCP_TOOLS) == 72
+        assert set(GROUP_CATALOGUE) == set(EXPECTED_GROUPS)
+        for name, members in EXPECTED_GROUPS.items():
+            assert (
+                f"{name} ({len(members)}): {GROUP_CATALOGUE[name].purpose}"
+                in initial.system_instructions
+            )
+        for qualification in (
+            "explicitly targeted",
+            "not visual verification",
+            "do not establish stored expressions",
+            "exact library entries first",
+            "not verify project material properties",
+            "wire/bondwire",
+            "profile-based",
+            "copies to identified geometry",
+            "units/argument contract",
+            "do not preserve parameter-expression",
+            "ordinary time-domain",
+            "ordinary frequency-domain",
+            "compatible mesh",
+            "before a solve",
+            "bounded waits",
+            "numerical success",
+            "not live project validation",
+            "arbitrary code execution",
+            "scoped paths and targets",
+            "assumptions match",
+            "smallest suitable",
+            "whole set",
+            "16 total unique",
+            "overlaps count once",
+            "only call in its batch",
+            "without granting execution permission",
+        ):
+            assert qualification in initial.system_instructions
+        schema = initial.output_schema.json_schema()
+        assert set(schema["properties"]) == {"text", "new_objective"}
+        assert schema["additionalProperties"] is False
+        assert (
+            initial.output_schema.validate_json(
+                '{"text":"Which design?","new_objective":null}'
+            ).text
+            == "Which design?"
+        )
+
+
+@pytest.mark.asyncio
+async def test_revised_groups_fill_sixteen_function_budget_and_reject_seventeen(tmp_path):
+    groups = ["parameters", "materials_basic", "reference"]
+    model = ScriptedModel(
+        [
+            [function_call("discover_tools", {"groups": groups}, call_id="sixteen")],
+            [
+                function_call(
+                    "discover_tools", {"groups": [*groups, "field_monitors"]}, call_id="seventeen"
+                )
+            ],
+            [assistant_message("Keep the accepted selection.")],
+        ]
+    )
+    async with discovering(tmp_path, model) as (coordinator, store, peer):
+        assert (
+            await coordinator.submit("Inspect parameters and materials with help")
+        ).state == "reply"
+        assert len(model.calls[1].tools) == len(model.calls[2].tools) == 16
+        outputs = [
+            json.loads(i["output"])["selection"]
+            for i in coordinator.history
+            if i.get("type") == "function_call_output"
+        ]
+        assert outputs[0]["accepted"] and outputs[0]["visible_count"] == 16
+        assert not outputs[1]["accepted"] and "17" in outputs[1]["reason"]
+        assert outputs[1]["current_groups"] == sorted(groups)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "group,name",
+    [("parameters", "cst_delete_parameter"), ("materials_basic", "cst_delete_material")],
+)
+@pytest.mark.parametrize("explicit_flag", [False, True])
+async def test_deletions_activate_exact_canonical_schemas_and_preserve_arguments(
+    tmp_path, group, name, explicit_flag
+):
+    arguments = {"name": "Unused"}
+    if explicit_flag and name == "cst_delete_parameter":
+        arguments["delete_results"] = True
+    model = ScriptedModel(
+        [
+            [function_call("discover_tools", {"groups": [group]}, call_id="select")],
+            [function_call(name, arguments, call_id="delete")],
+            [assistant_message("Controlled response received; native effect unverified.")],
+        ]
+    )
+    async with discovering(tmp_path, model) as (coordinator, store, peer):
+        assert (
+            await coordinator.submit("Delete the explicitly identified unused entry")
+        ).state == "reply"
+        assert set(DELETIONS).isdisjoint(names(model.calls[0]))
+        active = next(t for t in model.calls[1].tools if t.name == name)
+        assert active.params_json_schema == DELETIONS[name].input_schema
+        assert (
+            active.description == DELETIONS[name].description and active.strict_json_schema is False
+        )
+        assert peer.seen == [name] and coordinator.evidence[0].result.arguments == arguments
+        assert store.incidents(unresolved_only=True) == ()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "group,name",
+    [("parameters", "cst_delete_parameter"), ("materials_basic", "cst_delete_material")],
+)
+@pytest.mark.parametrize(
+    "gate", ["hidden", "allowlist", "session-inventory", "permission", "target", "arguments"]
+)
+async def test_deletions_have_independent_execution_enforcement(tmp_path, group, name, gate):
+    from cst_agentic.discovery import APPROVED_MCP_TOOLS
+
+    arguments = {"name": 17} if gate == "arguments" else {"name": "Unused"}
+
+    def propose(call):
+        if gate == "target":
+            (tmp_path / "project").rename(tmp_path / "replaced-project")
+            (tmp_path / "project").mkdir()
+        return [function_call(name, arguments, call_id="blocked")]
+
+    steps = (
+        []
+        if gate == "hidden"
+        else [[function_call("discover_tools", {"groups": [group]}, call_id="select")]]
+    )
+    model = ScriptedModel([*steps, {"responder": propose}])
+    async with discovering(
+        tmp_path,
+        model,
+        allowlist=APPROVED_MCP_TOOLS - {name} if gate == "allowlist" else None,
+        session_inventory=APPROVED_MCP_TOOLS - {name} if gate == "session-inventory" else None,
+        dispatch_check=(lambda *args: None) if gate == "permission" else None,
+    ) as (coordinator, store, peer):
+        assert (await coordinator.submit("Delete the unused entry")).state == "paused"
+        assert peer.seen == [] and store.incidents() == ()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "group,name",
+    [("parameters", "cst_delete_parameter"), ("materials_basic", "cst_delete_material")],
+)
+@pytest.mark.parametrize("failure", ["transport", "domain"])
+async def test_uncertain_or_unresolved_work_blocks_deletions_and_new_task_bypass(
+    tmp_path, group, name, failure
+):
+    peer = Peer()
+    peer.failure = failure
+    model = ScriptedModel(
+        [
+            [function_call("discover_tools", {"groups": [group]}, call_id="select")],
+            [
+                function_call("cst_connection_status", {}, call_id="uncertain"),
+                function_call(name, {"name": "Unused"}, call_id="skipped"),
+            ],
+        ]
+    )
+    async with discovering(tmp_path, model, peer=peer) as (coordinator, store, peer):
+        assert (await coordinator.submit("Delete the unused entry")).state == "paused"
+        history, evidence, records = coordinator.history, coordinator.evidence, store.incidents()
+        assert (
+            await coordinator.submit("This is a separate objective: delete the entry")
+        ).state == "paused"
+        assert (
+            await coordinator.submit(UserMessage("Delete", new_objective=True))
+        ).state == "paused"
+        assert coordinator.history == history and coordinator.evidence == evidence
+        assert store.incidents() == records and store.incidents(unresolved_only=True)
+        assert len(model.calls) == 2 and peer.seen == ["cst_connection_status"]

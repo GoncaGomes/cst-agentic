@@ -12,13 +12,16 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
-from agents import FunctionTool, ItemHelpers, Model, ModelSettings
+from agents import AgentOutputSchema, FunctionTool, ItemHelpers, Model, ModelSettings
+from agents.agent_output import AgentOutputSchemaBase
 from agents.items import TResponseInputItem
 from agents.models.interface import ModelTracing
 from agents.tool import Tool as AgentTool
 from mcp.types import Tool
 from openai.types.responses import ResponseFunctionToolCall
+from pydantic import BaseModel, ConfigDict
 
+from .canonical_schema import json_object
 from .controller import ControllerSession
 from .conversation_gateway import CallOutcome, ConversationGateway, ProtocolPause
 from .discovery import GROUP_GUIDANCE, ToolDiscovery
@@ -33,6 +36,15 @@ INSTRUCTIONS = (
     "Prior observations are historical, not proof of current live state. "
     "A received response does not prove a native effect or solver success. "
     "Do not infer rollback, launch permission or a selected live target from prose."
+    " Interpret ordinary user follow-ups using the conversation history: clarifications and "
+    "intermediate stages continue the current objective. If the boundary is genuinely ambiguous, "
+    "ask the user in your normal conversational text and leave new_objective null. "
+    "Return conversational messages as {text, new_objective}. Set new_objective to a nonempty "
+    "description only when the user has established a separate objective and application_context "
+    "allows a transition. Announce it before proposing any work for that objective, with no tool "
+    "calls in that response. The application resets selection and requests your next step. "
+    "Otherwise set new_objective null; tool-only responses continue the current objective. "
+    "A boundary decision labels intent only and never grants execution permission."
 )
 
 EXIT_WARNING = (
@@ -60,11 +72,21 @@ class UserMessage:
     new_objective: bool = False
 
 
+class ConversationDecision(BaseModel):
+    """Typed conversational output, separate from callable functions and authority."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    text: str
+    new_objective: str | None
+
+
 @dataclass(frozen=True)
 class ModelRequest:
     instructions: str
     input: list[TResponseInputItem]
     tools: tuple[Tool, ...]
+    output_schema: AgentOutputSchemaBase | None = None
 
 
 @dataclass(frozen=True)
@@ -145,7 +167,7 @@ class ConversationCoordinator:
         self._busy = False
         self._confirm_exit = False
         self._objective: str | None = None
-        self._pending_message: str | None = None
+        self._requested_scope: str | None = None
         self._event_sink = on_event
 
     def _observe(self, call: ResponseFunctionToolCall, outcome: CallOutcome) -> bool:
@@ -212,6 +234,16 @@ class ConversationCoordinator:
             return ConversationReply(reason, "paused" if self._discovery.blocker else "reply")
         finally:
             self._busy = False
+
+    async def _start_objective(self, objective: str) -> None:
+        """Change conversational intent only; retain all execution/recovery state."""
+        self._objective = objective
+        self._repetitions, self._repetition = 0, None
+        self._repeat_pause = False
+        if self._discovery is not None:
+            self._discovery.reset_task()
+            if self._catalogue_loader is not None:
+                await self._refresh_catalogue()
 
     async def submit(
         self,
@@ -294,48 +326,29 @@ class ConversationCoordinator:
                     return self._reply("Catalogue refresh adapter unavailable.", "paused")
                 reason = await self._refresh_catalogue()
                 return self._reply(reason, "paused" if self._discovery.blocker else "reply")
-            if command in {"same task", "new task"}:
-                if self._pending_message is None:
-                    return self._reply(
-                        "No pending follow-up; use same task: or new task: with text."
-                    )
-                text = self._pending_message
-                message = UserMessage(text, new_objective=command == "new task")
-                command = text.strip().lower()
-            if isinstance(message, UserMessage):
-                self._pending_message = None
-            elif self._objective is not None and (
-                command not in {"continue", "stop simulation"} or self._pending_message is not None
-            ):
-                if self._pending_message is None:
-                    self._pending_message = text
-                return self._reply(
-                    "Does this follow-up continue the same task or start a new task? "
-                    "Reply 'same task' or 'new task'; no model request or tools called.",
-                    "clarification",
-                )
             if isinstance(message, UserMessage) and message.new_objective:
-                self._objective = text
-                self._repetitions, self._repetition = 0, None
-                if self._discovery is not None:
-                    if self._catalogue_loader is not None:
-                        await self._refresh_catalogue()
-                    self._discovery.reset_task()
+                self._requested_scope = text
+                await self._start_objective(text)
             elif self._objective is None:
                 # This is conversational intent, never independent proof of
                 # target identity or an authorization bypass at dispatch.
                 self._objective = text
+                self._requested_scope = text
             if self._discovery is not None and self._discovery.pause_reason is not None:
                 if command == "continue":
                     return self._reply(
                         self._discovery.pause_reason + " Provide guidance first.", "paused"
                     )
                 self._discovery.resume_with_guidance()
-            return await self._converse(text)
+            return await self._converse(
+                text,
+                allow_transition=not isinstance(message, UserMessage)
+                and command not in {"continue", "stop simulation"},
+            )
         finally:
             self._busy = False
 
-    async def _converse(self, message: str) -> ConversationReply:
+    async def _converse(self, message: str, *, allow_transition: bool) -> ConversationReply:
         started = self._clock()
         requests = 0
         self._repeat_pause = False
@@ -352,9 +365,10 @@ class ConversationCoordinator:
             context = {
                 "provenance": "application_context",
                 "objective": self._objective,
+                "task_transition_allowed": allow_transition,
                 "permission": {
                     "source": "explicit user request",
-                    "requested_scope": self._objective,
+                    "requested_scope": self._requested_scope,
                     "execution": "actual target, scope and consequences require dispatch checks",
                 },
                 "evidence": [
@@ -367,6 +381,7 @@ class ConversationCoordinator:
                 INSTRUCTIONS + (" " + GROUP_GUIDANCE if self._discovery is not None else ""),
                 [{"role": "user", "content": json.dumps(context)}, *deepcopy(self._history)],
                 self.active_tools,
+                AgentOutputSchema(ConversationDecision),
             )
             if self._request_admission is None:
                 return self._reply(
@@ -409,7 +424,7 @@ class ConversationCoordinator:
                         input=deepcopy(request.input),
                         model_settings=ModelSettings(parallel_tool_calls=False),
                         tools=definitions,
-                        output_schema=None,
+                        output_schema=deepcopy(request.output_schema),
                         handoffs=[],
                         tracing=ModelTracing.DISABLED,
                         previous_response_id=None,
@@ -438,13 +453,39 @@ class ConversationCoordinator:
                     "paused",
                 )
             calls = [item for item in response.output if isinstance(item, ResponseFunctionToolCall)]
+            messages = [item for item in response.output if item.type == "message"]
+            decision = None
+            objective = None
+            try:
+                if messages:
+                    if len(messages) != 1:
+                        raise ValueError("Conflicting conversational decisions")
+                    text = ItemHelpers.extract_text(messages[0])
+                    if text is None:
+                        raise ValueError("Missing conversational text")
+                    decision = ConversationDecision.model_validate(json_object(text))
+                if not calls and decision is None:
+                    raise ValueError("Missing conversational decision")
+                if decision is not None and decision.new_objective is not None:
+                    objective = decision.new_objective.strip()
+                    if not allow_transition or not objective or objective == self._objective:
+                        raise ValueError("Invalid objective transition")
+            except Exception:
+                return self._reply(
+                    "Invalid conversational decision; protocol paused before effects.", "paused"
+                )
+            transitioning = decision is not None and decision.new_objective is not None
             if not calls:
                 self._history.extend(response.to_input_items())
-                return self._reply(
-                    "\n".join(
-                        text for item in response.output if (text := ItemHelpers.extract_text(item))
-                    )
-                )
+                assert decision is not None
+                if transitioning:
+                    assert objective is not None
+                    await self._start_objective(objective)
+                    allow_transition = False
+                    if decision.text:
+                        self._emit("progress", decision.text)
+                    continue
+                return self._reply(decision.text)
             try:
                 self._emit("progress", "Checking and settling the complete proposed batch.")
                 outcomes = await self._gateway.settle(
@@ -452,6 +493,12 @@ class ConversationCoordinator:
                     request.tools,
                     admit=lambda: self._clock() - started < 1200 and not self._repeat_pause,
                     observe=self._observe,
+                    reject_reason=(
+                        "Objective transition: originating task state is stale; "
+                        "no calls or discovery updates admitted. Replan after reset."
+                        if transitioning
+                        else None
+                    ),
                 )
             except ProtocolPause as error:
                 return self._reply(str(error), "paused")
@@ -464,6 +511,11 @@ class ConversationCoordinator:
                 self._history.append(ItemHelpers.tool_call_output_item(call, outcome.model_data()))
             for call, outcome in zip(calls, outcomes, strict=True):
                 self._emit("outcome", f"{outcome.state}: {outcome.reason}", call.call_id)
+            allow_transition = False
+            if transitioning:
+                assert objective is not None
+                await self._start_objective(objective)
+                continue
             try:
                 for incident in self._store.incidents(unresolved_only=True):
                     self._emit(

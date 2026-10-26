@@ -84,6 +84,12 @@ def main() -> None:
                 "tools": [{"name": name, "inputSchema": {"type": "object"}} for name in names]
             }
             if mode == "discovery":
+                deletions = json.loads(
+                    Path(__file__).with_name("canonical_deletions.json").read_text(encoding="utf-8")
+                )["tools"]
+                result["tools"].extend(
+                    tool for tool in deletions if tool["name"] == "cst_delete_parameter"
+                )
                 for tool in result["tools"]:
                     if tool["name"] == "cst_get_parameter":
                         tool["inputSchema"] = {

@@ -85,6 +85,7 @@ class ConversationGateway:
         *,
         admit: Callable[[], bool] = lambda: True,
         observe: Callable[[ResponseFunctionToolCall, CallOutcome], bool] | None = None,
+        reject_reason: str | None = None,
     ) -> tuple[CallOutcome, ...]:
         self.pending_error = None
         ids = [call.call_id for call in calls]
@@ -93,6 +94,8 @@ class ConversationGateway:
         if self._used_ids.intersection(ids):
             raise ProtocolPause("Reused call identifiers; no calls dispatched or replayed.")
         self._used_ids.update(ids)
+        if reject_reason is not None:
+            return tuple(CallOutcome(call.call_id, "rejected", reject_reason) for call in calls)
         definitions = {tool.name: tool for tool in deepcopy(snapshot)}
         if (
             any(call.name == "discover_tools" for call in calls)

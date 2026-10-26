@@ -10,6 +10,7 @@ import json
 from collections import Counter
 from collections.abc import Sequence
 from copy import deepcopy
+from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Any
 
@@ -17,96 +18,179 @@ from mcp.types import Tool
 
 from .canonical_schema import canonical_validator
 
-# Exact operational membership from #9's final resolution, not prototype variants.
-GROUPS = MappingProxyType(
+
+@dataclass(frozen=True)
+class OperationalGroup:
+    purpose: str
+    members: tuple[str, ...]
+
+
+# #9's final resolution, amended by the reviewed #20 deletion-tool request.
+GROUP_CATALOGUE = MappingProxyType(
     {
-        "session_project": (
-            "cst_connect",
-            "cst_disconnect",
-            "cst_open_project",
-            "cst_create_project",
-            "cst_save_project",
-            "cst_close_project",
-            "cst_project_info",
-            "cst_project_tree",
+        "session_project": OperationalGroup(
+            "Manage an explicitly targeted CST connection and project lifecycle: "
+            "connect/disconnect, open/create, reported context/tree, save and close.",
+            (
+                "cst_connect",
+                "cst_disconnect",
+                "cst_open_project",
+                "cst_create_project",
+                "cst_save_project",
+                "cst_close_project",
+                "cst_project_info",
+                "cst_project_tree",
+            ),
         ),
-        "project_context": (
-            "cst_project_info",
-            "cst_project_tree",
-            "cst_save_project",
-            "cst_export_structure_views",
+        "project_context": OperationalGroup(
+            "Read reported project context/tree, save and export structure views while working "
+            "in another capability. View export is not visual verification.",
+            (
+                "cst_project_info",
+                "cst_project_tree",
+                "cst_save_project",
+                "cst_export_structure_views",
+            ),
         ),
-        "parameters": ("cst_set_parameter", "cst_get_parameter", "cst_list_parameters"),
-        "materials_basic": (
-            "cst_create_material",
-            "cst_create_lossy_metal",
-            "cst_load_material",
-            "cst_list_materials",
-            "cst_get_material_info",
-            "cst_assign_material",
+        "parameters": OperationalGroup(
+            "Create/change or explicitly delete design parameters and inspect names/evaluated "
+            "values. Existing get/list tools do not establish stored expressions.",
+            (
+                "cst_set_parameter",
+                "cst_get_parameter",
+                "cst_list_parameters",
+                "cst_delete_parameter",
+            ),
         ),
-        "geometry_basic": (
-            "cst_create_brick",
-            "cst_create_cylinder",
-            "cst_create_cone",
-            "cst_create_sphere",
-            "cst_create_wire",
+        "materials_basic": OperationalGroup(
+            "Inspect bundled material entries, load exact library entries first where suitable, "
+            "or explicitly define/assign/delete ordinary project materials. Bundled queries do "
+            "not verify project material properties.",
+            (
+                "cst_create_material",
+                "cst_create_lossy_metal",
+                "cst_load_material",
+                "cst_list_materials",
+                "cst_get_material_info",
+                "cst_assign_material",
+                "cst_delete_material",
+            ),
         ),
-        "geometry_profiles": (
-            "cst_create_extrude",
-            "cst_create_polygon_extrude",
-            "cst_create_polygon3d",
-            "cst_create_analytical_curve",
-            "cst_create_face_from_curves",
-            "cst_create_loft",
-            "cst_create_ecylinder",
-            "cst_create_torus",
+        "geometry_basic": OperationalGroup(
+            "Create common solid primitives and the supported wire/bondwire geometry.",
+            (
+                "cst_create_brick",
+                "cst_create_cylinder",
+                "cst_create_cone",
+                "cst_create_sphere",
+                "cst_create_wire",
+            ),
         ),
-        "solid_operations": (
-            "cst_boolean_add",
-            "cst_boolean_subtract",
-            "cst_boolean_intersect",
-            "cst_boolean_insert",
-            "cst_transform_translate",
-            "cst_transform_rotate",
-            "cst_transform_mirror",
-            "cst_transform_scale",
+        "geometry_profiles": OperationalGroup(
+            "Create explicit profile-based curves/solids and less frequent shapes without "
+            "loading their schemas for ordinary primitive work.",
+            (
+                "cst_create_extrude",
+                "cst_create_polygon_extrude",
+                "cst_create_polygon3d",
+                "cst_create_analytical_curve",
+                "cst_create_face_from_curves",
+                "cst_create_loft",
+                "cst_create_ecylinder",
+                "cst_create_torus",
+            ),
         ),
-        "simulation_domain": (
-            "cst_set_frequency_range",
-            "cst_set_boundary",
-            "cst_set_background",
-            "cst_set_symmetry",
+        "solid_operations": OperationalGroup(
+            "Apply native boolean operations and supported translations, rotations, mirrors, "
+            "scales and copies to identified geometry.",
+            (
+                "cst_boolean_add",
+                "cst_boolean_subtract",
+                "cst_boolean_intersect",
+                "cst_boolean_insert",
+                "cst_transform_translate",
+                "cst_transform_rotate",
+                "cst_transform_mirror",
+                "cst_transform_scale",
+            ),
         ),
-        "ports_basic": (
-            "cst_add_waveguide_port",
-            "cst_add_discrete_port",
-            "cst_add_lumped_element",
-            "cst_list_ports",
-            "cst_delete_port",
+        "simulation_domain": OperationalGroup(
+            "Set the frequency band, boundary faces, background and justified symmetry using "
+            "each tool's actual units/argument contract.",
+            (
+                "cst_set_frequency_range",
+                "cst_set_boundary",
+                "cst_set_background",
+                "cst_set_symmetry",
+            ),
         ),
-        "solver_time_domain": ("cst_configure_time_domain_solver", "cst_get_solver_info"),
-        "solver_frequency_domain": ("cst_configure_frequency_domain_solver", "cst_get_solver_info"),
-        "mesh_basic": (
-            "cst_set_mesh_type",
-            "cst_set_mesh_density",
-            "cst_add_mesh_refinement",
-            "cst_set_adaptive_mesh",
-            "cst_get_mesh_info",
+        "ports_basic": OperationalGroup(
+            "Create ordinary waveguide/discrete ports and supported lumped elements, list ports "
+            "or delete an explicitly identified port. Numeric coordinate fields do not preserve "
+            "parameter-expression dependencies.",
+            (
+                "cst_add_waveguide_port",
+                "cst_add_discrete_port",
+                "cst_add_lumped_element",
+                "cst_list_ports",
+                "cst_delete_port",
+            ),
         ),
-        "field_monitors": ("cst_add_field_monitor",),
-        "simulation_run": (
-            "cst_run_simulation_async",
-            "cst_get_simulation_status",
-            "cst_wait_for_simulation",
-            "cst_stop_simulation",
+        "solver_time_domain": OperationalGroup(
+            "Configure the ordinary time-domain solver and read available solver information.",
+            ("cst_configure_time_domain_solver", "cst_get_solver_info"),
         ),
-        "diagnostics": ("cst_read_project_log", "cst_delete_results", "cst_check_model_setup"),
-        "reference": ("cst_search_help", "cst_read_help"),
-        "cad_io": ("cst_import_cad", "cst_export_cad"),
-        "connectors": ("cst_add_sma_edge_connector",),
+        "solver_frequency_domain": OperationalGroup(
+            "Configure the ordinary frequency-domain solver and read available solver information.",
+            ("cst_configure_frequency_domain_solver", "cst_get_solver_info"),
+        ),
+        "mesh_basic": OperationalGroup(
+            "Configure compatible mesh settings, density, refinement/adaptation and read "
+            "available mesh information.",
+            (
+                "cst_set_mesh_type",
+                "cst_set_mesh_density",
+                "cst_add_mesh_refinement",
+                "cst_set_adaptive_mesh",
+                "cst_get_mesh_info",
+            ),
+        ),
+        "field_monitors": OperationalGroup(
+            "Define supported field monitors before a solve.",
+            ("cst_add_field_monitor",),
+        ),
+        "simulation_run": OperationalGroup(
+            "Launch asynchronously, inspect progress, perform bounded waits or request stop. "
+            "Report observed state without equating solver idleness with numerical success.",
+            (
+                "cst_run_simulation_async",
+                "cst_get_simulation_status",
+                "cst_wait_for_simulation",
+                "cst_stop_simulation",
+            ),
+        ),
+        "diagnostics": OperationalGroup(
+            "Read logs, check a supplied setup description or explicitly invalidate results when "
+            "authorized. Setup-description checking is not live project validation.",
+            ("cst_read_project_log", "cst_delete_results", "cst_check_model_setup"),
+        ),
+        "reference": OperationalGroup(
+            "Search and read installed official CST help; documentation access does not "
+            "authorize arbitrary code execution.",
+            ("cst_search_help", "cst_read_help"),
+        ),
+        "cad_io": OperationalGroup(
+            "Import/export supported CAD using explicitly scoped paths and targets.",
+            ("cst_import_cad", "cst_export_cad"),
+        ),
+        "connectors": OperationalGroup(
+            "Create the specifically supported parametric edge-launch SMA connector when its "
+            "assumptions match the requested model.",
+            ("cst_add_sma_edge_connector",),
+        ),
     }
 )
+GROUPS = MappingProxyType({name: group.members for name, group in GROUP_CATALOGUE.items()})
 
 STARTUP_MCP = ("cst_connection_status", "cst_project_info")
 APPROVED_MCP_TOOLS = frozenset(STARTUP_MCP).union(*GROUPS.values())
@@ -118,15 +202,13 @@ GROUP_GUIDANCE = (
     "connection status, reported project info and discovery; overlaps count once. "
     "Discovery must be the only call in its batch. It activates canonical definitions on the "
     "next internal request, without granting execution permission. "
-    "Clarifications and intermediate stages preserve selection; explicitly separate "
+    "Clarifications and intermediate stages preserve selection; established separate "
     "objectives reset to startup. Ask if the task boundary is unclear. Project info is reported "
-    "context, not independent target identity. Material queries describe bundled entries, not "
-    "verified project properties; try the exact library entry before proposing custom inputs. "
-    "Parameter get/list does not establish stored expressions. Port coordinates may be numeric "
-    "only. View export is not visual verification; setup-description checking is not live "
-    "validation. Solver idleness is not solver success. Documentation never authorizes code "
-    "execution. Unexpected native dialogs require human intervention. Approved groups/tools: "
-    + "; ".join(f"{group}: {', '.join(names)}" for group, names in GROUPS.items())
+    "context, not independent target identity. Unexpected native dialogs require human "
+    "intervention. Approved groups:\n"
+    + "\n".join(
+        f"{name} ({len(group.members)}): {group.purpose}" for name, group in GROUP_CATALOGUE.items()
+    )
 )
 
 

@@ -1,0 +1,46 @@
+{
+  "revision": "a4a177aeb0856dbf0f668f2dc5a8ca06e20ac8c2",
+  "sources": [
+    "https://github.com/GoncaGomes/cst-mcp/blob/a4a177aeb0856dbf0f668f2dc5a8ca06e20ac8c2/src/cst_mcp/tools/parameters.py",
+    "https://github.com/GoncaGomes/cst-mcp/blob/a4a177aeb0856dbf0f668f2dc5a8ca06e20ac8c2/src/cst_mcp/tools/materials.py"
+  ],
+  "tools": [
+    {
+      "name": "cst_delete_parameter",
+      "description": "Delete a design parameter from the CST project. The parameter must not be referenced by other parameters or geometry. Uses the parameter list (no model-history step) and rebuilds; refused with code results_exist on a solved project unless delete_results=true.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the parameter to delete."
+          },
+          "delete_results": {
+            "type": "boolean",
+            "default": false,
+            "description": "Required when the project already has simulation results: they are deleted first (export anything you need). Without it the call is refused with code results_exist, because CST would block on a modal dialog."
+          }
+        },
+        "required": [
+          "name"
+        ]
+      }
+    },
+    {
+      "name": "cst_delete_material",
+      "description": "Delete a material from the current CST project.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the material to delete"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      }
+    }
+  ]
+}

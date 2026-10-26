@@ -1,10 +1,11 @@
 {
   "source": "https://github.com/GoncaGomes/cst-agentic/issues/9#issuecomment-6301794077",
+  "amendment": "Reviewed #20 implementation request adds cst_delete_parameter and cst_delete_material.",
   "groups": {
     "session_project": ["cst_connect", "cst_disconnect", "cst_open_project", "cst_create_project", "cst_save_project", "cst_close_project", "cst_project_info", "cst_project_tree"],
     "project_context": ["cst_project_info", "cst_project_tree", "cst_save_project", "cst_export_structure_views"],
-    "parameters": ["cst_set_parameter", "cst_get_parameter", "cst_list_parameters"],
-    "materials_basic": ["cst_create_material", "cst_create_lossy_metal", "cst_load_material", "cst_list_materials", "cst_get_material_info", "cst_assign_material"],
+    "parameters": ["cst_set_parameter", "cst_get_parameter", "cst_list_parameters", "cst_delete_parameter"],
+    "materials_basic": ["cst_create_material", "cst_create_lossy_metal", "cst_load_material", "cst_list_materials", "cst_get_material_info", "cst_assign_material", "cst_delete_material"],
     "geometry_basic": ["cst_create_brick", "cst_create_cylinder", "cst_create_cone", "cst_create_sphere", "cst_create_wire"],
     "geometry_profiles": ["cst_create_extrude", "cst_create_polygon_extrude", "cst_create_polygon3d", "cst_create_analytical_curve", "cst_create_face_from_curves", "cst_create_loft", "cst_create_ecylinder", "cst_create_torus"],
     "solid_operations": ["cst_boolean_add", "cst_boolean_subtract", "cst_boolean_intersect", "cst_boolean_insert", "cst_transform_translate", "cst_transform_rotate", "cst_transform_mirror", "cst_transform_scale"],

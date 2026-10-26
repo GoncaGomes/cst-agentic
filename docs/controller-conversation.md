@@ -35,10 +35,17 @@ Discovery calls never pass through MCP. The catalogue/selection adapter now
 implements [#9's final resolution](https://github.com/GoncaGomes/cst-agentic/issues/9#issuecomment-6301794077)
 through this same coordinator, not the historical discovery proposal.
 
+The existing SDK output-schema seam carries a small typed `ConversationDecision`
+with `text` and nullable `new_objective`. Questions and replies use `text`; only
+a validated, nonempty `new_objective` establishes a separate conversational
+objective. This is structured response data, not another callable tool. Invalid,
+conflicting or duplicate-key decisions pause before effects. Endpoint acceptance
+of this response format remains part of #23; production admission stays blocked.
+
 ## Progressive discovery
 
 `ToolDiscovery` accepts a detached canonical MCP catalogue. The exact eighteen
-operational groups cover seventy eligible unique MCP tools. Startup exposes
+operational groups cover seventy-two eligible unique MCP tools. Startup exposes
 exactly `cst_connection_status`, `cst_project_info` and application-owned
 `discover_tools`. Every selection replaces the entire group set, deduplicates
 startup/overlap, and enforces sixteen active unique functions. Invalid arguments,
@@ -48,6 +55,18 @@ must contain one discovery call and nothing else; mixed/multiple-discovery batch
 have no effects or selection changes. Accepted definitions activate on the next
 internal request, with complete prior paired history and no extra user go-ahead.
 
+`GROUP_CATALOGUE` owns each group's operational purpose and membership together.
+The initial and subsequent system instructions include all eighteen identifiers,
+membership counts computed from those members, and the approved capability
+qualifications. Full canonical argument schemas remain in active function
+definitions rather than prompt prose. The reviewed implementation request amends
+#9's baseline by adding `cst_delete_parameter` to `parameters` (four members) and
+`cst_delete_material` to `materials_basic` (seven members). These are the only
+inventory additions. Parameter/material deletion remains hidden until selection
+and subject to the same independent visibility, inventory, canonical argument,
+authorization, target and uncertainty checks. Discovery grants no permission.
+Component/solid deletion remains outside this inventory.
+
 Canonical schemas are passed unchanged with strict conversion disabled. Local
 validation supports the reviewed JSON Schema dialects and local JSON-pointer
 references. Unsupported assertions, dialects or reference scopes fail activation;
@@ -56,15 +75,33 @@ The gateway independently intersects its execution allowlist with the approved
 inventory and rechecks originating definitions/inventory at final dispatch
 admission. Selection never grants target, consequence or execution permission.
 
-`UserMessage(..., new_objective=False)` or terminal `same task: <clarification>`
-keeps the current objective/selection. Use `new_objective=True` or terminal
-`new task: <objective>` for a separate objective; this resets selection/tracking,
-not history, authorization, evidence or uncertainty. Plain follow-ups with no
-explicit boundary ask whether this is the `same task` or a `new task` before
-sending any model request, rather than guessing from engineering prose. The
-pending message is retained and submitted once the user answers that question.
+Ordinary follow-ups reach the model unchanged with the relevant history and
+current selection. The model interprets continuation, clarification and separate
+objectives, and asks a normal conversational question when the boundary is
+genuinely ambiguous. The user's answer, including plain `same task` or `new task`,
+continues through the model normally. No application-generated boundary question
+or pending-message interception precedes the model request.
 
-Snapshots remain frozen during tasks. A new explicit objective refreshes through
+An established model-led transition updates the conversational objective, resets
+selection and task-local discovery tracking, and makes the next internal request
+with exactly the startup functions. Calls co-returned with a transition are
+rejected as a whole, with matched outcomes retained; none execute or change
+selection under stale task state. Missing/conflicting/reused call IDs still pause
+without a transition. A model-led transition is allowed only before work on a user
+turn and at most once in that turn, preventing autonomous resets of loop guards.
+Tool-only replies continue the current objective. The model must announce a new
+objective before requesting work for it.
+
+`UserMessage(..., new_objective=False)` and `same task: <clarification>` remain
+optional explicit continuation shortcuts; `new_objective=True` and
+`new task: <objective>` explicitly reset before the model request. Both transition
+routes retain history, authorization records, evidence and unresolved-operation
+state. A model's objective label never replaces the retained explicit-request
+scope in the permission projection, changes the session's execution task/target,
+grants permission or reconciles uncertainty. Dispatch retains its independent
+checks; an unresolved current connection blocks further model work/transitions.
+
+Snapshots remain frozen during tasks. A new established objective refreshes through
 the injected catalogue loader; `refresh_catalogue(explicitly_authorized=True)` or
 terminal `refresh tools` permits a settled explicit refresh without reconnecting.
 Busy or unresolved connections refuse refresh. Refresh resets selection, disables
@@ -79,7 +116,7 @@ set without successful non-discovery work pauses with a concrete blocker and ask
 for guidance. Accepted selection breaks the rejection streak; only successful
 non-discovery work clears cycle tracking. Explicit refresh does not reset these
 task-local safeguards. Bare `continue` cannot bypass a discovery pause; guidance
-or a new explicit objective is needed, with ordinary safety gates still intact.
+or a new established objective is needed, with ordinary safety gates still intact.
 
 The `tools=` constructor seam remains available for existing controlled callers;
 production always supplies `ToolDiscovery`. A custom visible definition never
@@ -147,10 +184,15 @@ refusal, domain/transport/settlement failure, central incident handoff, final
 queued admission, abnormal cancellation, and the actual public stdio path.
 `tests/test_discovery.py` additionally exercises exact group memberships/counts,
 next-request activation, atomic selection/batch rejection, canonical arguments,
-task boundaries, refresh/drift/startup loss, independent execution gates and
+model-led questions/transitions, ordinary clarifications, operational prompt
+guidance, exact deletion schemas, refresh/drift/startup loss, independent execution gates and
 bounded escape. Its stdio case uses actual `tools/list` definitions and refresh
 with a controlled local peer, not CST. Protected-client tests also prove that
 catalogue reads cannot pass the permanent uncertainty latch.
+The deletion fixtures were extracted without executing handlers from the actual
+canonical definitions in `GoncaGomes/cst-mcp` at
+`a4a177aeb0856dbf0f668f2dc5a8ca06e20ac8c2`; source links accompany the fixture.
+They are offline schema evidence, not proof of native deletion behavior.
 
 Evidence categories:
 
