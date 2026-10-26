@@ -19,10 +19,23 @@ from agents.testing import ScriptedModel, assistant_message, function_call
 from mcp.types import CallToolResult, ListToolsResult, TextContent, Tool
 
 from cst_agentic.config import ConnectivityConfig
+from cst_agentic.context_budget import ContextBudget, adapter_identity
 from cst_agentic.mcp_client import CstMcpClient
 
 TEST_API_KEY = "test-secret-key-123"
 TEST_BASE_URL = "https://example.invalid/openai"
+
+
+def offline_context_budget(capacity=100_000, headroom=4_000) -> ContextBudget:
+    """Synthetic admission fixture, never real endpoint validation evidence."""
+    return ContextBudget(
+        input_capacity=capacity,
+        headroom=headroom,
+        validation_reference="offline-fixture-only; not endpoint evidence",
+        endpoint="https://example.invalid/v1",
+        model="controlled-model",
+        adapter=adapter_identity(),
+    )
 
 
 def make_config(tmp_path: Path, **overrides: Any) -> ConnectivityConfig:

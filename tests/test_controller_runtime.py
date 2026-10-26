@@ -52,6 +52,53 @@ def test_controller_configuration_is_separate_and_allowlists_child_environment(
     assert "synthetic-model-secret" not in repr(config)
 
 
+@pytest.mark.parametrize(
+    "mismatch", [None, "endpoint", "model", "adapter", "validated", "headroom"]
+)
+def test_context_validation_record_is_bound_to_configured_endpoint_model_and_adapter(
+    tmp_path, mismatch
+):
+    from cst_agentic.config import ConfigError
+    from cst_agentic.context_budget import ACCOUNTING_METHOD, adapter_identity
+
+    executable = tmp_path / "peer.cmd"
+    executable.touch()
+    record = {
+        "method": ACCOUNTING_METHOD,
+        "input_capacity": 32_000,
+        "headroom": 4_000,
+        "endpoint": "https://institution.invalid/v1",
+        "model": "controlled-model",
+        "adapter": adapter_identity(),
+        "validated": True,
+        "validation_reference": "synthetic-offline-fixture-not-real-evidence",
+    }
+    if mismatch is not None:
+        record[mismatch] = False if mismatch == "validated" else "synthetic-private-mismatch"
+    validation_file = tmp_path / "validation.json"
+    validation_file.write_text(json.dumps(record), encoding="utf-8")
+    config_file = tmp_path / "controller.env"
+    config_file.write_text(
+        "SKYNET_BASE_URL=https://institution.invalid/v1\n"
+        "SKYNET_API_KEY=synthetic-only\nAGENT=controlled-model\n"
+        f"CST_MCP_SERVER_EXECUTABLE={executable.as_posix()}\n"
+        f"CST_MCP_SERVER_CWD={tmp_path.as_posix()}\n"
+        f"CST_CONTROLLER_WORK_DIR={(tmp_path / 'work').as_posix()}\n"
+        f"CST_CONTROLLER_CONTEXT_VALIDATION_FILE={validation_file.as_posix()}\n",
+        encoding="utf-8",
+    )
+    if mismatch is not None:
+        with pytest.raises(ConfigError, match="context validation") as caught:
+            load_controller_config(env_path=config_file)
+        assert "synthetic-private" not in str(caught.value)
+    else:
+        config = load_controller_config(env_path=config_file)
+        assert config.context_budget is not None
+        assert config.context_budget.blocker is None
+        assert config.context_budget.input_capacity == 32_000
+        assert "CST_CONTROLLER_CONTEXT_VALIDATION_FILE" not in config.child_env({})
+
+
 def test_sdk_environment_expansion_requires_review_before_spawn(tmp_path: Path, monkeypatch):
     from mcp.client import stdio
 
@@ -151,6 +198,42 @@ async def test_actual_factory_manual_environment_no_dispatch_and_lease(
     assert "synthetic-private-server-stderr" not in capfd.readouterr().err
     with RecoveryStore(state).session() as reopened:
         assert reopened.incidents() == ()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("validation", ["missing", "matched", "wrong_model"])
+async def test_factory_wires_context_budget_without_bypassing_other_acceptance_gates(
+    tmp_path, validation
+):
+    from dataclasses import replace
+
+    from cst_agentic.controller_runtime import create_controller_session
+    from cst_agentic.recovery import RecoveryError
+    from fakes import offline_context_budget
+
+    config = manual_config(tmp_path)
+    if validation != "missing":
+        config = replace(
+            config,
+            context_budget=replace(
+                offline_context_budget(),
+                endpoint=config.base_url,
+                model=config.model if validation == "matched" else "different-model",
+            ),
+        )
+    if validation == "wrong_model":
+        with pytest.raises(RecoveryError, match="context validation"):
+            async with create_controller_session(config, state_directory=tmp_path / "state"):
+                pytest.fail("mismatched provider admitted")
+        assert not (tmp_path / "observed.json").exists()
+    else:
+        async with create_controller_session(config, state_directory=tmp_path / "state") as runtime:
+            reply = await runtime.coordinator.submit("Inspect only")
+            assert reply.state == "paused"
+            kind = "context_pause" if validation == "missing" else "context_accounting"
+            assert any(e.kind == kind for e in reply.events)
+            assert "#24" in reply.text
+        assert json.loads((tmp_path / "observed.json").read_text(encoding="utf-8"))["calls"] == []
 
 
 @pytest.mark.asyncio

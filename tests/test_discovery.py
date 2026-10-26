@@ -15,6 +15,7 @@ from cst_agentic.controller import ControllerSession, DispatchEvidence
 from cst_agentic.conversation import ConversationCoordinator, UserMessage
 from cst_agentic.recovery import RecoveryStore
 from fakes import conversation_message as assistant_message
+from fakes import offline_context_budget
 
 
 def definition(name, schema=None):
@@ -87,6 +88,7 @@ async def discovering(
             discovery=ToolDiscovery(tools),
             allowlist=APPROVED_MCP_TOOLS if allowlist is None else allowlist,
             request_admission=lambda request: None,
+            context_budget=kwargs.pop("context_budget", offline_context_budget()),
             interpreters={name: lambda result: True for name in APPROVED_MCP_TOOLS},
             **kwargs,
         )
@@ -95,6 +97,31 @@ async def discovering(
 
 def names(call):
     return {tool.name for tool in call.tools}
+
+
+@pytest.mark.asyncio
+async def test_oversized_discovery_rejections_bound_explanations_not_call_arguments(tmp_path):
+    arguments = {"groups": ["unrecognized-" + "x" * 20_000]}
+    model = ScriptedModel(
+        [
+            [function_call("discover_tools", arguments, call_id="large-rejection")],
+            [assistant_message("Please choose a known group.")],
+        ]
+    )
+    async with discovering(tmp_path, model) as (coordinator, store, peer):
+        reply = await coordinator.submit("Inspect available choices")
+        assert reply.state == "reply"
+        output = next(
+            item["output"]
+            for item in coordinator.history
+            if item.get("type") == "function_call_output"
+        )
+        assert len(output.encode("utf-8")) <= 16_384
+        assert json.loads(output)["omissions"]["selection"] is True
+        call = next(item for item in coordinator.history if item.get("type") == "function_call")
+        assert json.loads(call["arguments"]) == arguments
+        assert {tool.name for tool in coordinator.active_tools} == STARTUP
+        assert peer.seen == []
 
 
 @pytest.mark.asyncio
@@ -640,6 +667,7 @@ async def test_discovery_and_refresh_through_actual_protected_stdio_wrapper(tmp_
             catalogue_loader=session.refresh_catalogue,
             allowlist=APPROVED_MCP_TOOLS,
             request_admission=lambda request: None,
+            context_budget=offline_context_budget(),
             interpreters={
                 "cst_get_parameter": lambda result: result.structured_content == {"mode": "offline"}
             },

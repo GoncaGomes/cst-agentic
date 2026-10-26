@@ -1,9 +1,9 @@
-# Application-owned conversation coordinator (#19 / #20)
+# Application-owned conversation coordinator (#19 / #20 / #21)
 
 `ConversationCoordinator.submit(...)` is the shared interface for terminal input
 and deterministic tests. It accepts text, `UserMessage` (including explicit new
 objectives) and `ControlIntent`, and returns a settled reply or input pause with
-progress/outcome/incident events. The terminal preserves message casing and owns
+progress/outcome/incident and context-accounting/pause events. The terminal preserves message casing and owns
 only input/output and abnormal-input cleanup. Help, historical status, continue,
 stop-simulation intent and exit confirmation are coordinator behavior. There is
 no separate mid-task cancel command. Ctrl+C remains abnormal interruption.
@@ -13,7 +13,7 @@ no separate mid-task cancel command. Ctrl+C remains abnormal interruption.
 Dependencies are the SDK `Model`, recovery-aware `ControllerSession`, the same
 authoritative `RecoveryStore`, reviewed canonical tool definitions, independent
 execution allowlist, trusted response interpreters, request-admission adapter and
-monotonic clock. Tests substitute the external model/peer/clock boundaries while
+monotonic clock, plus an explicitly validated context budget. Tests substitute the external model/peer/clock boundaries while
 using the actual session, protected client and isolated durable store.
 
 The coordinator directly calls public `Model.get_response` with
@@ -95,7 +95,7 @@ objective before requesting work for it.
 `UserMessage(..., new_objective=False)` and `same task: <clarification>` remain
 optional explicit continuation shortcuts; `new_objective=True` and
 `new task: <objective>` explicitly reset before the model request. Both transition
-routes retain history, authorization records, evidence and unresolved-operation
+routes retain relevant history, authorization records, supported evidence and unresolved-operation
 state. A model's objective label never replaces the retained explicit-request
 scope in the permission projection, changes the session's execution task/target,
 grants permission or reconciles uncertainty. Dispatch retains its independent
@@ -153,8 +153,10 @@ These bounds neither authorize a retry after uncertainty nor stop a solver.
 
 The production factory now supplies this same coordinator. It does **not** install
 unconditional request-admission, target-evidence or outcome-settlement callbacks.
-Until bounded context (#21), configured endpoint
-validation (#23) and live target support (#24) are available, the terminal reports
+The [bounded-context implementation](controller-context.md) requires a reviewed
+endpoint/model/adapter validation record; none is supplied by default. Until
+that record, configured endpoint/schema validation (#23) and live target support (#24)
+are available, the terminal reports
 the missing prerequisites before a model request or tool dispatch. It still
 starts the manual-mode transport under the existing lease and recovery admission,
 so running the production command is not an offline validation command.
@@ -166,7 +168,7 @@ native capability or readiness of the complete Controller. The actual public
 stdio wrapper is also exercised with a separate local peer that never imports
 CST or requests the institutional endpoint.
 
-Endpoint context counting and compaction, decision memory, native status/stop
+Actual endpoint context validation, decision memory, native status/stop
 interpretation, operation-specific simulation
 policy, and the positive isolated-project recovery route remain their owning
 tickets' work. #17 still owns integrated recovery acceptance. Production installs

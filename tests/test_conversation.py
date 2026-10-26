@@ -16,6 +16,7 @@ from cst_agentic.conversation import ConversationCoordinator
 from cst_agentic.mcp_client import CstMcpClient
 from cst_agentic.recovery import RecoveryStore
 from fakes import conversation_message as assistant_message
+from fakes import offline_context_budget as validated_budget
 
 
 class Peer:
@@ -77,7 +78,8 @@ async def conversation(tmp_path, model, *, peer=None, tools=None, **kwargs):
             store=store,
             tools=tools,
             allowlist=frozenset(t.name for t in tools),
-            request_admission=lambda request: None,
+            request_admission=kwargs.pop("request_admission", lambda request: None),
+            context_budget=kwargs.pop("context_budget", validated_budget()),
             interpreters={
                 t.name: lambda result: result.structured_content == {"mode": "offline"}
                 for t in tools
@@ -85,6 +87,228 @@ async def conversation(tmp_path, model, *, peer=None, tools=None, **kwargs):
             **kwargs,
         )
         yield coordinator, store, peer
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("missing", [False, True])
+async def test_unvalidated_context_capacity_pauses_before_model_and_native_calls(tmp_path, missing):
+    from cst_agentic.context_budget import ContextBudget
+
+    model = ScriptedModel([[assistant_message("must not be requested")]])
+    async with conversation(
+        tmp_path,
+        model,
+        context_budget=None if missing else ContextBudget(input_capacity=100_000, headroom=4_000),
+    ) as (coordinator, store, peer):
+        reply = await coordinator.submit("Read status")
+        assert reply.state == "paused"
+        assert "validated" in reply.text
+        assert any(event.kind == "context_pause" for event in reply.events)
+        assert not model.calls and not peer.seen
+
+
+@pytest.mark.asyncio
+async def test_context_accounting_includes_all_request_sections_and_explicit_headroom(tmp_path):
+    model = ScriptedModel([[assistant_message("Which material?")]])
+    async with conversation(tmp_path, model, context_budget=validated_budget()) as (
+        coordinator,
+        store,
+        peer,
+    ):
+        reply = await coordinator.submit("Inspect λ, without simulation or saving")
+        assert reply.state == "reply"
+        usage = json.loads(next(e.text for e in reply.events if e.kind == "context_accounting"))
+        assert usage["method"] == "logical-json-utf8-v1"
+        assert usage["headroom"] == 4_000
+        assert usage["input_capacity"] == 100_000
+        assert all(
+            usage["sections"][key] > 0
+            for key in ("instructions", "schemas", "input", "response_format", "request_options")
+        )
+        assert usage["estimated_input_tokens"] == sum(usage["sections"].values())
+        assert usage["estimated_input_tokens"] + 4_000 <= 100_000
+        assert model.calls[0].model_settings.max_tokens is None
+        assert peer.seen == []
+
+
+@pytest.mark.asyncio
+async def test_essential_context_over_capacity_pauses_without_truncating_permission(tmp_path):
+    model = ScriptedModel([])
+    objective = "Do not save or simulate. " + "dimension choice; " * 500
+    async with conversation(tmp_path, model, context_budget=validated_budget(5_000, 1_000)) as (
+        coordinator,
+        store,
+        peer,
+    ):
+        reply = await coordinator.submit(objective)
+        assert reply.state == "paused"
+        assert "essential" in reply.text.lower()
+        assert any(e.kind == "context_pause" for e in reply.events)
+        assert coordinator.history[-1]["content"] == objective
+        assert not model.calls and not peer.seen
+
+
+@pytest.mark.asyncio
+async def test_compaction_removes_old_whole_batches_and_marks_lost_support_unavailable(tmp_path):
+    class DetailedPeer(Peer):
+        async def call_tool(self, name, arguments):
+            result = await super().call_tool(name, arguments)
+            result.content.append(TextContent(type="text", text="historical detail " * 80))
+            return result
+
+    tool = STATUS.model_copy(update={"name": "cst_get_simulation_status"})
+    steps = []
+    for index in range(5):
+        calls = [function_call(tool.name, {}, call_id=f"batch-{index}-a")]
+        if index == 0:
+            calls.append(function_call(tool.name, {}, call_id="batch-0-b"))
+        steps.extend([calls, [assistant_message("Which material? Solver success is unverified.")]])
+    model = ScriptedModel(steps)
+    async with conversation(
+        tmp_path,
+        model,
+        peer=DetailedPeer(),
+        tools=[tool],
+        context_budget=validated_budget(17_000, 1000),
+    ) as (coordinator, store, peer):
+        events = []
+        for _ in range(5):
+            reply = await coordinator.submit("Inspect only; do not launch, save or stop.")
+            assert reply.state == "reply", reply.text
+            events.extend(reply.events)
+        assert any(e.kind == "context_compacted" for e in events)
+        replay = model.calls[-1].input
+        calls = [item["call_id"] for item in replay if item.get("type") == "function_call"]
+        results = [item["call_id"] for item in replay if item.get("type") == "function_call_output"]
+        assert calls == results
+        assert "batch-0-a" not in calls and "batch-0-b" not in calls
+        assert "batch-4-a" in calls
+        assert any("Which material?" in str(item.get("content", "")) for item in replay)
+        context = json.loads(replay[0]["content"])
+        assert "not verified facts" in context["discussion_summary"]["provenance"]
+        assert context["evidence_gaps"]["omitted_observations"] >= 2
+        assert "unknown" in context["evidence_gaps"]["state"]
+        assert all(e["call_id"] in results for e in context["evidence"])
+        assert all(e.call_id in results for e in coordinator.evidence)
+        assert "do not launch, save or stop" in context["permission"]["requested_scope"]
+
+
+@pytest.mark.asyncio
+async def test_large_outcomes_are_bounded_with_explicit_omissions_not_partial_facts(tmp_path):
+    class LargePeer(Peer):
+        async def call_tool(self, name, arguments):
+            result = await super().call_tool(name, arguments)
+            result.content.append(TextContent(type="text", text="λ" * 50_000))
+            return result
+
+    model = ScriptedModel(
+        [
+            [function_call(STATUS.name, {}, call_id="large")],
+            [assistant_message("Response details unavailable; no native facts established.")],
+        ]
+    )
+    async with conversation(
+        tmp_path, model, peer=LargePeer(), context_budget=validated_budget(30_000, 1000)
+    ) as (coordinator, store, peer):
+        reply = await coordinator.submit("Read status only")
+        assert reply.state == "reply"
+        replay = model.calls[-1].input
+        output = next(
+            item["output"] for item in replay if item.get("type") == "function_call_output"
+        )
+        assert len(output.encode("utf-8")) <= 16_384
+        projection = json.loads(output)
+        assert projection["omissions"]["content_blocks"] == 2
+        assert projection["evidence_complete"] is False
+        assert projection["support_available"] is False
+        assert projection["content"] == [] and projection["structured_content"] is None
+        assert not coordinator.evidence[0].result.content
+        assert not coordinator.evidence[0].result.evidence_complete
+        evidence = json.loads(replay[0]["content"])["evidence"][0]
+        assert "unavailable" in evidence["support"]
+        assert peer.seen == [STATUS.name]
+
+
+@pytest.mark.asyncio
+async def test_task_and_requested_target_change_never_promotes_historical_evidence(tmp_path):
+    from cst_agentic.conversation import UserMessage
+
+    model = ScriptedModel(
+        [
+            [function_call(STATUS.name, {}, call_id="target-a")],
+            [assistant_message("Historical response for A, not live identity.")],
+            [assistant_message("B requires independently established target evidence.")],
+        ]
+    )
+    async with conversation(tmp_path, model, context_budget=validated_budget()) as (
+        coordinator,
+        store,
+        peer,
+    ):
+        await coordinator.submit("Inspect project A, no saving")
+        await coordinator.submit(UserMessage("Inspect project B only", new_objective=True))
+        context = json.loads(model.calls[-1].input[0]["content"])
+        assert context["objective"] == "Inspect project B only"
+        assert context["permission"]["requested_scope"] == "Inspect project B only"
+        observation = context["evidence"][0]
+        assert observation["objective_at_observation"] == "Inspect project A, no saving"
+        assert "unknown" in observation["state"]
+        assert "not established" in observation["live_target"]
+        assert peer.seen == [STATUS.name]
+
+
+@pytest.mark.asyncio
+async def test_new_objective_can_omit_oversized_old_discussion_but_not_inherit_authority(tmp_path):
+    model = ScriptedModel([[assistant_message("New objective needs new target checks.")]])
+    async with conversation(tmp_path, model, context_budget=validated_budget(8_000, 1000)) as (
+        coordinator,
+        store,
+        peer,
+    ):
+        assert (await coordinator.submit("Inspect A: " + "old detail " * 2000)).state == "paused"
+        reply = await coordinator.submit("new task: Inspect B; never save")
+        assert reply.state == "reply"
+        assert any(e.kind == "context_compacted" for e in reply.events)
+        context = json.loads(model.calls[0].input[0]["content"])
+        assert context["permission"]["requested_scope"] == "Inspect B; never save"
+        assert all("old detail" not in str(item) for item in model.calls[0].input)
+        assert peer.seen == []
+
+
+@pytest.mark.asyncio
+async def test_compaction_retains_unanswered_questions_inside_tool_responses(tmp_path):
+    class DetailedPeer(Peer):
+        async def call_tool(self, name, arguments):
+            result = await super().call_tool(name, arguments)
+            result.content.append(TextContent(type="text", text="detail " * 200))
+            return result
+
+    tool = STATUS.model_copy(update={"name": "cst_get_simulation_status"})
+    steps = []
+    for index in range(6):
+        output = [function_call(tool.name, {}, call_id=f"question-{index}")]
+        if index == 0:
+            output.append(assistant_message("Which exact library material should be used?"))
+        steps.extend([output, [assistant_message("Inspection only.")]])
+    model = ScriptedModel(steps)
+    async with conversation(
+        tmp_path,
+        model,
+        peer=DetailedPeer(),
+        tools=[tool],
+        context_budget=validated_budget(17_000, 1000),
+    ) as (coordinator, store, peer):
+        events = []
+        for _ in range(6):
+            reply = await coordinator.submit("Continue inspection, no material choice yet.")
+            events.extend(reply.events)
+            if reply.state == "paused":
+                break
+        assert any(e.kind == "context_compacted" for e in events)
+        assert all(
+            any("Which exact library material" in str(item) for item in call.input)
+            for call in model.calls[1:]
+        )
 
 
 @pytest.mark.asyncio
@@ -355,6 +579,7 @@ async def test_budget_is_rechecked_after_queueing_at_actual_dispatch(tmp_path):
             tools=[STATUS],
             allowlist=frozenset({STATUS.name}),
             request_admission=lambda request: None,
+            context_budget=validated_budget(),
             interpreters={
                 STATUS.name: lambda result: result.structured_content == {"mode": "offline"}
             },
@@ -474,6 +699,7 @@ async def test_coordinator_status_through_actual_public_stdio_wrapper(tmp_path):
             tools=[status_definition],
             allowlist=frozenset({STATUS.name}),
             request_admission=lambda request: None,
+            context_budget=validated_budget(),
             interpreters={
                 STATUS.name: lambda result: result.structured_content == {"mode": "offline"}
             },
@@ -607,6 +833,7 @@ async def test_coordinator_retains_incident_a_while_session_admits_isolated_b(tm
             tools=[STATUS],
             allowlist=frozenset({STATUS.name}),
             request_admission=lambda request: None,
+            context_budget=validated_budget(),
             interpreters={
                 STATUS.name: lambda result: result.structured_content == {"mode": "offline"}
             },
@@ -679,6 +906,7 @@ async def test_repetition_comparison_ignores_result_dictionary_key_order(tmp_pat
             tools=[STATUS],
             allowlist=frozenset({STATUS.name}),
             request_admission=lambda request: None,
+            context_budget=validated_budget(),
             interpreters={
                 STATUS.name: lambda result: (
                     result.structured_content == {"mode": "offline", "project_open": False}
@@ -727,6 +955,7 @@ async def test_bad_batches_never_execute_and_keep_only_trustworthy_pairs(tmp_pat
             tools=[STATUS],
             allowlist=frozenset({STATUS.name}),
             request_admission=lambda request: None,
+            context_budget=validated_budget(),
             interpreters={
                 STATUS.name: lambda result: result.structured_content == {"mode": "offline"}
             },
@@ -774,6 +1003,7 @@ async def test_status_conversation_retains_pairs_and_durable_settlement(tmp_path
             tools=[STATUS],
             allowlist=frozenset({STATUS.name}),
             request_admission=lambda request: None,
+            context_budget=validated_budget(),
             interpreters={
                 STATUS.name: lambda result: result.structured_content == {"mode": "offline"}
             },

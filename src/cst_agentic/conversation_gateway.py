@@ -18,6 +18,8 @@ from .discovery import APPROVED_MCP_TOOLS, ToolDiscovery
 from .mcp_client import McpToolCall
 from .recovery import RecoveryError
 
+MAX_OUTCOME_BYTES = 16_384
+
 
 @dataclass(frozen=True)
 class CallOutcome:
@@ -43,7 +45,33 @@ class CallOutcome:
                     content=[block.model_dump(mode="json") for block in self.result.content],
                     structured_content=self.result.structured_content,
                 )
-            return json.dumps(data, allow_nan=False, sort_keys=True)
+            projected = json.dumps(data, allow_nan=False, sort_keys=True)
+            size = len(projected.encode("utf-8"))
+            if size > MAX_OUTCOME_BYTES:
+                # Omit complete payload fields rather than presenting clipped
+                # text/JSON as enough support for a native fact. Full dispatch
+                # records remain separate from bounded conversation context.
+                data.update(
+                    content=[],
+                    structured_content=None,
+                    evidence_complete=False,
+                    support_available=False,
+                    reason="Outcome details exceeded the model-facing allowance; "
+                    "see explicit omissions. No omitted content supports a fact.",
+                    omissions={
+                        "reason": "Outcome exceeded the model-facing byte allowance; "
+                        "payload unavailable, not evidence of current facts.",
+                        "original_bytes": size,
+                        "content_blocks": len(self.result.content) if self.result else 0,
+                        "structured_content": self.result is not None
+                        and self.result.structured_content is not None,
+                        "selection": self.selection is not None,
+                        "original_reason": True,
+                    },
+                )
+                data.pop("selection", None)
+                return json.dumps(data, allow_nan=False, sort_keys=True)
+            return projected
         except (TypeError, ValueError, OverflowError):
             return json.dumps(
                 {
