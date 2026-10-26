@@ -97,6 +97,9 @@ Trusted integration dependencies are deliberately **not model tools**:
   status or stop exception exists after uncertainty.
 
 There are **no production live identity/isolation adapters in this checkout**.
+The [#24 evidence-source proposal](controller-isolation-evidence.md) records the
+missing proofs and candidate restrictions for review; it does not admit a route
+or fulfill the required positive isolated-project delivery.
 Do not wire arbitrary `True` callbacks into a live Controller. The tests use
 controlled synthetic evidence; missing typed server readbacks remain affected
 capability blockers. JSON records tell us about recorded incidents, not which
