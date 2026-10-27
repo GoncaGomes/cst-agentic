@@ -6,7 +6,7 @@ import json
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from .mcp_client import McpToolCall
 from .project_storage import ProjectLocation, ProjectStorageError
@@ -20,12 +20,44 @@ def _signature(name: str, arguments: Mapping[str, Any]) -> str:
 @dataclass(frozen=True)
 class TaskPermission:
     path: str
-    action: str
+    action: Literal["create", "open"]
     launch_new: bool
     outcome: str
     changes: str
     consequences: frozenset[str]
     operations: frozenset[str]
+
+    def __post_init__(self) -> None:
+        if self.action not in {"create", "open"} or self.launch_new is not True:
+            raise RecoveryError("Explicit new-instance launch and create/open action required.")
+        if any(
+            not isinstance(value, str) or not value.strip()
+            for value in (self.path, self.outcome, self.changes)
+        ):
+            raise RecoveryError("Task destination, outcome and agreed changes are required.")
+        if not Path(self.path).is_absolute():
+            raise RecoveryError("Task destination must be absolute.")
+        if not isinstance(self.consequences, frozenset) or not self.consequences <= {
+            "save",
+            "overwrite",
+            "discard",
+            "delete_results",
+            "run_simulation",
+        }:
+            raise RecoveryError("Unknown task consequence permission.")
+        if not isinstance(self.operations, frozenset):
+            raise RecoveryError("Immutable exact operation grants are required.")
+        for signature in self.operations:
+            try:
+                name, arguments = json.loads(signature)
+                if (
+                    not isinstance(name, str)
+                    or not isinstance(arguments, dict)
+                    or _signature(name, arguments) != signature
+                ):
+                    raise ValueError
+            except (TypeError, ValueError):
+                raise RecoveryError("Invalid exact operation grant.") from None
 
     @classmethod
     def from_json(cls, value: Mapping[str, Any]) -> TaskPermission:
@@ -120,6 +152,36 @@ class WorkingProject:
         self.valid = False
         self.generation += 1
 
+    def context(self) -> dict[str, Any]:
+        """Detached authoritative scope, not an additional model capability."""
+        permission, binding = self.permission, self.binding
+        return {
+            "provenance": "application-owned task permission and session-bound API readback",
+            "valid": self.valid,
+            "generation": self.generation,
+            "selected_path": binding.path if binding else (permission.path if permission else None),
+            "permission": {
+                "outcome": permission.outcome,
+                "changes": permission.changes,
+                "consequences": sorted(permission.consequences),
+                "remaining_operations": [
+                    {"name": name, "arguments": arguments}
+                    for name, arguments in (json.loads(value) for value in sorted(self._remaining))
+                ],
+            }
+            if permission
+            else None,
+            "binding": {
+                "connection": binding.connection,
+                "project": binding.project,
+                "sequence": binding.sequence,
+                "provenance": binding.provenance,
+                "scope": "target readback only; model/setup/result facts remain uninspected",
+            }
+            if binding
+            else None,
+        }
+
     def metadata(self) -> dict[str, Any]:
         if self.permission is None or not self.valid:
             raise RecoveryError("Task permission/live target requires renewed prerequisites.")
@@ -165,9 +227,13 @@ class WorkingProject:
             return False
         if _signature(name, arguments) not in self._remaining:
             return False
-        if name in {"cst_connect", "cst_create_project", "cst_open_project"} or name.startswith(
-            "cst_workflow"
-        ):
+        if name in {
+            "cst_connect",
+            "cst_create_project",
+            "cst_open_project",
+            "cst_export_cad",
+            "cst_export_structure_views",
+        } or name.startswith("cst_workflow"):
             return False
         required = set()
         if name == "cst_save_project":

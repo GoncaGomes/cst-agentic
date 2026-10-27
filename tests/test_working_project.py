@@ -71,6 +71,8 @@ async def selected(
         "cst_save_project",
         "cst_delete_results",
         "cst_run_simulation_async",
+        "cst_export_cad",
+        "cst_export_structure_views",
     }
     async with ControllerSession(
         store,
@@ -283,6 +285,86 @@ async def test_model_work_reuses_gateway_schema_and_final_protected_boundary(tmp
         assert peer.calls[-1][0] == "cst_save_project"
         assert session.attempts[-1].dispatched
         assert not session.store.incidents(unresolved_only=True)
+        context = json.loads(model.calls[0].input[0]["content"])
+        assert (
+            context["working_project"]["selected_path"]
+            == str((tmp_path / "exact.cst").resolve()).lower()
+        )
+        assert context["working_project"]["permission"]["consequences"] == ["save"]
+        assert context["working_project"]["permission"]["remaining_operations"] == [
+            {"name": "cst_save_project", "arguments": {}}
+        ]
+        assert context["working_project"]["binding"]["provenance"] == "held-project.filename"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("name", ["cst_export_cad", "cst_export_structure_views"])
+async def test_unreviewed_export_overwrite_route_is_never_admitted(tmp_path, name):
+    from cst_agentic.mcp_client import McpCallError
+
+    async with selected(
+        tmp_path,
+        consequences=("overwrite",),
+        operations=[{"name": name, "arguments": {"path": "existing-output"}}],
+    ) as (_, session, _, peer, reply):
+        assert reply.state == "reply"
+        with pytest.raises(McpCallError, match="guard refused"):
+            await session.dispatch(name, {"path": "existing-output"}, settled=lambda r: True)
+        assert len(peer.calls) == 3
+
+
+def test_typed_local_task_cannot_bypass_action_invariant(tmp_path):
+    from cst_agentic.recovery import RecoveryError
+    from cst_agentic.working_project import TaskPermission
+
+    with pytest.raises(RecoveryError, match="create/open"):
+        TaskPermission(
+            str(tmp_path / "exact.cst"),
+            "typo",
+            True,
+            "Outcome",
+            "Changes",
+            frozenset(),
+            frozenset(),
+        )
+
+
+@pytest.mark.asyncio
+async def test_detected_instance_conflict_stops_shared_coordinator_setup(tmp_path):
+    class ConflictPeer(Peer):
+        async def call_tool(self, name, arguments, *, meta=None):
+            if name == "cst_connect":
+                self.calls.append((name, arguments, meta))
+                return CallToolResult(
+                    content=[],
+                    is_error=True,
+                    structured_content={
+                        "status": "error",
+                        "message": "Detected existing CST instance; not closed.",
+                    },
+                )
+            return await super().call_tool(name, arguments, meta=meta)
+
+    async with selected(tmp_path, peer=ConflictPeer()) as (_, session, working, peer, reply):
+        assert reply.state == "paused"
+        assert session.paused and not working.valid
+        assert [call[0] for call in peer.calls] == ["cst_connection_status", "cst_connect"]
+        (incident,) = session.store.incidents(unresolved_only=True)
+        assert incident.operation == "cst_connect" and incident.project is None
+        assert session.attempts[-1].dispatched
+
+
+@pytest.mark.asyncio
+async def test_missing_protocol_probe_blocks_before_launch(tmp_path):
+    class OldPeer(Peer):
+        async def call_tool(self, name, arguments, *, meta=None):
+            self.calls.append((name, arguments, meta))
+            return CallToolResult(content=[], structured_content={"mode": "offline"})
+
+    async with selected(tmp_path, peer=OldPeer()) as (_, session, _, peer, reply):
+        assert reply.state == "paused"
+        assert len(peer.calls) == 1
+        assert session.paused
 
 
 @pytest.mark.asyncio

@@ -291,6 +291,9 @@ class ConversationCoordinator:
     def _build_request(self, allow_transition: bool) -> ModelRequest:
         context = {
             "provenance": "application_context",
+            "working_project": self._connection.working_project.context()
+            if self._connection.working_project is not None
+            else None,
             "objective": self._objective,
             "task_transition_allowed": allow_transition,
             "permission": {

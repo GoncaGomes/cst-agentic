@@ -26,6 +26,9 @@ arguments; it is not permission to repeat work. Distinct consequences are `save`
 `overwrite`, `discard`, `delete_results` and `run_simulation`. A consequence alone
 does not authorize an operation. Creating a file is not permission for later saves.
 Cross-project overwrite/Save As remains unsupported even with a consequence grant.
+CAD export and structure-view export execution are also refused pending a reviewed
+output/overwrite destination route, even with `overwrite` permission. Their
+discovery membership is unchanged; visibility is not execution support.
 
 This first adapter requires structured exact scope rather than inferring choices
 or permission from prose. Normal conversation does not create execution permission.
@@ -62,6 +65,10 @@ response echoes cannot establish that binding. A supported CST instance-list
 check refuses detected pre-existing/additional instances and unavailable checks;
 it does not inventory helpers/services or prove multi-instance isolation.
 No unrelated instance is closed automatically. No generic execution tool is added.
+Model request context includes this binding's provenance/validity and the exact
+remaining operation grants, outcome, agreed changes and consequence permissions.
+Context accounting includes that full application-owned state; it is not summarized
+into a model-created permission claim.
 
 Create/open and every supported save validate the actual canonical destination in
 both application and server. Save without a path uses the checked live destination,
