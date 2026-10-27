@@ -20,6 +20,7 @@ from .controller_config import ControllerConfig
 from .conversation import EXIT_WARNING, ConversationCoordinator
 from .discovery import APPROVED_MCP_TOOLS, ToolDiscovery
 from .recovery import RecoveryError, RecoveryStore
+from .working_project import WorkingProject
 
 
 def admit_manual_catalogue(tools: list[Tool]) -> None:
@@ -147,8 +148,13 @@ async def create_controller_session(
             catalogue_admission=admit_manual_catalogue,
         )
 
+    working = WorkingProject()
     async with ControllerSession(
-        store, client_factory, inventory=APPROVED_MCP_TOOLS, dispatch_check=lambda *args: None
+        store,
+        client_factory,
+        inventory=APPROVED_MCP_TOOLS,
+        dispatch_check=working.check,
+        working_project=working,
     ) as session:
         await session.open_manual_transport()
         provider: AsyncOpenAI | None = None
@@ -171,6 +177,17 @@ async def create_controller_session(
                     catalogue_loader=session.refresh_catalogue,
                     allowlist=APPROVED_MCP_TOOLS,
                     context_budget=config.context_budget,
+                    interpreters={
+                        "cst_save_project": lambda result: (
+                            isinstance(result.structured_content, dict)
+                            and result.structured_content.get("status") == "saved"
+                        ),
+                        "cst_project_info": lambda result: (
+                            isinstance(result.structured_content, dict)
+                            and result.structured_content.get("project_open") is True
+                            and result.structured_content.get("mode") == "connected"
+                        ),
+                    },
                 ),
             )
         finally:

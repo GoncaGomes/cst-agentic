@@ -28,11 +28,12 @@ provides central incident storage, a per-user session lease and guarded dispatch
 for future Controller integration. It does not enable a conversational/live CST
 modeling command or change this connectivity check. A separate
 [manual Controller session](docs/controller-session.md) adds explicit startup and
-confirmed exit without launching or attaching to CST. Native work remains blocked
-pending validated context/endpoint and typed-target prerequisites. Its shared
+confirmed exit without implicitly launching or attaching to CST. The explicit
+[working-project/task adapter](docs/controller-project.md) supplies guarded setup
+with paired typed server support. Model work remains blocked pending endpoint admission. Its shared
 [conversation coordinator](docs/controller-conversation.md) is tested offline
 with scripted models and controlled peers, including approved progressive tool
-discovery; it does not enable live CST work.
+discovery; offline tests do not establish native CST correctness.
 
 An explicit command verifies that the OpenAI Agents SDK can use the institutional Qwen
 endpoint to call `cst_connection_status` through the `cst-studio-mcp` MCP server, with the

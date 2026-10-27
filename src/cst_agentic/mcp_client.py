@@ -311,6 +311,7 @@ class CstMcpClient:
         *,
         timeout_s: float | None = None,
         dispatch_guard: Callable[[], bool] | None = None,
+        controller_metadata: Mapping[str, Any] | None = None,
     ) -> McpToolCall:
         """Issue one serialized ``tools/call`` and record the attempt.
 
@@ -363,6 +364,9 @@ class CstMcpClient:
             started_monotonic=started,
         )
         self.attempts.append(attempt)
+        frozen_metadata = (
+            deepcopy(dict(controller_metadata)) if controller_metadata is not None else None
+        )
         lock_acquired = False
         try:
             try:
@@ -434,8 +438,13 @@ class CstMcpClient:
                 ) from None
             attempt.dispatched = True
             try:
+                metadata_args: dict[str, Any] = {}
+                if frozen_metadata is not None:
+                    from mcp.types import RequestParamsMeta
+
+                    metadata_args["meta"] = RequestParamsMeta(cst_controller=frozen_metadata)
                 result = await asyncio.wait_for(
-                    self._session.call_tool(name, arguments=attempt.arguments),
+                    self._session.call_tool(name, arguments=attempt.arguments, **metadata_args),
                     timeout=remaining,
                 )
             except asyncio.CancelledError:

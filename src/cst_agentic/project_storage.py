@@ -29,6 +29,8 @@ class ProjectLocation:
         try:
             if path.suffix.lower() != ".cst":
                 raise ProjectStorageError("A .cst project path is required.")
+            if path.name.rstrip(" .") != path.name or ":" in path.name or path.is_reserved():
+                raise ProjectStorageError("Ambiguous Windows destination names are refused.")
             directory = path.parent.resolve(strict=True)
             if not directory.is_dir():
                 raise ProjectStorageError("The project directory is unavailable.")

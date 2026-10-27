@@ -6,7 +6,7 @@ disabled/status-only `verify-connectivity` command. No new model-visible tools,
 inventory groups, provider requests or native CST operations are introduced.
 
 Authority: [#17](https://github.com/GoncaGomes/cst-agentic/issues/17), including its
-[project-isolation amendment](https://github.com/GoncaGomes/cst-agentic/issues/17#issuecomment-6366676070)
+[single-instance/manual-recovery decision](https://github.com/GoncaGomes/cst-agentic/issues/17#issuecomment-6446214034)
 and [dedicated-folder/storage requirement](https://github.com/GoncaGomes/cst-agentic/issues/17#issuecomment-6367032475).
 
 ## Storage
@@ -48,7 +48,8 @@ Controller dispatch route. It accepts dependencies for controlled testing:
 
 1. Enter the session to acquire the central lease and validate recovery state.
 2. Submit a fresh explicit request with `start_task(project_path, request)`.
-   Recovery/isolation admission precedes even client construction.
+   Central recovery admission precedes even client construction. Production
+   working-project setup uses [the explicit task adapter](controller-project.md).
 3. Dispatch through `dispatch(...)`. The real protected client's synchronous
    final guard rechecks directory/target/authorization after queueing and writes
    an `in_flight` record with file flush/fsync and atomic replacement. If any
@@ -74,17 +75,15 @@ Trusted integration dependencies are deliberately **not model tools**:
 
 - The approved inventory is application-owned and independently checked.
 - `dispatch_check` must validate the actual arguments, task authorization and
-  independent live target/state prerequisites. It returns typed `DispatchEvidence`,
-  including an exact instance identifier that distinguishes PID reuse. Operations
+   live target/state prerequisites. It returns typed `DispatchEvidence`,
+   including a connection-bound instance identifier, not a cross-restart process proof. Operations
   whose impact is not safely project-scoped, such as an uncertain instance launch,
   must use `project_scoped=False`; their incident cannot be bypassed by selecting
   a different project. A callback returning `None` refuses dispatch.
-- `isolation_check` must establish the proposed new-instance route's independence
-  from every remaining incident, including continuing activity and affected files.
-  It runs before transport startup and again at dispatch. Without this dependency,
-  any other unresolved incident refuses admission. Known overlapping files,
-  directories, unknown targets/instances and shared instance identity cannot be
-  overridden merely by returning `True`.
+- `isolation_check` is compatibility-only: no callback can bypass an unresolved
+  central incident. New A/B work and replacement transport require explicit local
+  human reconciliation, followed by a fresh session/task. The former isolated-B
+  exception is superseded; directory separation is not isolation evidence.
 - Save operations must supply the actual typed save destination and verify it
   against the canonical arguments in `dispatch_check`. This slice refuses Save As
   to a different file instead of inventing an unsupported lifecycle/overwrite
@@ -96,12 +95,13 @@ Trusted integration dependencies are deliberately **not model tools**:
   client. It does not settle that failure or resume dependent work. No readback,
   status or stop exception exists after uncertainty.
 
-There are **no production live identity/isolation adapters in this checkout**.
-Do not wire arbitrary `True` callbacks into a live Controller. The tests use
-controlled synthetic evidence; missing typed server readbacks remain affected
-capability blockers. JSON records tell us about recorded incidents, not which
-project is actually loaded or whether CST is idle. No automatic recovery/replay,
-existing-instance attachment or new native authorization is provided.
+The [working-project adapter](controller-project.md) supplies connection-bound
+live target support through a paired typed server protocol. The
+[earlier isolation investigation](controller-isolation-evidence.md) is historical,
+not an unresolved prerequisite. Missing protocol support still blocks affected
+operations. JSON records describe incidents, not the loaded project or solver
+state. No automatic recovery/replay, existing-instance attachment or native
+experiment authorization is provided.
 
 `ControllerMcpClient` uses public SDK contexts entered/exited in the owning task,
 complete startup (including catalogue) and one total cleanup allowance. It captures
@@ -111,9 +111,9 @@ overshoot; this is reported rather than described as hard real-time behavior.
 The [manual-session production factory](controller-session.md) now supplies
 separately validated manual-mode, credential-safe child settings and uses this
 central lease/admission before transport construction. It refuses unresolved
-routes until production typed isolation evidence is available; this does not
-complete #17 or its allowed isolated B-route requirement.
-It admits ordinary calls up to 120 seconds; launch/wait/stop-specific runtime
+incidents until explicit local human reconciliation; #17's remaining recovery
+integration is separate. Ordinary calls are capped at 120 seconds and the explicit
+#24 new-instance launch at 480 seconds. Wait/stop-specific runtime
 policy and interactive exit warnings belong to the remaining Controller runtime,
 not an implicit live route supplied by these helpers. Newly owned CST instances
 remain session-bound; no exit/crash survival promise is made.
@@ -129,7 +129,7 @@ uv run pyright
 
 Tests exercise actual isolated filesystem writes and OS leases, the protected
 client's last-moment guard, write/settlement failures, no-replay/reconciliation,
-independent-project admission and unsafe-route refusal. Controlled public-stdio
+central A/B refusal and unsafe-route refusal. Controlled public-stdio
 peers exercise the new lifecycle wrapper, startup refusal/timeout, cleanup error
 retention and an EOF-refusing peer. A disposable whole-application subprocess
 exits abruptly after SDK delivery and durable marker observation; a separate
