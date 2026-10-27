@@ -1,8 +1,8 @@
 """Recovery-aware Controller seam, separate from the connectivity command.
 
 This is the safety/lifecycle slice, not a conversational model loop. Trusted
-application adapters supply reviewed inventory, live target/authorization checks,
-isolation evidence and outcome interpretation. Missing live support refuses work;
+application adapters supply reviewed inventory, live target/authorization checks
+and outcome interpretation. Missing live support refuses work;
 model text, project notes and recovery JSON cannot implement these checks.
 """
 
@@ -25,13 +25,14 @@ from mcp.types import Tool
 from .mcp_client import CstMcpClient, McpAttempt, McpStartupError, McpToolCall, _validate_timeout
 from .project_storage import ProjectLocation
 from .recovery import Incident, RecoveryError, RecoveryStore
+from .working_project import TaskPermission, WorkingProject
 
 
 @dataclass(frozen=True)
 class DispatchEvidence:
-    """Trusted checks established scope and a non-secret exact process identity.
+    """Trusted checks established scope and a non-secret session instance identity.
 
-    ``instance_id`` must distinguish PID reuse (e.g. PID plus creation time).
+    ``instance_id`` is connection-bound, not a cross-restart Windows identity proof.
     Unknown-scope operations such as launching an instance use project_scoped=False.
     This data comes from a trusted typed adapter, never model/user assertions.
     """
@@ -144,9 +145,8 @@ class ControllerSession:
     startup/dispatch/cleanup is pending. In production the client factory must
     construct a manual-mode ControllerMcpClient with reviewed child settings.
 
-    Isolation checks are independent trusted evidence, not bools accepted from
-    model output. The default is to refuse whenever another incident exists.
-    Directory/file overlap and unknown targets cannot be overridden by a check.
+    Every unresolved central incident blocks new work/replacement transport.
+    The legacy isolation callback cannot override human reconciliation.
     """
 
     def __init__(
@@ -160,12 +160,15 @@ class ControllerSession:
         ],
         isolation_check: Callable[[ProjectLocation, tuple[Incident, ...]], bool] | None = None,
         readback_inventory: frozenset[str] = frozenset(),
+        working_project: WorkingProject | None = None,
     ) -> None:
         self.store = store
         self._factory = client_factory
         self._inventory = inventory
         self._dispatch_check = dispatch_check
-        self._isolation_check = isolation_check
+        self.working_project = working_project
+        # Compatibility-only argument. The single-instance prototype never
+        # allows a callback to bypass central human reconciliation.
         if not readback_inventory <= inventory:
             raise RecoveryError("Readback operations must belong to the approved inventory.")
         self._readback_inventory = readback_inventory
@@ -220,25 +223,8 @@ class ControllerSession:
                 and record.state == "received_unresolved"
             )
         )
-        if any(
-            record.project is None or record.instance_id is None or project.overlaps(record.project)
-            for record in incidents
-        ):
-            raise RecoveryError(
-                "Affected or unknown project remains blocked pending reconciliation."
-            )
         if incidents:
-            try:
-                isolated = (
-                    self._isolation_check is not None
-                    and self._isolation_check(project, incidents) is True
-                )
-            except Exception:
-                isolated = False
-            if not isolated:
-                raise RecoveryError(
-                    "Independent instance/activity isolation has not been established."
-                )
+            raise RecoveryError("Unresolved central incident requires local human reconciliation.")
 
     async def start_task(self, project_path: Path, explicit_request: str) -> None:
         """Called only for a fresh explicit human request; never restored prose.
@@ -272,6 +258,29 @@ class ControllerSession:
         self._project = project
         await self._open_client()
 
+    async def establish_working_project(self, permission: TaskPermission) -> None:
+        if self.working_project is None:
+            raise RecoveryError("Live target adapter unavailable.")
+        self.working_project.begin(permission)
+        await self.start_task(Path(permission.path), permission.outcome)
+        path = ProjectLocation.inspect(Path(permission.path)).path
+        for name, arguments in (
+            ("cst_connection_status", {}),
+            ("cst_connect", {"mode": "new"}),
+            (
+                "cst_create_project" if permission.action == "create" else "cst_open_project",
+                {"path": path},
+            ),
+        ):
+            await self.dispatch(
+                name,
+                arguments,
+                timeout_s=480 if name == "cst_connect" else 120,
+                settled=lambda result: True,
+            )
+            if self._paused:
+                raise RecoveryError("Working project prerequisites failed; reconcile locally.")
+
     async def _open_client(self) -> None:
         if self._client is None:
             client = self._factory()
@@ -281,16 +290,13 @@ class ControllerSession:
     async def open_manual_transport(self) -> None:
         """Open a disconnected manual session, without inventing a project route.
 
-        Production isolation support belongs to #24. Until it exists this route
-        refuses every unresolved incident before even constructing the client.
+        This route refuses every unresolved incident before constructing the client.
         No task or dispatch authorization is created by opening the transport.
         """
         if not self._entered or self._closing or asyncio.current_task() is not self._owner:
             raise RecoveryError("Manual startup requires the active lifecycle owner.")
         if self.store.incidents(unresolved_only=True):
-            raise RecoveryError(
-                "Unresolved recovery requires trustworthy isolation evidence (#24)."
-            )
+            raise RecoveryError("Unresolved recovery requires explicit local human reconciliation.")
         await self._open_client()
 
     def begin_cleanup(self, deadline: float) -> None:
@@ -423,7 +429,14 @@ class ControllerSession:
         if name not in self._inventory:
             raise RecoveryError("Operation is outside the approved Controller inventory.")
         _validate_timeout(timeout_s)
-        if timeout_s > 120:
+        maximum = (
+            480
+            if self.working_project is not None
+            and self.working_project.stage == "launch"
+            and name == "cst_connect"
+            else 120
+        )
+        if timeout_s > maximum:
             raise RecoveryError(
                 "This safety slice only admits ordinary allowances up to 120 seconds."
             )
@@ -431,6 +444,7 @@ class ControllerSession:
         loop = asyncio.get_running_loop()
         deadline = loop.time() + timeout_s
         frozen_arguments = deepcopy(dict(arguments or {}))
+        metadata = self.working_project.metadata() if self.working_project is not None else None
         try:
             async with asyncio.timeout_at(deadline):
                 await self._dispatch_lock.acquire()
@@ -465,6 +479,12 @@ class ControllerSession:
                 if self._closing or not self._entered or name not in self._inventory:
                     return False
                 if admission_check is not None and admission_check() is not True:
+                    return False
+                if self._task_id != task_id or self._task_complete or self._client is not client:
+                    return False
+                if self.working_project is not None and not self.working_project.admits(
+                    project, name, frozen_arguments, metadata
+                ):
                     return False
                 current = ProjectLocation.inspect(Path(project.path))
                 if current.directory_id != project.directory_id or (
@@ -509,7 +529,11 @@ class ControllerSession:
                 if remaining <= 0:
                     raise RecoveryError("Operation was not dispatched: allowance expired.")
                 result = await client.call_tool(
-                    name, frozen_arguments, timeout_s=remaining, dispatch_guard=guard
+                    name,
+                    frozen_arguments,
+                    timeout_s=remaining,
+                    dispatch_guard=guard,
+                    controller_metadata=metadata,
                 )
             except BaseException as primary:
                 if incident_id is not None:
@@ -530,7 +554,8 @@ class ControllerSession:
             # raises, returns false, or process death happens during settlement.
             self._paused = True
             self.store.finish(incident_id, "received_unresolved")
-            if settled is not None and settled(result) is True:
+            target_valid = self.working_project is None or self.working_project.accept(result)
+            if target_valid and settled is not None and settled(result) is True:
                 self.store.finish(incident_id, "settled")
                 self._paused = readback
             return result

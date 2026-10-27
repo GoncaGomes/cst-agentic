@@ -28,6 +28,7 @@ from .conversation_gateway import CallOutcome, ConversationGateway, ProtocolPaus
 from .discovery import GROUP_GUIDANCE, ToolDiscovery
 from .mcp_client import McpToolCall
 from .recovery import RecoveryError, RecoveryStore
+from .working_project import TaskPermission
 
 INSTRUCTIONS = (
     "You are the CST Controller. Clarify missing choices and report evidence honestly. "
@@ -222,6 +223,27 @@ class ConversationCoordinator:
     def evidence(self) -> tuple[Observation, ...]:
         return tuple(deepcopy(self._evidence))
 
+    async def establish_task(self, permission: TaskPermission) -> ConversationReply:
+        """Explicit local human instruction, never a model-callable capability."""
+        if self._busy:
+            return self._reply("A turn is pending.", "paused")
+        self._busy = True
+        try:
+            await self._connection.establish_working_project(permission)
+            await self._start_objective(permission.outcome, preserve_authorization=True)
+            self._requested_scope = permission.changes
+            return self._reply(
+                "Selected actual live project verified. Existing-project overview gaps: "
+                "geometry, units, parameters, solver/setup and results remain uninspected. "
+                "Only exact agreed operations/consequences are authorized."
+            )
+        except Exception:
+            return self._reply(
+                "Task prerequisites refused or unresolved; no dependent work admitted.", "paused"
+            )
+        finally:
+            self._busy = False
+
     def _append_settled(self, items: list[TResponseInputItem]) -> _SettledBatch:
         batch = _SettledBatch(
             tuple(deepcopy(items)),
@@ -340,10 +362,16 @@ class ConversationCoordinator:
             self._busy = False
 
     async def _start_objective(
-        self, objective: str, *, retain: tuple[_SettledBatch, ...] = ()
+        self,
+        objective: str,
+        *,
+        retain: tuple[_SettledBatch, ...] = (),
+        preserve_authorization: bool = False,
     ) -> None:
         """Change conversational intent only; retain all execution/recovery state."""
         self._objective = objective
+        if not preserve_authorization and self._connection.working_project is not None:
+            self._connection.working_project.invalidate()
         self._objective_generation += 1
         for batch in retain:
             # The user's exact transition request (including restrictions) and
@@ -364,6 +392,14 @@ class ConversationCoordinator:
         on_event: Callable[[ConversationEvent], None] | None = None,
     ) -> ConversationReply:
         """Wait for a settled turn or input pause; no mid-task cancel command."""
+        if isinstance(message, str) and message.strip().startswith("task: "):
+            try:
+                permission = TaskPermission.from_json(json_object(message.strip()[6:]))
+            except Exception:
+                return self._reply(
+                    "Invalid explicit task instruction; see docs/controller-project.md.", "paused"
+                )
+            return await self.establish_task(permission)
         if self._busy:
             return ConversationReply(
                 "A turn is pending; submit ordinary input at its settled prompt.", "paused"
@@ -395,10 +431,19 @@ class ConversationCoordinator:
                 return self._reply(
                     "Commands: help, status (last observation only), continue, "
                     "new task: <objective>, same task: <clarification>, "
-                    "refresh tools, stop simulation, quit. "
+                    "refresh tools, stop simulation, manual intervention, task: <JSON>, quit. "
                     "Ordinary messages wait for a settled reply; no mid-task cancel command. "
                     "CST work requires reviewed discovery/context and "
                     "live-target prerequisites (#24)."
+                )
+            if command == "manual intervention":
+                if self._connection.working_project is not None:
+                    self._connection.working_project.invalidate()
+                return self._reply(
+                    "Automation paused for manual intervention. Relevant evidence is invalid. "
+                    "Reconcile any incident locally, then start a fresh session/task "
+                    "and inspect again.",
+                    "paused",
                 )
             if command == "status":
                 if not self._evidence:
@@ -416,13 +461,10 @@ class ConversationCoordinator:
             if command == "continue" and self._objective is None:
                 return self._reply("There is no agreed task to continue.", "paused")
             try:
-                self._store.incidents(unresolved_only=True)
+                incidents = self._store.incidents(unresolved_only=True)
             except RecoveryError:
                 return self._reply("Central recovery state unavailable; work blocked.", "paused")
-            # Project/instance scope is enforced by the recovery-aware session,
-            # including independently admitted isolated routes. Never reinstate
-            # a global incident gate above that central authority.
-            if self._connection.paused:
+            if incidents or self._connection.paused:
                 self._emit(
                     "incident",
                     "Unresolved work remains; human reconciliation and "

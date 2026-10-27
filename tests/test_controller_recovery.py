@@ -197,16 +197,16 @@ async def test_task_completion_keeps_transport_open_and_needs_fresh_request(tmp_
 
 
 @pytest.mark.asyncio
-async def test_shared_instance_rejected_even_for_different_folders(tmp_path: Path) -> None:
+async def test_unresolved_instance_blocks_other_folder_before_transport(tmp_path: Path) -> None:
     store = RecoveryStore(tmp_path / "state")
     a, b = location(tmp_path), location(tmp_path, "b")
     with store.session():
         store.prepare(str(uuid.uuid4()), "edit", ProjectLocation.inspect(a), "pid123-created456")
     client = Client(Peer(store))
-    async with session(store, client, isolation_check=lambda *args: True) as controller:
-        await controller.start_task(b, "B")
-        with pytest.raises(McpCallError):
-            await controller.dispatch("edit", {})
+    async with session(store, client) as controller:
+        with pytest.raises(RecoveryError, match="reconciliation"):
+            await controller.start_task(b, "B")
+        assert client.starts == 0
         assert client.peer.seen == []
 
 
@@ -266,8 +266,8 @@ async def test_settlement_write_failure_keeps_restart_block(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("kind", ["same", "unknown", "unproven", "isolated"])
-async def test_restart_isolation_before_transport(tmp_path: Path, kind: str) -> None:
+@pytest.mark.parametrize("kind", ["same", "unknown", "different"])
+async def test_restart_central_reconciliation_before_transport(tmp_path: Path, kind: str) -> None:
     store = RecoveryStore(tmp_path / "state")
     a, b = location(tmp_path), location(tmp_path, "b")
     with store.session():
@@ -279,19 +279,11 @@ async def test_restart_isolation_before_transport(tmp_path: Path, kind: str) -> 
         )
     peer = Peer(store)
     client = Client(peer)
-    async with session(
-        store, client, isolation_check=lambda *args: kind != "unproven"
-    ) as controller:
-        if kind != "isolated":
-            with pytest.raises(RecoveryError):
-                await controller.start_task(a if kind == "same" else b, "Fresh task")
-            assert client.starts == 0
-        else:
-            await controller.start_task(b, "Fresh B task")
-            await controller.dispatch("edit", {}, settled=lambda r: True)
-            remaining = store.incidents(unresolved_only=True)
-            assert [r.id for r in remaining] == [incident_id]
-            assert remaining[0].state == "in_flight"
+    async with session(store, client) as controller:
+        with pytest.raises(RecoveryError, match="reconciliation"):
+            await controller.start_task(a if kind == "same" else b, "Fresh task")
+        assert client.starts == 0
+        assert [r.id for r in store.incidents(unresolved_only=True)] == [incident_id]
 
 
 @pytest.mark.asyncio

@@ -133,7 +133,7 @@ async def test_production_factory_refuses_incident_before_constructing_transport
         tmp_path,
         tmp_path,
     )
-    with pytest.raises(RecoveryError, match="isolation evidence"):
+    with pytest.raises(RecoveryError, match="human reconciliation"):
         async with create_controller_session(config, state_directory=state):
             pytest.fail("unresolved route admitted")
     with RecoveryStore(state).session() as store:

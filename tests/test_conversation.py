@@ -836,7 +836,7 @@ async def test_compound_cancellation_and_persistence_failure_survives_pair_recor
 
 
 @pytest.mark.asyncio
-async def test_coordinator_retains_incident_a_while_session_admits_isolated_b(tmp_path):
+async def test_coordinator_refuses_b_while_a_requires_central_reconciliation(tmp_path):
     from cst_agentic.project_storage import ProjectLocation
 
     store, peer = RecoveryStore(tmp_path / "state"), Peer()
@@ -855,11 +855,6 @@ async def test_coordinator_retains_incident_a_while_session_admits_isolated_b(tm
         lambda: Client(peer),
         inventory=frozenset({STATUS.name}),
         dispatch_check=lambda *args: DispatchEvidence("controlled-b-created-2"),
-        isolation_check=lambda project, incidents: (
-            Path(project.path) == path_b.resolve()
-            and len(incidents) == 1
-            and incidents[0].instance_id == "controlled-a-created-1"
-        ),
     ) as session:
         incident = store.prepare(
             "00000000-0000-0000-0000-000000000001",
@@ -868,7 +863,10 @@ async def test_coordinator_retains_incident_a_while_session_admits_isolated_b(tm
             "controlled-a-created-1",
         )
         store.finish(incident, "uncertain")
-        await session.start_task(path_b, "Read controlled isolated B")
+        from cst_agentic.recovery import RecoveryError
+
+        with pytest.raises(RecoveryError, match="reconciliation"):
+            await session.start_task(path_b, "Read B")
         coordinator = ConversationCoordinator(
             model=model,
             connection=session,
@@ -882,8 +880,9 @@ async def test_coordinator_retains_incident_a_while_session_admits_isolated_b(tm
             },
         )
         reply = await coordinator.submit("Read B status")
-        assert reply.text == "Controlled B status received."
-        assert peer.seen == [STATUS.name]
+        assert reply.state == "paused"
+        assert peer.seen == []
+        assert not model.calls
         assert store.incidents(unresolved_only=True)[0].id == incident
 
 

@@ -1,4 +1,12 @@
-# Controller isolation evidence: prerequisite for #24
+# Historical investigation: superseded Controller isolation requirement
+
+**Historical, not a current delivery prerequisite.** The
+[2026-10-27 single-instance/manual-recovery decision](https://github.com/GoncaGomes/cst-agentic/issues/17#issuecomment-6446214034)
+supersedes the B-while-A-unresolved requirement investigated below. Complete
+multi-instance isolation, independent Windows observers and cross-restart process
+continuity are not required for this prototype. All remaining sections describe
+the earlier investigation, not current requirements. Current implementation and
+limits are in [working-project authorization](controller-project.md).
 
 Research date: 2026-10-26. **Design evidence only; #24 remains incomplete.**
 The user selected evidence-source design before implementation. No production

@@ -810,7 +810,10 @@ async def test_model_transition_resets_before_work_and_preserves_history_and_saf
             ProjectLocation.inspect(other / "b.cst"),
             "other-instance",
         )
-        store.finish(incident, "uncertain")
+        # Historical settled incidents survive objective transitions. An
+        # unresolved incident now blocks the entire turn (covered by the
+        # coordinator recovery test), including model/discovery requests.
+        store.finish(incident, "settled")
         records = store.incidents()
         followup = "Now inspect the materials of a separate design."
         assert (await coordinator.submit(followup)).state == "reply"

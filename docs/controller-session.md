@@ -3,8 +3,9 @@
 This builds on local recovery foundation `b02d6b1`, not a replacement for it.
 The production lifecycle factory is `create_controller_session`; the terminal
 uses that same factory. The [conversation coordinator](controller-conversation.md)
-now owns terminal policy and the offline-tested model/tool loop (#19). Live target
-support (#24), production isolation evidence and native acceptance remain unavailable.
+now owns terminal policy and the offline-tested model/tool loop (#19). The
+[working-project adapter](controller-project.md) adds explicit #24 task setup;
+endpoint admission and native acceptance remain separate.
 
 ## Configuration and entry
 
@@ -44,8 +45,8 @@ are operational configuration, not a sandbox or filesystem-access restriction.
 
 Startup acquires the central per-Windows-user lease and validates recovery state
 before client construction. Any unresolved incident refuses this manual route
-before transport startup: production pre-transport isolation evidence is not yet
-available from #24. Missing/corrupt expected state likewise blocks admission.
+before transport startup until explicit local human reconciliation.
+Missing/corrupt expected state likewise blocks admission.
 The lease remains held through provider and transport cleanup.
 
 Public stdio, SDK session, initialization, paginated catalogue discovery and
@@ -67,15 +68,17 @@ never automatically forwarded, and discarded on cleanup.
 ## Interaction and exit
 
 `help`, historical `status`, `continue`, stop-simulation intent and exit confirmation
-are handled by the shared coordinator. Production work requests report the missing
-context/endpoint/target prerequisites; no native launch, attachment, status, stop,
-save, disconnect or close route is activated. Existing-instance attachment remains excluded.
+are handled by the shared coordinator. Explicit `task: <JSON>` instructions use
+the application-owned working-project adapter, not the model endpoint. Ordinary
+model requests retain independent context/endpoint gates. Existing-instance
+attachment remains excluded. See the working-project document for permission,
+supported settlement and manual-intervention limits.
 
 `quit`/`exit` warns about unsaved work, active simulations and unknown live state;
 the user must type `exit` again to confirm. Declining keeps the session open.
 These are conservative warnings, not live dirty/run-state readbacks. The production
-runtime cannot own a CST instance while dispatch prerequisites are blocked. Future native task
-integration must add target-specific applicable save/run confirmations; this
+runtime may own a session-bound CST instance after explicit task setup. Target-specific
+save/run permission must come from the explicit task instruction; this
 generic confirmation cannot authorize saving, stopping or closing native work.
 Task completion in the inherited session still leaves transport/CST alone.
 
@@ -110,9 +113,9 @@ a replay of the consumed #14 experiments.
 Run offline checks with `uv run pytest -q`, `uv run ruff format --check .`,
 `uv run ruff check .`, and `uv run pyright`.
 
-**#17 remains open, with all requirements intact.** In particular, this refusal
-does not demonstrate its allowed isolated B route. Production typed isolation,
-production dispatch/settlement/reconciliation acceptance, additional abrupt-death
+**#17 remains open under the single-instance/manual-recovery decision.** The
+previous isolated-B exception is superseded, not an outstanding proof requirement.
+Production dispatch/settlement/reconciliation acceptance, additional abrupt-death
 windows and the persistence-plus-temporary-cleanup compound-error regression
 remain outstanding. Coordinator-level dispatch and compound cancellation/persistence
 are tested offline as described in the conversation document. The permanent client latch and no-replay rules are

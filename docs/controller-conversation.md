@@ -7,6 +7,9 @@ progress/outcome/incident and context-accounting/pause events. The terminal pres
 only input/output and abnormal-input cleanup. Help, historical status, continue,
 stop-simulation intent and exit confirmation are coordinator behavior. There is
 no separate mid-task cancel command. Ctrl+C remains abnormal interruption.
+The shared `establish_task`/`task: <JSON>` entry supplies explicit local human
+[working-project permission](controller-project.md); it is not model-callable.
+New objectives and manual-intervention pauses invalidate prior execution evidence.
 
 ## Model requests and execution
 
@@ -95,7 +98,7 @@ objective before requesting work for it.
 `UserMessage(..., new_objective=False)` and `same task: <clarification>` remain
 optional explicit continuation shortcuts; `new_objective=True` and
 `new task: <objective>` explicitly reset before the model request. Both transition
-routes retain relevant history, authorization records, supported evidence and unresolved-operation
+routes retain relevant history, authorization records and unresolved-operation
 state. A model's objective label never replaces the retained explicit-request
 scope in the permission projection, changes the session's execution task/target,
 grants permission or reconciles uncertainty. Dispatch retains its independent

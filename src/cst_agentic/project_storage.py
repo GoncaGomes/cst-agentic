@@ -29,6 +29,8 @@ class ProjectLocation:
         try:
             if path.suffix.lower() != ".cst":
                 raise ProjectStorageError("A .cst project path is required.")
+            if path.name.rstrip(" .") != path.name or ":" in path.name or path.is_reserved():
+                raise ProjectStorageError("Ambiguous Windows destination names are refused.")
             directory = path.parent.resolve(strict=True)
             if not directory.is_dir():
                 raise ProjectStorageError("The project directory is unavailable.")
@@ -46,6 +48,8 @@ class ProjectLocation:
                 raise ProjectStorageError("The project path is not a regular file.")
             stat = directory.stat()
             file_stat = requested.stat() if requested.exists() else None
+            if file_stat is not None and file_stat.st_nlink != 1:
+                raise ProjectStorageError("Project hard-link aliases are refused.")
             if not stat.st_ino or (file_stat is not None and not file_stat.st_ino):
                 raise ProjectStorageError("Stable filesystem identity is unavailable.")
             return cls(
