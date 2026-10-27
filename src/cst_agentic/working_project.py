@@ -138,6 +138,8 @@ class WorkingProject:
         if self.connection is not None:
             raise RecoveryError("New-instance task requires a fresh Controller session.")
         location = ProjectLocation.inspect(Path(permission.path))
+        if location.file_id is not None and Path(location.path).stat().st_nlink != 1:
+            raise RecoveryError("Project hard-link destinations are refused.")
         if permission.action == "create" and location.file_id is not None:
             raise RecoveryError("Creation destination exists; no overwrite or suffix fallback.")
         if permission.action == "open" and location.file_id is None:
@@ -222,7 +224,7 @@ class WorkingProject:
         if self.stage != "bound" or self.binding is None:
             return False
         current = ProjectLocation.inspect(Path(project.path))
-        if current != self.binding.location:
+        if current != self.binding.location or Path(current.path).stat().st_nlink != 1:
             self.invalidate()
             return False
         if _signature(name, arguments) not in self._remaining:
@@ -294,6 +296,8 @@ class WorkingProject:
                 ):
                     raise ValueError
                 path = ProjectLocation.inspect(Path(evidence["path"])).path
+                if Path(path).stat().st_nlink != 1:
+                    raise ValueError
                 if (
                     path != self.metadata()["path"]
                     or not isinstance(evidence["project"], str)
