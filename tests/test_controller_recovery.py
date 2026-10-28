@@ -127,7 +127,11 @@ async def test_uncertainty_retains_block_and_old_latch_after_human_reconciliatio
             with pytest.raises(RecoveryError, match="paused"):
                 await controller.dispatch(name, {})
         store.reconcile(
-            incident.id, project_confirmed=True, effects_resolved=True, activity_resolved=True
+            incident.id,
+            project_confirmed=True,
+            effects_resolved=True,
+            activity_resolved=True,
+            instance_closed=True,
         )
         with pytest.raises(RecoveryError, match="fresh explicit task"):
             await controller.dispatch("edit", {})
@@ -141,6 +145,28 @@ async def test_uncertainty_retains_block_and_old_latch_after_human_reconciliatio
         assert fresh.starts == 0
         await controller.start_task(path, "Fresh status request")
         await controller.dispatch("status", {}, settled=lambda r: True)
+
+
+@pytest.mark.asyncio
+async def test_compound_persistence_failure_survives_protected_guard(tmp_path, monkeypatch):
+    store = RecoveryStore(tmp_path / "state")
+    client = Client(Peer(store))
+    async with session(store, client) as controller:
+        await controller.start_task(location(tmp_path), "Edit")
+
+        def refuse(*args, **kwargs):
+            raise OSError("private filesystem detail")
+
+        with monkeypatch.context() as patch:
+            patch.setattr(os, "replace", refuse)
+            patch.setattr(Path, "unlink", refuse)
+            with pytest.raises(ExceptionGroup) as caught:
+                await controller.dispatch("edit", {})
+        assert [str(error) for error in caught.value.exceptions] == [
+            "Recovery persistence failed; dispatch is blocked.",
+            "Recovery temporary-file cleanup failed.",
+        ]
+        assert not client.peer.seen and not client.attempts[-1].dispatched
 
 
 @pytest.mark.asyncio

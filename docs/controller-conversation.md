@@ -145,6 +145,12 @@ client stays permanently blocked. A healthy not-dispatched technical rejection i
 returned to Qwen with its reason and paired history. At most one automatic correction
 per autonomous work period is permitted across calls, regardless of changed arguments
 or names. Unknown/partial effects still pause; an error message proves no rollback.
+After exiting the old Controller, the separate application-owned `recovery status`
+and interactive `recovery reconcile <incident-id>` commands work without transport
+or model access. Explicit human findings include effects, activity and previous
+instance closure. See [recovery](controller-recovery.md). Reconciliation never
+resumes the old task; a fresh session/explicit request must re-establish normal
+technical prerequisites.
 
 Each complete model request is bounded by at most 120 seconds (a smaller injected
 allowance is supported). The production provider retains `max_retries=0`.
@@ -176,7 +182,8 @@ CST or requests the institutional endpoint.
 Actual endpoint context validation, decision memory, native status/stop
 interpretation, operation-specific simulation
 policy and richer operation-effect classification remain their owning tickets'
-work. #17 still owns integrated recovery acceptance. Production installs
+work. Integrated recovery and abrupt-death evidence is documented under
+[#17 recovery](controller-recovery.md). Production installs
 the approved discovery selection, but model requests/dispatch remain gated as above.
 The disabled/status-only connectivity
 command and its SDK Runner path remain unchanged.

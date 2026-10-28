@@ -32,6 +32,16 @@ _SETTLED = {"settled", "reconciled"}
 
 
 @dataclass(frozen=True)
+class HumanFindings:
+    project_confirmed: bool
+    effects_resolved: bool
+    activity_resolved: bool
+    instance_closed: bool
+    provenance: str = "local_human"
+    limitations: str = "not_independently_verified"
+
+
+@dataclass(frozen=True)
 class Incident:
     id: str
     task_id: str
@@ -43,6 +53,8 @@ class Incident:
     human_evidence: bool = False
     effects_resolved: bool = False
     activity_resolved: bool = False
+    instance_closed: bool = False
+    findings: tuple[HumanFindings, ...] = ()
 
 
 def controller_state_directory() -> Path:
@@ -81,7 +93,12 @@ class RecoveryStore:
             ledger = self.directory / "recovery.json"
             if not lock_path.exists() and ledger.exists():
                 raise RecoveryError("Expected recovery lease metadata is missing.")
-            lease = lock_path.open("a+b")
+            try:
+                lease = lock_path.open("x+b")
+                created = True
+            except FileExistsError:
+                lease = lock_path.open("r+b")
+                created = False
             lease.seek(0)
             if os.name == "nt":
                 import msvcrt
@@ -98,6 +115,8 @@ class RecoveryStore:
             lease.seek(0)
             header = lease.read()
             if not header:
+                if not created:
+                    raise RecoveryError("Recovery initialization is incomplete; admission blocked.")
                 if ledger.exists():
                     raise RecoveryError("Recovery lease metadata is corrupt.")
                 lease.write(b"CST-Agentic recovery v1\n")
@@ -150,7 +169,7 @@ class RecoveryStore:
             if (
                 set(data) != {"version", "incidents"}
                 or type(data["version"]) is not int
-                or data["version"] != 1
+                or data["version"] not in {1, 2}
             ):
                 raise ValueError
             if not isinstance(data["incidents"], list):
@@ -158,6 +177,13 @@ class RecoveryStore:
             records = []
             for item in data["incidents"]:
                 item = dict(item)
+                if data["version"] == 1:
+                    # Legacy findings did not establish previous-instance closure.
+                    # Retain the record, but never silently grant new admission.
+                    item["instance_closed"] = False
+                    item["findings"] = []
+                    if item.get("state") == "reconciled":
+                        item["state"] = "received_unresolved"
                 if set(item) != {
                     "id",
                     "task_id",
@@ -168,8 +194,42 @@ class RecoveryStore:
                     "human_evidence",
                     "effects_resolved",
                     "activity_resolved",
+                    "instance_closed",
+                    "findings",
                 }:
                     raise ValueError
+                if not isinstance(item["findings"], list):
+                    raise ValueError
+                if any(
+                    not isinstance(finding, dict)
+                    or set(finding)
+                    != {
+                        "project_confirmed",
+                        "effects_resolved",
+                        "activity_resolved",
+                        "instance_closed",
+                        "provenance",
+                        "limitations",
+                    }
+                    for finding in item["findings"]
+                ):
+                    raise ValueError
+                item["findings"] = tuple(HumanFindings(**finding) for finding in item["findings"])
+                for finding in item["findings"]:
+                    if (
+                        any(
+                            type(value) is not bool
+                            for value in (
+                                finding.project_confirmed,
+                                finding.effects_resolved,
+                                finding.activity_resolved,
+                                finding.instance_closed,
+                            )
+                        )
+                        or finding.provenance != "local_human"
+                        or finding.limitations != "not_independently_verified"
+                    ):
+                        raise ValueError
                 if item["project"] is not None:
                     item["project"] = ProjectLocation(**item["project"])
                     if not all(
@@ -210,11 +270,20 @@ class RecoveryStore:
                         record.human_evidence,
                         record.effects_resolved,
                         record.activity_resolved,
+                        record.instance_closed,
                     )
                 ):
                     raise ValueError
                 if record.state == "reconciled" and not (
-                    record.human_evidence and record.effects_resolved and record.activity_resolved
+                    record.human_evidence
+                    and record.effects_resolved
+                    and record.activity_resolved
+                    and record.instance_closed
+                    and record.findings
+                    and record.findings[-1].project_confirmed
+                    and record.findings[-1].effects_resolved
+                    and record.findings[-1].activity_resolved
+                    and record.findings[-1].instance_closed
                 ):
                     raise ValueError
                 records.append(record)
@@ -263,6 +332,7 @@ class RecoveryStore:
         project_confirmed: bool,
         effects_resolved: bool,
         activity_resolved: bool,
+        instance_closed: bool = False,
     ) -> None:
         """Record explicit human findings as flags, not independent readback.
 
@@ -270,7 +340,8 @@ class RecoveryStore:
         the block. This never changes a protected client's latch or starts a task.
         """
         if any(
-            type(v) is not bool for v in (project_confirmed, effects_resolved, activity_resolved)
+            type(v) is not bool
+            for v in (project_confirmed, effects_resolved, activity_resolved, instance_closed)
         ):
             raise RecoveryError("Explicit human reconciliation findings are required.")
         if any(
@@ -278,14 +349,24 @@ class RecoveryStore:
             for r in self.incidents()
         ):
             raise RecoveryError("Cannot reconcile an operation still in flight in this session.")
+        record = next((r for r in self.incidents() if r.id == incident_id), None)
+        if record is None:
+            raise RecoveryError("Recovery record was not found.")
         self._update(
             incident_id,
             state="reconciled"
-            if project_confirmed and effects_resolved and activity_resolved
+            if project_confirmed and effects_resolved and activity_resolved and instance_closed
             else None,
             human_evidence=True,
             effects_resolved=effects_resolved,
             activity_resolved=activity_resolved,
+            instance_closed=instance_closed,
+            findings=(
+                *record.findings,
+                HumanFindings(
+                    project_confirmed, effects_resolved, activity_resolved, instance_closed
+                ),
+            ),
         )
 
     def _update(self, incident_id: str, **changes: object) -> None:
@@ -297,6 +378,7 @@ class RecoveryStore:
                 values = asdict(record)
                 values.update({key: value for key, value in changes.items() if value is not None})
                 values["project"] = record.project
+                values["findings"] = changes.get("findings", record.findings)
                 records[index] = Incident(**values)
                 self._write(records)
                 return
@@ -315,7 +397,7 @@ class RecoveryStore:
                 delete=False,
             ) as stream:
                 temporary = Path(stream.name)
-                json.dump({"version": 1, "incidents": [asdict(r) for r in records]}, stream)
+                json.dump({"version": 2, "incidents": [asdict(r) for r in records]}, stream)
                 stream.flush()
                 os.fsync(stream.fileno())
             os.replace(temporary, self.directory / "recovery.json")
@@ -323,10 +405,16 @@ class RecoveryStore:
             self._failed = True
             raise RecoveryError("Recovery persistence failed; dispatch is blocked.") from None
         finally:
-            if temporary is not None and temporary.exists():
+            primary = sys.exception()
+            if temporary is not None:
                 # Do not suppress cleanup failures or expose OS exception text.
                 try:
-                    temporary.unlink()
+                    temporary.unlink(missing_ok=True)
                 except OSError:
                     self._failed = True
-                    raise RecoveryError("Recovery temporary-file cleanup failed.") from None
+                    cleanup = RecoveryError("Recovery temporary-file cleanup failed.")
+                    if primary is not None:
+                        raise BaseExceptionGroup(
+                            "Recovery persistence and cleanup failed", [primary, cleanup]
+                        ) from None
+                    raise cleanup from None

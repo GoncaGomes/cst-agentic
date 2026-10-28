@@ -14,10 +14,12 @@ from agents.testing import ScriptedModel, function_call
 from mcp.types import CallToolResult, Tool
 from test_working_project import Client
 
+from cst_agentic.cli import main
 from cst_agentic.controller import ControllerSession
 from cst_agentic.conversation import ConversationCoordinator, UserMessage
+from cst_agentic.mcp_client import McpCallError
 from cst_agentic.output_storage import interpret_export_response
-from cst_agentic.recovery import RecoveryStore
+from cst_agentic.recovery import RecoveryError, RecoveryStore
 from cst_agentic.working_project import WorkingProject, interpret_setup_response
 from fakes import conversation_message, offline_context_budget
 
@@ -76,11 +78,11 @@ TOOLS = (
 
 
 @asynccontextmanager
-async def flow(tmp_path, steps, *, peer=None, tools=TOOLS, discovery=None):
+async def flow(tmp_path, steps, *, peer=None, tools=TOOLS, discovery=None, state_directory=None):
     peer = peer or ProjectPeer()
     model = ScriptedModel(steps)
     working = WorkingProject()
-    store = RecoveryStore(tmp_path / "state")
+    store = RecoveryStore(state_directory or tmp_path / "state")
     client = Client(peer)
     names = frozenset(tool.name for tool in tools)
     async with ControllerSession(
@@ -705,3 +707,99 @@ async def test_canonical_explicit_project_type_passes_the_real_selection_guard(t
         reply = await coordinator.submit("Create the requested MWS project")
         assert reply.state == "reply" and working.binding is not None and not session.paused
         assert peer.calls[-1][1] == arguments
+
+
+@pytest.mark.asyncio
+async def test_uncertainty_local_reconciliation_and_fresh_model_led_task(tmp_path, monkeypatch):
+    class UncertainPeer(ProjectPeer):
+        async def call_tool(self, name, arguments, *, meta=None):
+            if name == "cst_save_project":
+                self.calls.append((name, arguments, meta))
+                raise ConnectionError("private controlled transport failure")
+            return await super().call_tool(name, arguments, meta=meta)
+
+    monkeypatch.setenv("LOCALAPPDATA", str(tmp_path))
+    state = tmp_path / "CST-Agentic"
+    a = tmp_path / "a"
+    b = tmp_path / "b"
+    a.mkdir()
+    b.mkdir()
+    path = a / "exact.cst"
+    steps = setup_steps(path) + [
+        [function_call("cst_save_project", {}, call_id="uncertain-save")],
+        [function_call("cst_project_info", {}, call_id="must-not-replay")],
+    ]
+    async with flow(tmp_path, steps, peer=UncertainPeer(), state_directory=state) as (
+        coordinator,
+        session,
+        _,
+        peer,
+        model,
+        old_client,
+    ):
+        reply = await coordinator.submit("Launch, create the exact project, then save it")
+        assert reply.state == "paused" and session.paused
+        record = session.store.incidents(unresolved_only=True)[0]
+        assert record.state == "uncertain" and record.operation == "cst_save_project"
+        assert any(record.id in event.text for event in reply.events)
+        assert len(model.calls) == 4
+        assert (await coordinator.submit(f"Open project {b / 'b.cst'}")).state == "paused"
+        for tool in TOOLS:
+            with pytest.raises(McpCallError, match="uncertain"):
+                await old_client.call_tool(tool.name, {})
+        assert len(peer.calls) == 4
+
+    # A new chat, selected directory or application session cannot start transport.
+    for target in (path, b / "b.cst"):
+
+        def forbidden():
+            pytest.fail("Unresolved incident constructed replacement transport")
+
+        working = WorkingProject()
+        async with ControllerSession(
+            RecoveryStore(state),
+            forbidden,
+            inventory=frozenset(t.name for t in TOOLS),
+            dispatch_check=working.check,
+            working_project=working,
+        ) as restarted:
+            with pytest.raises(RecoveryError, match="reconciliation"):
+                await restarted.open_manual_transport()
+            with pytest.raises(RecoveryError, match="reconciliation"):
+                await restarted.start_task(target, "A fresh explicit request")
+
+    answers = iter(["yes", "yes", "no", "yes"])
+    monkeypatch.setattr("builtins.input", lambda prompt: next(answers))
+    assert main(["recovery", "reconcile", record.id]) == 1
+    answers = iter(["yes"] * 4)
+    assert main(["recovery", "reconcile", record.id]) == 0
+    with pytest.raises(McpCallError, match="uncertain"):
+        await old_client.call_tool("cst_connection_status", {})
+    assert len(peer.calls) == 4  # Local human findings made no CST calls.
+
+    steps = [
+        [function_call("cst_connection_status", {}, call_id="fresh-probe")],
+        [function_call("cst_connect", {"mode": "new"}, call_id="fresh-launch")],
+        [function_call("cst_open_project", {"path": str(path)}, call_id="fresh-open")],
+        [conversation_message("Fresh target verified; no interrupted work restored.")],
+    ]
+    async with flow(tmp_path, steps, state_directory=state) as (
+        coordinator,
+        session,
+        working,
+        fresh_peer,
+        model,
+        _,
+    ):
+        assert not fresh_peer.calls and not model.calls  # Admission alone does not replay.
+        assert working.binding is None and working.connection is None
+        assert (await coordinator.submit(f"Launch CST and open {path}")).state == "reply"
+        assert [c[0] for c in fresh_peer.calls] == [
+            "cst_connection_status",
+            "cst_connect",
+            "cst_open_project",
+        ]
+        assert working.binding is not None and not session.paused
+        assert not session.store.incidents(unresolved_only=True)
+        history = next(r for r in session.store.incidents() if r.id == record.id)
+        assert history.state == "reconciled" and len(history.findings) == 2

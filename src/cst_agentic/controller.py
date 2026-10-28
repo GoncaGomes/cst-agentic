@@ -464,9 +464,10 @@ class ControllerSession:
                     "Task is paused; reconciliation requires a fresh explicit task."
                 )
             incident_id: str | None = None
+            persistence_failures: BaseExceptionGroup | None = None
 
             def guard() -> bool:
-                nonlocal incident_id
+                nonlocal incident_id, persistence_failures
                 if self._closing or not self._entered or name not in self._inventory:
                     return False
                 if admission_check is not None and admission_check() is not True:
@@ -507,12 +508,18 @@ class ControllerSession:
                     for record in self.store.incidents(unresolved_only=True)
                 ):
                     return False
-                incident_id = self.store.prepare(
-                    task_id,
-                    name,
-                    current if evidence.project_scoped else None,
-                    evidence.instance_id,
-                )
+                try:
+                    incident_id = self.store.prepare(
+                        task_id,
+                        name,
+                        current if evidence.project_scoped else None,
+                        evidence.instance_id,
+                    )
+                except BaseExceptionGroup as failures:
+                    # The protected client deliberately categorizes guard exceptions.
+                    # Retain the store's safe primary+cleanup diagnostics for our caller.
+                    persistence_failures = failures
+                    raise
                 return True
 
             attempt_index = len(client.attempts)
@@ -528,6 +535,8 @@ class ControllerSession:
                     controller_metadata=metadata,
                 )
             except BaseException as primary:
+                if persistence_failures is not None:
+                    raise persistence_failures from None
                 attempt = (
                     client.attempts[attempt_index] if len(client.attempts) > attempt_index else None
                 )
