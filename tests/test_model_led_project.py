@@ -120,6 +120,8 @@ async def flow(tmp_path, steps, *, peer=None, tools=TOOLS, discovery=None):
 
 
 @pytest.mark.asyncio
+# Intentional Portuguese user inputs verify unchanged multilingual delivery;
+# these are external-conversation test data, not application-authored messages.
 @pytest.mark.parametrize(
     "message", ["Abre o CST, por favor.", "Lança uma nova instância.", "  Open CST.  "]
 )
@@ -127,11 +129,12 @@ async def test_original_message_can_launch_without_intent_response_or_project(tm
     steps = [
         [function_call("cst_connection_status", {}, call_id="probe")],
         [function_call("cst_connect", {"mode": "new"}, call_id="launch")],
-        [conversation_message("CST aberto; nenhum projeto selecionado.")],
+        [conversation_message("CST launched; no project selected.")],
     ]
     async with flow(tmp_path, steps) as (coordinator, session, working, peer, model, _):
         reply = await coordinator.submit(message)
         assert reply.state == "reply", reply.text
+        assert reply.text == "CST launched; no project selected."
         assert model.calls[0].input[-1]["content"] == message
         assert [c[0] for c in peer.calls] == ["cst_connection_status", "cst_connect"]
         assert working.connection == "owned-connection" and working.binding is None
@@ -150,22 +153,22 @@ async def test_separate_selection_clarification_and_healthy_tasks_need_no_manife
     steps = [
         [function_call("cst_connection_status", {}, call_id="probe")],
         [function_call("cst_connect", {"mode": "new"}, call_id="launch")],
-        [conversation_message("Nenhum projeto selecionado.")],
-        [conversation_message("Qual é o caminho completo?")],
+        [conversation_message("No project selected.")],
+        [conversation_message("What is the full path?")],
         [function_call(f"cst_{action}_project", {"path": str(path)}, call_id="select")],
-        [conversation_message("Destino verificado; conteúdo ainda não inspecionado.")],
+        [conversation_message("Destination verified; contents not yet inspected.")],
         [function_call("cst_project_info", {}, call_id="inspect")],
-        [conversation_message("Inspeção recebida.")],
+        [conversation_message("Inspection received.")],
         [function_call("cst_save_project", {}, call_id="save")],
-        [conversation_message("Gravação recebida.")],
+        [conversation_message("Save response received.")],
     ]
     async with flow(tmp_path, steps) as (coordinator, session, working, peer, model, _):
         for message in (
-            "Abre CST",
-            "Quero selecionar um projeto",
+            "Open CST",
+            "I want to select a project",
             str(path),
-            "Inspeciona o projeto",
-            "Agora guarda o projeto",
+            "Inspect the project",
+            "Now save the project",
         ):
             reply = await coordinator.submit(message)
             assert reply.state == "reply", reply.text
@@ -178,7 +181,7 @@ async def test_separate_selection_clarification_and_healthy_tasks_need_no_manife
         ]
         assert working.binding.path == str(path.resolve()).lower()
         assert not session.paused and not session.store.incidents(unresolved_only=True)
-        assert all(any(i.get("content") == "Abre CST" for i in call.input) for call in model.calls)
+        assert all(any(i.get("content") == "Open CST" for i in call.input) for call in model.calls)
 
 
 def setup_steps(path):
@@ -290,11 +293,11 @@ async def test_recoverable_preselection_rejection_reaches_model_with_paired_hist
         [function_call("cst_connection_status", {}, call_id="probe")],
         [function_call("cst_connect", {"mode": "new"}, call_id="launch")],
         [function_call("cst_save_project", {}, call_id="premature")],
-        [conversation_message("Escolhe primeiro o caminho exato do projeto.")],
+        [conversation_message("Choose the exact project path first.")],
     ]
     async with flow(tmp_path, steps) as (coordinator, session, _, peer, model, _):
-        reply = await coordinator.submit("Abre CST e guarda o projeto")
-        assert reply.text == "Escolhe primeiro o caminho exato do projeto."
+        reply = await coordinator.submit("Open CST and save the project")
+        assert reply.text == "Choose the exact project path first."
         output = next(
             i
             for i in model.calls[-1].input
@@ -315,7 +318,7 @@ async def test_one_correction_allowance_cannot_reset_by_changing_tool_or_argumen
         [function_call("cst_connection_status", {}, call_id="must-not-run")],
     ]
     async with flow(tmp_path, steps) as (coordinator, _, _, peer, model, _):
-        reply = await coordinator.submit("Abre uma instância nova")
+        reply = await coordinator.submit("Launch a new instance")
         assert reply.state == "paused"
         assert len(model.calls) == 2
         assert not peer.calls
@@ -367,7 +370,7 @@ async def test_discovery_can_precede_launch_without_any_intent_declaration(tmp_p
     steps = [
         [function_call("discover_tools", {"groups": ["session_project"]}, call_id="discover")],
         *setup_steps(tmp_path / "exact.cst"),
-        [conversation_message("Destino verificado, geometria e unidades por inspecionar.")],
+        [conversation_message("Destination verified; geometry and units not yet inspected.")],
     ]
     async with flow(tmp_path, steps, tools=catalogue, discovery=ToolDiscovery(catalogue)) as (
         coordinator,
@@ -377,7 +380,7 @@ async def test_discovery_can_precede_launch_without_any_intent_declaration(tmp_p
         model,
         _,
     ):
-        message = "Não uses uma instância existente; abre CST e cria o ficheiro combinado."
+        message = "Do not use an existing instance; open CST and create the agreed file."
         reply = await coordinator.submit(message)
         assert reply.state == "reply", reply.text
         assert model.calls[0].input[-1]["content"] == message
@@ -404,12 +407,12 @@ async def test_create_conflict_returns_reason_then_a_new_message_can_choose_exac
     other.mkdir()
     requested = other / "chosen.cst"
     steps = setup_steps(occupied) + [
-        [conversation_message("Esse destino já existe. Qual é o outro caminho?")],
+        [conversation_message("That destination already exists. What is the other path?")],
         [function_call("cst_create_project", {"path": str(requested)}, call_id="new-destination")],
-        [conversation_message("Novo destino exato verificado.")],
+        [conversation_message("New exact destination verified.")],
     ]
     async with flow(tmp_path, steps) as (coordinator, session, working, peer, model, _):
-        reply = await coordinator.submit("Cria o projeto no caminho ocupado")
+        reply = await coordinator.submit("Create the project at the occupied path")
         assert reply.state == "reply"
         assert occupied.read_text() == "must not change"
         assert len(peer.calls) == 2
@@ -504,7 +507,7 @@ async def test_export_destination_conflicts_are_model_visible_and_never_dispatch
     tool = definition(name, {key: {} for key in arguments}, tuple(arguments))
     steps = setup_steps(tmp_path / "exact.cst") + [
         [function_call(name, arguments, call_id="unsafe-output")],
-        [conversation_message("Escolhe outro destino de exportação.")],
+        [conversation_message("Choose another export destination.")],
     ]
     async with flow(tmp_path, steps, tools=(*TOOLS, tool)) as (
         coordinator,
@@ -515,7 +518,7 @@ async def test_export_destination_conflicts_are_model_visible_and_never_dispatch
         _,
     ):
         reply = await coordinator.submit("Create the project and export")
-        assert reply.text == "Escolhe outro destino de exportação."
+        assert reply.text == "Choose another export destination."
         assert len(peer.calls) == 3 and not session.paused
         rejection = json.loads(
             next(
