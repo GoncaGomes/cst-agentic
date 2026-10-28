@@ -68,17 +68,18 @@ never automatically forwarded, and discarded on cleanup.
 ## Interaction and exit
 
 `help`, historical `status`, `continue`, stop-simulation intent and exit confirmation
-are handled by the shared coordinator. Explicit `task: <JSON>` instructions use
-the application-owned working-project adapter, not the model endpoint. Ordinary
-model requests retain independent context/endpoint gates. Existing-instance
-attachment remains excluded. See the working-project document for permission,
+are handled by the shared coordinator. Ordinary messages reach Qwen unchanged;
+it chooses discovery, explicit launch, exact selection and subsequent task calls.
+The legacy `task: <JSON>` setup interface remains optional, not a semantic gate.
+Model requests retain independent context/endpoint gates. Existing-instance
+attachment remains excluded. See the working-project document for interpretation,
 supported settlement and manual-intervention limits.
 
 `quit`/`exit` warns about unsaved work, active simulations and unknown live state;
 the user must type `exit` again to confirm. Declining keeps the session open.
 These are conservative warnings, not live dirty/run-state readbacks. The production
-runtime may own a session-bound CST instance after explicit task setup. Target-specific
-save/run permission must come from the explicit task instruction; this
+runtime may own a session-bound CST instance after a model-selected explicit launch.
+Qwen must follow the user's save/run instructions and agreed consequences; this
 generic confirmation cannot authorize saving, stopping or closing native work.
 Task completion in the inherited session still leaves transport/CST alone.
 

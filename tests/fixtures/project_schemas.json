@@ -1,0 +1,49 @@
+{
+  "source_repository": "https://github.com/GoncaGomes/cst-mcp",
+  "source_commit": "94906b8",
+  "source_paths": ["src/cst_mcp/tools/project.py", "src/cst_mcp/types.py"],
+  "tools": [
+    {
+      "name": "cst_create_project",
+      "description": "Create a new CST Studio Suite project file. In connected mode the project is created directly; in offline mode a VBA script is returned for manual execution.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Full file path for the new project, e.g. 'C:/cst_projects/MyAntenna.cst'."
+          },
+          "project_type": {
+            "type": "string",
+            "description": "CST project type. One of: MWS (Microwave Studio), EMS (EM Studio), PS (Particle Studio), MPS (Mphysics Studio), CS (Cable Studio), DS (Design Studio), PCB (PCB Studio).",
+            "default": "MWS",
+            "enum": ["MWS", "EMS", "PS", "MPS", "CS", "DS", "PCB"]
+          }
+        },
+        "required": ["path"]
+      }
+    },
+    {
+      "name": "cst_open_project",
+      "description": "Open an existing CST Studio Suite project. In connected mode the project is opened in the running instance; in offline mode a reference is stored for subsequent operations.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "path": {"type": "string", "description": "Full file path of the existing .cst project to open."}
+        },
+        "required": ["path"]
+      }
+    },
+    {
+      "name": "cst_save_project",
+      "description": "Save the currently open CST project. Optionally provide a new path to 'Save As'.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "path": {"type": "string", "description": "Optional file path for 'Save As'. If omitted, saves to the current project path."}
+        },
+        "required": []
+      }
+    }
+  ]
+}

@@ -117,11 +117,11 @@ async def selected(
         ("cst_delete_results", "delete_results"),
     ],
 )
-async def test_exact_operation_does_not_implicitly_grant_distinct_consequence(
+async def test_legacy_manifest_does_not_semantically_gate_technically_valid_calls(
     tmp_path, name, consequence
 ):
-    from cst_agentic.mcp_client import McpCallError
-
+    # Consequence agreement is Qwen behavior. This tests only technical dispatch,
+    # not delivery or permission for downstream simulation/deletion capabilities.
     async with selected(tmp_path, operations=[{"name": name, "arguments": {}}]) as (
         _,
         session,
@@ -130,25 +130,23 @@ async def test_exact_operation_does_not_implicitly_grant_distinct_consequence(
         reply,
     ):
         assert reply.state == "reply"
-        with pytest.raises(McpCallError, match="guard refused"):
-            await session.dispatch(name, {}, settled=lambda result: True)
-        assert len(peer.calls) == 3
+        await session.dispatch(name, {}, settled=lambda result: True)
+        assert peer.calls[-1][0] == name
+        assert not session.paused
 
 
 @pytest.mark.asyncio
-async def test_agreed_operation_is_not_permission_to_repeat_it(tmp_path):
-    from cst_agentic.mcp_client import McpCallError
-
+async def test_distinct_successful_calls_are_not_single_use_manifest_grants(tmp_path):
     async with selected(tmp_path, consequences=("save",)) as (_, session, _, peer, reply):
         assert reply.state == "reply"
         await session.dispatch("cst_save_project", {}, settled=lambda result: True)
-        with pytest.raises(McpCallError, match="guard refused"):
-            await session.dispatch("cst_save_project", {}, settled=lambda result: True)
-        assert len(peer.calls) == 4
+        await session.dispatch("cst_save_project", {}, settled=lambda result: True)
+        assert len(peer.calls) == 5
+        assert not session.store.incidents(unresolved_only=True)
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("change", ["permission", "target", "connection", "file"])
+@pytest.mark.parametrize("change", ["evidence", "target", "connection", "file"])
 async def test_invalidation_while_queued_blocks_dependent_dispatch_and_stale_evidence(
     tmp_path, change
 ):
@@ -180,7 +178,7 @@ async def test_invalidation_while_queued_blocks_dependent_dispatch_and_stale_evi
             session.dispatch("cst_save_project", {}, settled=lambda r: True)
         )
         await asyncio.sleep(0)
-        if change == "permission":
+        if change == "evidence":
             working.invalidate()
         elif change == "target":
             from dataclasses import replace
@@ -290,16 +288,16 @@ async def test_model_work_reuses_gateway_schema_and_final_protected_boundary(tmp
             context["working_project"]["selected_path"]
             == str((tmp_path / "exact.cst").resolve()).lower()
         )
-        assert context["working_project"]["permission"]["consequences"] == ["save"]
-        assert context["working_project"]["permission"]["remaining_operations"] == [
-            {"name": "cst_save_project", "arguments": {}}
-        ]
+        assert "permission" not in context["working_project"]
+        assert (
+            "does not independently prove consent" in context["working_project"]["interpretation"]
+        )
         assert context["working_project"]["binding"]["provenance"] == "held-project.filename"
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("name", ["cst_export_cad", "cst_export_structure_views"])
-async def test_unreviewed_export_overwrite_route_is_never_admitted(tmp_path, name):
+async def test_unknown_export_output_arguments_are_not_admitted(tmp_path, name):
     from cst_agentic.mcp_client import McpCallError
 
     async with selected(
@@ -368,7 +366,7 @@ async def test_missing_protocol_probe_blocks_before_launch(tmp_path):
 
 
 @pytest.mark.asyncio
-async def test_explicit_task_creates_exact_target_and_admits_only_agreed_work(tmp_path):
+async def test_legacy_setup_creates_exact_target_and_admits_technically_valid_save(tmp_path):
     from cst_agentic.working_project import TaskPermission, WorkingProject
 
     path = tmp_path / "exact.cst"

@@ -564,7 +564,14 @@ async def test_canonical_local_refs_defaults_and_unions_are_validated_without_ar
     async with discovering(tmp_path, model, catalogue=tools) as (coordinator, store, peer):
         reply = await coordinator.submit("Inspect parameters")
         if arguments == {"value": True}:
-            assert reply.state == "paused" and peer.seen == []
+            # Recoverable canonical rejection is returned to Qwen for explanation.
+            assert reply.state == "reply" and peer.seen == []
+            rejected = [
+                json.loads(i["output"])
+                for i in coordinator.history
+                if i.get("type") == "function_call_output" and i["call_id"] == "canonical"
+            ]
+            assert rejected[0]["state"] == "rejected"
         else:
             assert reply.state == "reply" and peer.seen == ["cst_get_parameter"]
             assert coordinator.evidence[0].result.arguments == arguments

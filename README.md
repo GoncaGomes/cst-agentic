@@ -28,9 +28,10 @@ provides central incident storage, a per-user session lease and guarded dispatch
 for future Controller integration. It does not enable a conversational/live CST
 modeling command or change this connectivity check. A separate
 [manual Controller session](docs/controller-session.md) adds explicit startup and
-confirmed exit without implicitly launching or attaching to CST. The explicit
-[working-project/task adapter](docs/controller-project.md) supplies guarded setup
-with paired typed server support. Model work remains blocked pending endpoint admission. Its shared
+confirmed exit without implicitly launching or attaching to CST. The model-led
+[working-project flow](docs/controller-project.md) supports separate launch/selection
+and healthy follow-up tasks through technical guards and typed server support.
+Production model work remains blocked pending #23 endpoint admission. Its shared
 [conversation coordinator](docs/controller-conversation.md) is tested offline
 with scripted models and controlled peers, including approved progressive tool
 discovery; offline tests do not establish native CST correctness.

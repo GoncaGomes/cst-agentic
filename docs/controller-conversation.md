@@ -7,9 +7,10 @@ progress/outcome/incident and context-accounting/pause events. The terminal pres
 only input/output and abnormal-input cleanup. Help, historical status, continue,
 stop-simulation intent and exit confirmation are coordinator behavior. There is
 no separate mid-task cancel command. Ctrl+C remains abnormal interruption.
-The shared `establish_task`/`task: <JSON>` entry supplies explicit local human
-[working-project permission](controller-project.md); it is not model-callable.
-New objectives and manual-intervention pauses invalidate prior execution evidence.
+The shared [working-project flow](controller-project.md) uses model-selected calls,
+without intent declarations or exact-call manifests. `establish_task`/`task: <JSON>`
+remain optional legacy local setup interfaces, not model-callable functions.
+New objectives retain a healthy live binding; manual intervention invalidates it.
 
 ## Model requests and execution
 
@@ -67,7 +68,7 @@ definitions rather than prompt prose. The reviewed implementation request amends
 `cst_delete_material` to `materials_basic` (seven members). These are the only
 inventory additions. Parameter/material deletion remains hidden until selection
 and subject to the same independent visibility, inventory, canonical argument,
-authorization, target and uncertainty checks. Discovery grants no permission.
+technical target and uncertainty checks. Qwen owns consequence agreement.
 Component/solid deletion remains outside this inventory.
 
 Canonical schemas are passed unchanged with strict conversion disabled. Local
@@ -92,8 +93,8 @@ rejected as a whole, with matched outcomes retained; none execute or change
 selection under stale task state. Missing/conflicting/reused call IDs still pause
 without a transition. A model-led transition is allowed only before work on a user
 turn and at most once in that turn, preventing autonomous resets of loop guards.
-Tool-only replies continue the current objective. The model must announce a new
-objective before requesting work for it.
+Tool-only replies can directly perform new requested work. Objective labels are
+optional conversation/discovery bookkeeping, never a mandatory permission stage.
 
 `UserMessage(..., new_objective=False)` and `same task: <clarification>` remain
 optional explicit continuation shortcuts; `new_objective=True` and
@@ -139,10 +140,12 @@ response projections produce matched bounded failure data while keeping full
 received evidence in memory and pausing dependent work. Repetition comparison
 normalizes JSON object key order.
 
-Scoped admission remains the session's responsibility. An unresolved incident in
-A does not impose a second global gate over an independently admitted isolated B
-route. Controlled tests retain A's incident while admitting synthetic B evidence;
-production still has no isolation adapter and remains blocked.
+Every unresolved central incident blocks A/B work and replacement transport until
+local human reconciliation; isolated-B admission is superseded. The old uncertain
+client stays permanently blocked. A healthy not-dispatched technical rejection is
+returned to Qwen with its reason and paired history. At most one automatic correction
+per autonomous work period is permitted across calls, regardless of changed arguments
+or names. Unknown/partial effects still pause; an error message proves no rollback.
 
 Each complete model request is bounded by at most 120 seconds (a smaller injected
 allowance is supported). The production provider retains `max_retries=0`.
@@ -173,8 +176,8 @@ CST or requests the institutional endpoint.
 
 Actual endpoint context validation, decision memory, native status/stop
 interpretation, operation-specific simulation
-policy, and the positive isolated-project recovery route remain their owning
-tickets' work. #17 still owns integrated recovery acceptance. Production installs
+policy and richer operation-effect classification remain their owning tickets'
+work. #17 still owns integrated recovery acceptance. Production installs
 the approved discovery selection, but model requests/dispatch remain gated as above.
 The disabled/status-only connectivity
 command and its SDK Runner path remain unchanged.
