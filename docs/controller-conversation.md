@@ -8,8 +8,7 @@ only input/output and abnormal-input cleanup. Help, historical status, continue,
 stop-simulation intent and exit confirmation are coordinator behavior. There is
 no separate mid-task cancel command. Ctrl+C remains abnormal interruption.
 The shared [working-project flow](controller-project.md) uses model-selected calls,
-without intent declarations or exact-call manifests. `establish_task`/`task: <JSON>`
-remain optional legacy local setup interfaces, not model-callable functions.
+without intent declarations or exact-call manifests.
 New objectives retain a healthy live binding; manual intervention invalidates it.
 
 ## Model requests and execution

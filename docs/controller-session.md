@@ -70,7 +70,6 @@ never automatically forwarded, and discarded on cleanup.
 `help`, historical `status`, `continue`, stop-simulation intent and exit confirmation
 are handled by the shared coordinator. Ordinary messages reach Qwen unchanged;
 it chooses discovery, explicit launch, exact selection and subsequent task calls.
-The legacy `task: <JSON>` setup interface remains optional, not a semantic gate.
 Model requests retain independent context/endpoint gates. Existing-instance
 attachment remains excluded. See the working-project document for interpretation,
 supported settlement and manual-intervention limits.

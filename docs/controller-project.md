@@ -34,10 +34,8 @@ consequences not already agreed. A complete request needs no per-tool approval.
 Controlled operation adapters can test task integration without claiming delivery
 of geometry, units, parameter editing, setup or simulation from their owning issues.
 
-`establish_task(TaskPermission)` and terminal `task: <JSON>` remain legacy local
-setup interfaces, not prerequisites of ordinary conversation. Their old operation
-and consequence fields are not application-enforced semantic grants or single-use
-tokens. Prefer normal conversation; no model-visible intent function was added.
+Normal conversation is the Controller interaction path; no separate setup
+declaration or model-visible intent function is required.
 
 ## Technical safeguards and server contract
 
