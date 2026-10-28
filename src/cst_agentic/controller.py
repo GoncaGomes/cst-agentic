@@ -1,7 +1,7 @@
 """Recovery-aware Controller seam, separate from the connectivity command.
 
 This is the safety/lifecycle slice, not a conversational model loop. Trusted
-application adapters supply reviewed inventory, live target/authorization checks
+application adapters supply reviewed inventory, technical live-target checks
 and outcome interpretation. Missing live support refuses work;
 model text, project notes and recovery JSON cannot implement these checks.
 """
@@ -156,7 +156,7 @@ class ControllerSession:
         *,
         inventory: frozenset[str],
         dispatch_check: Callable[
-            [ProjectLocation, str, Mapping[str, Any]], DispatchEvidence | None
+            [ProjectLocation | None, str, Mapping[str, Any]], DispatchEvidence | None
         ],
         isolation_check: Callable[[ProjectLocation, tuple[Incident, ...]], bool] | None = None,
         readback_inventory: frozenset[str] = frozenset(),
@@ -213,7 +213,7 @@ class ControllerSession:
             )
         return False
 
-    def _check_route(self, project: ProjectLocation, *, readback: bool = False) -> None:
+    def _check_route(self, project: ProjectLocation | None, *, readback: bool = False) -> None:
         incidents = tuple(
             record
             for record in self.store.incidents(unresolved_only=True)
@@ -230,7 +230,7 @@ class ControllerSession:
         """Called only for a fresh explicit human request; never restored prose.
 
         Directory inspection is not a live CST readback. Dispatch still requires
-        an independent target/authorization check at actual SDK admission.
+        an independent technical target check at actual SDK admission.
         """
         if (
             not self._entered
@@ -369,8 +369,8 @@ class ControllerSession:
         ``settled`` is trusted application interpretation, never a model claim.
         Without it even a received response remains unresolved. Errors/partial
         effects are not transport uncertainty; they pause this task. Save routes
-        must supply their destination and retain ordinary overwrite authorization
-        in dispatch_check. No raw arguments enter the recovery ledger.
+        retain technical destination checks; Qwen owns user agreement. No raw
+        arguments enter the recovery ledger.
         """
         return await self._dispatch(
             name,
@@ -417,11 +417,29 @@ class ControllerSession:
         readback: bool,
         admission_check: Callable[[], bool] | None,
     ) -> McpToolCall:
+        if self.working_project is not None and self.working_project.stage == "unselected":
+            if name != "cst_connection_status" or arguments:
+                raise RecoveryError("Check connection status before explicit new-instance launch.")
+            if not self._entered or self._closing or self._paused:
+                raise RecoveryError("A healthy active Controller session is required.")
+            self._check_route(None)
+            self.working_project.launch()
+            self._task_id = str(uuid.uuid4())
+            self._task_complete = False
+            await self._open_client()
+        if (
+            self.working_project is not None
+            and name in {"cst_create_project", "cst_open_project"}
+            and self.working_project.stage == "connection"
+        ):
+            if self._dispatch_lock.locked() or self._paused or self._closing:
+                raise RecoveryError("Project selection requires a settled healthy session.")
+            self._check_route(None)
+            self._project = self.working_project.select(name, dict(arguments or {}))
         if (
             not self._entered
             or self._closing
             or self._client is None
-            or self._project is None
             or self._task_id is None
             or self._task_complete
         ):
@@ -486,15 +504,16 @@ class ControllerSession:
                     project, name, frozen_arguments, metadata
                 ):
                     return False
-                current = ProjectLocation.inspect(Path(project.path))
-                if current.directory_id != project.directory_id or (
-                    project.file_id is not None and current.file_id != project.file_id
-                ):
-                    return False
+                current = ProjectLocation.inspect(Path(project.path)) if project else None
+                if project is not None and current is not None:
+                    if current.directory_id != project.directory_id or (
+                        project.file_id is not None and current.file_id != project.file_id
+                    ):
+                        return False
                 self._check_route(current, readback=readback)
                 if save_destination is not None:
                     destination = ProjectLocation.inspect(save_destination)
-                    if destination.path != current.path:
+                    if current is None or destination.path != current.path:
                         # Cross-project Save As needs its own reviewed route; never
                         # silently turn a save into a second project or overwrite.
                         return False
@@ -536,8 +555,11 @@ class ControllerSession:
                     controller_metadata=metadata,
                 )
             except BaseException as primary:
+                attempt = (
+                    client.attempts[attempt_index] if len(client.attempts) > attempt_index else None
+                )
                 if incident_id is not None:
-                    attempt = client.attempts[attempt_index]
+                    assert attempt is not None
                     self._paused = readback or attempt.dispatched
                     try:
                         self.store.finish(
@@ -547,6 +569,13 @@ class ControllerSession:
                         raise BaseExceptionGroup(
                             "Dispatch and recovery persistence failed", [primary, persistence]
                         ) from None
+                if (
+                    attempt is not None
+                    and attempt.state == "not_dispatched"
+                    and self.working_project is not None
+                    and self.working_project.selection_not_dispatched(metadata)
+                ):
+                    self._project = None
                 raise
             if incident_id is None:
                 raise RecoveryError("Client did not enforce durable dispatch admission.")

@@ -1,102 +1,116 @@
-# Selected working project and task authorization (#24)
+# Model-led working projects (#24)
 
-## Scope and explicit entry
+## Interpretation and interaction
 
-Start with CST closed. Use one Controller session, one Controller-launched CST
-instance and one selected project; no concurrent manual edits are supported.
-Starting the application/MCP transport still does not launch or attach to CST.
-Existing-instance attachment, connect-to-any, active/first-project adoption,
-silent filename suffixes and cross-project Save As are not supported.
+[The approved model-led decision](https://github.com/GoncaGomes/cst-agentic/issues/11#issuecomment-6472025069)
+assigns interpretation of ordinary requests and agreed consequences to Qwen.
+The application passes original messages unchanged, coordinates discovery/calls
+and retains conversation context. It does not parse consent, classify intent or
+require a separate permission response or exact-call manifest. Instruction-following
+must be evaluated as model behavior, separately from technical safeguards.
 
-The shared coordinator exposes `establish_task(TaskPermission)` to trusted local
-adapters, and the terminal accepts the equivalent **explicit human** instruction
-`task: <JSON>`. This is not a model tool or a parser of model-generated permission.
-For example (illustrative only; not permission to execute):
+Start with CST closed. Use one Controller session, one Controller-launched instance
+and one selected project, without concurrent manual edits. Starting the application
+and manual MCP transport does not launch or attach to CST. These ordinary messages
+may arrive separately, with clarification between them, or as a combined request:
 
 ```text
-task: {"path":"C:/projects/example/example.cst","action":"create","launch_new":true,"outcome":"Create an empty project, then save it once","changes":"Empty MWS project only","consequences":["save"],"operations":[{"name":"cst_save_project","arguments":{}}]}
+Open CST.
+Create project C:\Projects\Example\Example.cst.
+Inspect this project.
+Save the project.
 ```
 
-The dedicated parent directory must already exist. `action` is `create` or `open`.
-Open requires an existing regular file; create refuses an existing destination.
-No automatic directory/file reorganization, replacement or fallback occurs.
-The complete instruction authorizes initial launch/create/open without duplicate
-approval. Each exact listed operation is a single-use grant, including its exact
-arguments; it is not permission to repeat work. Distinct consequences are `save`,
-`overwrite`, `discard`, `delete_results` and `run_simulation`. A consequence alone
-does not authorize an operation. Creating a file is not permission for later saves.
-Cross-project overwrite/Save As remains unsupported even with a consequence grant.
-CAD export and structure-view export execution are also refused pending a reviewed
-output/overwrite destination route, even with `overwrite` permission. Their
-discovery membership is unchanged; visibility is not execution support.
+Qwen discovers tools, probes protocol support using `cst_connection_status`, and
+requests `cst_connect(mode="new")`. Launch requires no project path. The resulting
+connection-only state admits connection checks but no project-dependent work.
+Qwen then chooses create/open with the exact absolute path. “Connect to project”
+means opening that file in this owned instance, never attaching to another instance.
+Healthy follow-up tasks retain the verified binding and recheck it before dispatch.
+Conversational objective labels do not invalidate it or require semantic renewal.
 
-This first adapter requires structured exact scope rather than inferring choices
-or permission from prose. Normal conversation does not create execution permission.
-A new conversational objective invalidates the previous task's execution evidence.
-A fresh launch task currently requires a fresh Controller session; same-instance
-follow-on task rebinding is not implemented. The generic conversational loop remains
-independently blocked by missing #23 endpoint admission, even when local
-working-project prerequisites succeed.
+Qwen must ask about additional saving, overwriting, discarding, deletion and solver
+consequences not already agreed. A complete request needs no per-tool approval.
+Controlled operation adapters can test task integration without claiming delivery
+of geometry, units, parameter editing, setup or simulation from their owning issues.
 
-## Dispatch and live evidence
+`establish_task(TaskPermission)` and terminal `task: <JSON>` remain legacy local
+setup interfaces, not prerequisites of ordinary conversation. Their old operation
+and consequence fields are not application-enforced semantic grants or single-use
+tokens. Prefer normal conversation; no model-visible intent function was added.
 
-The runtime installs `WorkingProject` into `ControllerSession`. Setup uses that
-same recovery-aware session and protected client; model operations additionally
-pass through `ConversationGateway` visibility and canonical-schema checks.
-The real client's final synchronous guard rechecks exact task permission,
-task/generation, canonical arguments/destination, filesystem identity, central
-incidents and session state **after queueing**. Initial launch receives the existing
-480-second queue-inclusive allowance; ordinary work is capped at 120 seconds.
+## Technical safeguards and server contract
 
-The paired server change is in `C:/dev/cst-studio-mcp`, branch
-`feat/24-live-target-enforcement`, based on `a4a177a`. It uses public MCP request
-`_meta.cst_controller` version 1, outside model tool arguments. No function, group,
-schema or count changes: eighteen groups, seventy-two eligible MCP tools, three
-startup functions including application discovery, sixteen active functions.
-An existing read-only status call probes protocol support **before launch**.
-Missing support refuses dependent work. This implementation supports MCP SDK v2;
-an old server/v1 path without metadata support fails the probe, not open.
+`WorkingProject` records stage, connection, exact selected destination, immutable
+live binding, readback order/provenance, validity and generation. Model assertions,
+requested-path echoes, notes and historical responses cannot establish native facts.
+The model context explicitly reports uninspected geometry/units/setup/results.
 
-The server checks actual held API objects on its existing CST worker immediately
-before the handler, and reads `held_project.filename()` after selection/operations.
-Connection/project tokens, acquisition sequence and provenance are checked and
-retained in an immutable application binding. Cached paths, offline scripts and
-response echoes cannot establish that binding. A supported CST instance-list
-check refuses detected pre-existing/additional instances and unavailable checks;
-it does not inventory helpers/services or prove multi-instance isolation.
-No unrelated instance is closed automatically. No generic execution tool is added.
-Model request context includes this binding's provenance/validity and the exact
-remaining operation grants, outcome, agreed changes and consequence permissions.
-Context accounting includes that full application-owned state; it is not summarized
-into a model-created permission claim.
+`ControllerSession` and the real protected client's final synchronous guard recheck
+target/connection/generation, canonical arguments, filesystem identity, lifecycle,
+inventory, budgets and central incidents **after queueing**, before durable dispatch
+preparation. The server rechecks its held API objects immediately before handlers
+and reads `held_project.filename()` afterward. Missing or mismatched readback blocks
+dependent work. Detected conflicting instances are refused, never silently closed.
+This is not exhaustive process accounting or continuous external-change detection.
 
-Create/open and every supported save validate the actual canonical destination in
-both application and server. Save without a path uses the checked live destination,
-not the legacy cached path. Filesystem device/inode identities, resolved directory
-aliases and casing checks are used; hard-linked project destinations and ambiguous
-Windows names are refused. Unknown identity refuses rather than guessing.
-These checks are not filesystem locking or continuous external-change detection.
+The companion source inspected is `GoncaGomes/cst-mcp` main at `94906b8` (PR #5).
+Its opt-in MCP `_meta.cst_controller` version-1 protocol already supports launch
+without a path and expected-target enforcement. No companion changes are needed
+for these routes. Source inspection is not deployed/native acceptance evidence.
+The inventory remains eighteen groups, seventy-two eligible MCP tools and sixteen
+active functions, with three startup functions including application discovery.
+No tool schema or group was added or rewritten.
 
-Existing-project setup reports overview gaps: geometry, units, parameters, solver
-setup and results are uninspected. A valid binding proves a target, not these facts.
-`manual intervention` invalidates evidence and pauses automation; a fresh session,
-task and relevant inspections are required. No automatic evidence restoration.
-Runtime settlement is narrowly supplied for save responses and project-info; other
-operations without a reviewed outcome interpreter pause with a retained incident.
-Native destination/effect validation remains #37, not a response-success claim.
+Create/open and supported saves require one distinct `.cst` per existing dedicated
+directory. Actual canonical arguments and supported Windows identities/aliases are
+checked. Existing create destinations, hard-link conflicts, unknown identities and
+cross-project Save As are refused. No suffix, directory creation, move or overwrite
+fallback occurs. Save without a path uses the checked live destination in the server.
+Canonical creation arguments, including optional `project_type`, are preserved.
+After affirmative not-dispatched selection failure, only that pending selection is
+released so the model/user can choose another exact destination. Received/uncertain
+selection failures never restore connection-only admission or clear incidents.
 
-## Recovery and evidence limits
+CAD and structure-view exports now admit explicit safe **new** output destinations.
+Both application and server check actual output paths, parents, aliases, format
+extensions and existing-file conflicts. Existing-output replacement is not exposed
+by the canonical schemas: choose an unused destination; replacement remains an
+explicit unsupported route, not inferred consent. Runtime settlement checks matching
+response paths and nonempty artifacts, not CAD/image correctness or native fidelity.
 
-Every unresolved central incident blocks new A/B work and replacement transport
-until explicit local human reconciliation under #17/#25. The old uncertain client
-remains permanently blocked. The old `isolation_check` constructor argument is
-compatibility-only and cannot bypass admission. Dedicated directories organize
-destinations; they do not establish isolation. The earlier
-[isolation investigation](controller-isolation-evidence.md) is historical.
+## Rejections, recovery and remaining evidence
 
-Tests use the terminal-shared coordinator, real gateway/protected-client guard,
-isolated filesystem/state and controlled peers. Server tests use actual
-registry/project/connection wrappers with controlled API objects. These are
-**offline behavioral tests**, not endpoint acceptance, configured-model behavior,
-native CST success or native recovery evidence. No consumed native campaign is
-replayed; no CST instance or provider request is needed for these tests.
+Recoverable technical rejections return to Qwen in paired call/result history.
+One automatic correction is allowed per autonomous user work period, conservatively
+shared across calls: changing names/arguments or successful intermediate work cannot
+reset it. Only affirmative not-dispatched evidence qualifies here. Received errors
+without a reviewed no-effect interpreter remain unresolved; error text never proves
+rollback. Rich no-effect/partial-effect interpretation and correction ownership
+remain coordinated with #25. Missing operation interpreters pause dependent work.
+
+Manual intervention invalidates evidence and requires a pause and renewed relevant
+inspection in a fresh session. Uncertainty permanently blocks every old-client call.
+All unresolved central incidents block new A/B work and replacement transport until
+explicit local human reconciliation (#17/#25), then a fresh session/task with normal
+prerequisites. Dedicated directories do not prove isolation. The
+[old isolation investigation](controller-isolation-evidence.md) is historical.
+
+## Acceptance trace and evidence limits
+
+| #24 criteria | Offline evidence |
+| --- | --- |
+| Unchanged input; no intent/manifest stage; discovery | `tests/test_model_led_project.py` |
+| Launch without path; separate/combined selection; clarification; healthy tasks/save | Same coordinator tests, using real session/gateway/client and typed external peers |
+| Exact targets/readback, destination conflicts and instance conflicts | Same tests plus `tests/test_working_project.py` |
+| Queued technical invalidation; lifecycle, serialization and uncertainty | Working-project, conversation, protected-client and actual-wrapper tests |
+| CAD/view safe outputs and honest settlement | Model-led coordinator tests with artifact-producing controlled peers |
+| Recovery integration without isolated-B bypass | Existing conversation/recovery/runtime regressions; remaining #17 acceptance stays open |
+
+Offline scripted models prove application integration, **not** real Qwen understanding.
+The create/open/save schema fixtures are copied from the pinned companion source;
+their optional fields/defaults are not narrowed to simplified path-only schemas.
+Production `request_admission=None` still blocks model requests pending #23; no
+unconditional adapter was installed. Endpoint probes, configured-Qwen behavioral
+trials and native destination/effect acceptance (#37) were not run. Full #17/#25
+recovery delivery and downstream modeling capabilities are not claimed here.

@@ -19,8 +19,9 @@ from .controller import ControllerMcpClient, ControllerSession
 from .controller_config import ControllerConfig
 from .conversation import EXIT_WARNING, ConversationCoordinator
 from .discovery import APPROVED_MCP_TOOLS, ToolDiscovery
+from .output_storage import interpret_export_response
 from .recovery import RecoveryError, RecoveryStore
-from .working_project import WorkingProject
+from .working_project import WorkingProject, interpret_setup_response
 
 
 def admit_manual_catalogue(tools: list[Tool]) -> None:
@@ -96,7 +97,8 @@ async def run_controller_terminal(
             raise RecoveryError("Controller conversation coordinator is unavailable.")
         write_line(
             "Controller ready in manual mode; CST was not launched or attached. "
-            "Enter a request or help. Live work requires reviewed prerequisites (#24)."
+            "Enter a request or help. Model requests remain blocked pending "
+            "validated endpoint admission (#23)."
         )
         prompt = "Controller> "
         while True:
@@ -177,7 +179,20 @@ async def create_controller_session(
                     catalogue_loader=session.refresh_catalogue,
                     allowlist=APPROVED_MCP_TOOLS,
                     context_budget=config.context_budget,
+                    # #23 owns validated endpoint admission; never bypass it.
+                    request_admission=None,
                     interpreters={
+                        **dict.fromkeys(
+                            (
+                                "cst_connection_status",
+                                "cst_connect",
+                                "cst_create_project",
+                                "cst_open_project",
+                            ),
+                            interpret_setup_response,
+                        ),
+                        "cst_export_cad": interpret_export_response,
+                        "cst_export_structure_views": interpret_export_response,
                         "cst_save_project": lambda result: (
                             isinstance(result.structured_content, dict)
                             and result.structured_content.get("status") == "saved"

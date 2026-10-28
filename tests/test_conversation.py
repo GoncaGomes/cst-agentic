@@ -258,25 +258,32 @@ async def test_task_and_requested_target_change_never_promotes_historical_eviden
 
 
 @pytest.mark.asyncio
-async def test_new_objective_can_omit_oversized_old_discussion_but_not_inherit_authority(tmp_path):
-    model = ScriptedModel([[assistant_message("New objective needs new target checks.")]])
+async def test_new_objective_cannot_discard_oversized_session_discussion_to_fit(tmp_path):
+    model = ScriptedModel([[assistant_message("This request must not be admitted.")]])
     async with conversation(tmp_path, model, context_budget=validated_budget(8_000, 1000)) as (
         coordinator,
         store,
         peer,
     ):
-        assert (await coordinator.submit("Inspect A: " + "old detail " * 2000)).state == "paused"
+        original = "Never save during this session. Inspect A: " + "agreed detail " * 2000
+        assert (await coordinator.submit(original)).state == "paused"
         reply = await coordinator.submit("new task: Inspect B; never save")
-        assert reply.state == "reply"
-        assert any(e.kind == "context_compacted" for e in reply.events)
-        context = json.loads(model.calls[0].input[0]["content"])
-        assert context["permission"]["requested_scope"] == "Inspect B; never save"
-        assert all("old detail" not in str(item) for item in model.calls[0].input)
+        assert reply.state == "paused"
+        assert any(e.kind == "context_pause" for e in reply.events)
+        assert not any(e.kind == "context_compacted" for e in reply.events)
+        assert any(item.get("content") == original for item in coordinator.history)
+        assert coordinator.history[-1]["content"] == "new task: Inspect B; never save"
+        assert not model.calls
         assert peer.seen == []
 
 
 @pytest.mark.asyncio
-async def test_compaction_retains_unanswered_questions_inside_tool_responses(tmp_path):
+@pytest.mark.parametrize("transition", ["explicit", "model"])
+async def test_compaction_retains_prior_objective_discussion_inside_tool_responses(
+    tmp_path, transition
+):
+    from cst_agentic.conversation import UserMessage
+
     class DetailedPeer(Peer):
         async def call_tool(self, name, arguments):
             result = await super().call_tool(name, arguments)
@@ -286,6 +293,8 @@ async def test_compaction_retains_unanswered_questions_inside_tool_responses(tmp
     tool = STATUS.model_copy(update={"name": "cst_get_simulation_status"})
     steps = []
     for index in range(6):
+        if index > 0 and transition == "model":
+            steps.append([assistant_message("Next inspection.", new_objective=f"Inspect {index}")])
         output = [function_call(tool.name, {}, call_id=f"question-{index}")]
         if index == 0:
             output.append(assistant_message("Which exact library material should be used?"))
@@ -299,8 +308,13 @@ async def test_compaction_retains_unanswered_questions_inside_tool_responses(tmp
         context_budget=validated_budget(17_000, 1000),
     ) as (coordinator, store, peer):
         events = []
-        for _ in range(6):
-            reply = await coordinator.submit("Continue inspection, no material choice yet.")
+        for index in range(6):
+            message = f"Inspection {index}, no material choice yet."
+            reply = await coordinator.submit(
+                UserMessage(message, new_objective=index > 0)
+                if transition == "explicit"
+                else message
+            )
             events.extend(reply.events)
             if reply.state == "paused":
                 break
@@ -309,6 +323,11 @@ async def test_compaction_retains_unanswered_questions_inside_tool_responses(tmp
             any("Which exact library material" in str(item) for item in call.input)
             for call in model.calls[1:]
         )
+        assert any("Which exact library material" in str(item) for item in coordinator.history)
+        for request in model.calls:
+            assert [i["call_id"] for i in request.input if i.get("type") == "function_call"] == [
+                i["call_id"] for i in request.input if i.get("type") == "function_call_output"
+            ]
 
 
 @pytest.mark.asyncio

@@ -16,6 +16,7 @@ from .canonical_schema import canonical_validator, json_object
 from .controller import ControllerSession
 from .discovery import APPROVED_MCP_TOOLS, ToolDiscovery
 from .mcp_client import McpToolCall
+from .project_storage import ProjectStorageError
 from .recovery import RecoveryError
 
 MAX_OUTCOME_BYTES = 16_384
@@ -280,6 +281,9 @@ class ConversationGateway:
                 result = await self._connection.dispatch(
                     call.name,
                     values,
+                    timeout_s=480
+                    if call.name == "cst_connect" and values == {"mode": "new"}
+                    else 120,
                     settled=settled,
                     admission_check=dispatch_admission,
                 )
@@ -291,6 +295,12 @@ class ConversationGateway:
                         call.call_id,
                         "received",
                         "Unresolved effects; dependent work paused."
+                        + (
+                            " " + self._connection.working_project.refusal
+                            if self._connection.working_project is not None
+                            and self._connection.working_project.refusal
+                            else ""
+                        )
                         if failed
                         else "Application interpreter settled the response; "
                         "no further effects inferred.",
@@ -303,11 +313,18 @@ class ConversationGateway:
                 attempts = self._connection.attempts
                 attempt = attempts[before] if len(attempts) > before else None
                 state = attempt.state if attempt is not None else "not_dispatched"
+                reason = "Dispatch or durable settlement failed; reconciliation may be required."
+                working = self._connection.working_project
+                if state == "not_dispatched":
+                    if isinstance(error, (RecoveryError, ProjectStorageError)):
+                        reason = str(error)
+                    elif working is not None and working.refusal:
+                        reason = working.refusal
                 outcomes.append(
                     CallOutcome(
                         call.call_id,
                         state,
-                        "Dispatch or durable settlement failed; reconciliation may be required.",
+                        reason,
                         deepcopy(attempt.result) if attempt is not None else None,
                     )
                 )
