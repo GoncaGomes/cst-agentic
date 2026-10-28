@@ -6,6 +6,7 @@ import asyncio
 import json
 import os
 import sys
+import tempfile
 from pathlib import Path
 
 from mcp import ClientSession
@@ -19,35 +20,45 @@ def install_crash(window: str) -> None:
     original_fsync = os.fsync
     original_replace = os.replace
     original_call = ClientSession.call_tool
-    fsync_count = 0
+    original_temporary = tempfile.NamedTemporaryFile
+    lease_fd = None
+    temporary_paths = {}
 
     def crash(point: str) -> None:
         if point == window:
             os._exit(23)  # No exception unwinding, context exits, or finalizers.
 
     def open_file(path, mode="r", *args, **kwargs):
+        nonlocal lease_fd
         stream = original_open(path, mode, *args, **kwargs)
         if path.name == "session.lock" and mode == "x+b":
+            lease_fd = stream.fileno()
             crash("lease-created")
         return stream
 
-    def fsync(fd):
-        nonlocal fsync_count
-        fsync_count += 1
-        phase = {1: "header", 2: "initial", 3: "prepare", 4: "receipt", 5: "settle"}[fsync_count]
-        crash(f"{phase}-before-fsync")
-        original_fsync(fd)
-        crash(f"{phase}-after-fsync")
+    def temporary_file(*args, **kwargs):
+        stream = original_temporary(*args, **kwargs)
+        temporary_paths[stream.fileno()] = Path(stream.name)
+        return stream
 
-    def replace(source, destination):
+    def ledger_phase(source):
         data = json.loads(Path(source).read_text(encoding="utf-8"))
-        phase = (
+        return (
             {"in_flight": "prepare", "received_unresolved": "receipt", "settled": "settle"}[
                 data["incidents"][-1]["state"]
             ]
             if data["incidents"]
             else "initial"
         )
+
+    def fsync(fd):
+        phase = "header" if fd == lease_fd else ledger_phase(temporary_paths[fd])
+        crash(f"{phase}-before-fsync")
+        original_fsync(fd)
+        crash(f"{phase}-after-fsync")
+
+    def replace(source, destination):
+        phase = ledger_phase(source)
         crash(f"{phase}-before-replace")
         original_replace(source, destination)
         crash(f"{phase}-after-replace")
@@ -61,6 +72,7 @@ def install_crash(window: str) -> None:
     Path.open = open_file
     os.fsync = fsync
     os.replace = replace
+    tempfile.NamedTemporaryFile = temporary_file
     ClientSession.call_tool = call
 
 

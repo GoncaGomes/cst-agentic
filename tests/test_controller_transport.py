@@ -209,9 +209,9 @@ def test_abrupt_death_windows_through_actual_wrapper(
     if window == "response-received":
         other = tmp_path / "b"
         other.mkdir()
-        args[3] = str(other / "b.cst")
+        b_args = [window, expected, str(state), str(other / "b.cst"), str(launcher), str(seen)]
         restart_b = subprocess.run(
-            ["uv", "run", "--no-sync", "python", str(driver), "restart", *args],
+            ["uv", "run", "--no-sync", "python", str(driver), "restart", *b_args],
             capture_output=True,
             timeout=40,
         )
