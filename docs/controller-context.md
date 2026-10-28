@@ -96,9 +96,9 @@ earlier discussion; a fresh session requires the user to restate applicable
 instructions and does not bypass recovery or technical prerequisites.
 
 For model-recognized transitions, the exact triggering user message (including
-restrictions) and the complete transition response/pairs belong to the new
-objective. A shorter model objective label cannot replace them or make them
-eligible for compaction. Oversized essential transition discussion pauses.
+restrictions) and the complete transition response/pairs stay in history. A
+shorter model objective label cannot replace them or make discussion eligible
+for compaction. Oversized essential transition discussion pauses.
 
 This retention policy adds no model-callable instruction buffer or disk-backed
 decision memory (#34). Startup remains two MCP functions plus application-owned

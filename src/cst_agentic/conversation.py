@@ -125,7 +125,6 @@ class ConversationReply:
 @dataclass
 class _SettledBatch:
     items: tuple[TResponseInputItem, ...]
-    objective_generation: int
     has_calls: bool
     has_discussion: bool
 
@@ -175,7 +174,6 @@ class ConversationCoordinator:
         self._interpreters = dict(interpreters or {})
         self._clock = clock
         self._history_batches: list[_SettledBatch] = []
-        self._objective_generation = 0
         self._omitted_batches = 0
         self._omitted_observations = 0
         self._evidence: list[Observation] = []
@@ -251,15 +249,13 @@ class ConversationCoordinator:
         finally:
             self._busy = False
 
-    def _append_settled(self, items: list[TResponseInputItem]) -> _SettledBatch:
+    def _append_settled(self, items: list[TResponseInputItem]) -> None:
         batch = _SettledBatch(
             tuple(deepcopy(items)),
-            self._objective_generation,
             any(item.get("type") == "function_call" for item in items),
             any(item.get("role") in {"user", "assistant"} for item in items),
         )
         self._history_batches.append(batch)
-        return batch
 
     def _compact_old_batch(self) -> bool:
         """Only settled batches are recorded. Keep recent pairs and all discussion.
@@ -371,22 +367,11 @@ class ConversationCoordinator:
         finally:
             self._busy = False
 
-    async def _start_objective(
-        self,
-        objective: str,
-        *,
-        retain: tuple[_SettledBatch, ...] = (),
-    ) -> None:
+    async def _start_objective(self, objective: str) -> None:
         """Change conversational intent only; retain all execution/recovery state."""
         self._objective = objective
         # Conversational task labels neither grant permission nor invalidate a
         # healthy connection-bound native readback.
-        self._objective_generation += 1
-        for batch in retain:
-            # The user's exact transition request (including restrictions) and
-            # the complete paired transition response belong to the new task.
-            # A model's shorter objective label cannot replace either one.
-            batch.objective_generation = self._objective_generation
         self._repetitions, self._repetition = 0, None
         self._repeat_pause = False
         if self._discovery is not None:
@@ -517,7 +502,7 @@ class ConversationCoordinator:
         requests = 0
         corrections = 0
         self._repeat_pause = False
-        user_batch = self._append_settled([{"role": "user", "content": message}])
+        self._append_settled([{"role": "user", "content": message}])
         while True:
             if self._discovery is not None and self._discovery.blocker is not None:
                 return self._reply(self._discovery.blocker, "paused")
@@ -646,11 +631,11 @@ class ConversationCoordinator:
                 )
             transitioning = decision is not None and decision.new_objective is not None
             if not calls:
-                response_batch = self._append_settled(response.to_input_items())
+                self._append_settled(response.to_input_items())
                 assert decision is not None
                 if transitioning:
                     assert objective is not None
-                    await self._start_objective(objective, retain=(user_batch, response_batch))
+                    await self._start_objective(objective)
                     allow_transition = False
                     if decision.text:
                         self._emit("progress", decision.text)
@@ -686,13 +671,13 @@ class ConversationCoordinator:
                         )
                     )
                 settled_items.append(ItemHelpers.tool_call_output_item(call, projection.model_data))
-            response_batch = self._append_settled(settled_items)
+            self._append_settled(settled_items)
             for call, outcome, projection in zip(calls, outcomes, projections, strict=True):
                 self._emit("outcome", f"{outcome.state}: {projection.reason}", call.call_id)
             allow_transition = False
             if transitioning:
                 assert objective is not None
-                await self._start_objective(objective, retain=(user_batch, response_batch))
+                await self._start_objective(objective)
                 continue
             try:
                 recovery_blocked = False
