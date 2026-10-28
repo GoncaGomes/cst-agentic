@@ -80,8 +80,8 @@ Trusted integration dependencies are deliberately **not model tools**:
   whose impact is not safely project-scoped, such as an uncertain instance launch,
   must use `project_scoped=False`; their incident cannot be bypassed by selecting
   a different project. A callback returning `None` refuses dispatch.
-- `isolation_check` is compatibility-only: no callback can bypass an unresolved
-  central incident. New A/B work and replacement transport require explicit local
+- No callback can bypass an unresolved central incident.
+  New A/B work and replacement transport require explicit local
   human reconciliation, followed by a fresh session/task. The former isolated-B
   exception is superseded; directory separation is not isolation evidence.
 - Save operations must supply the actual typed save destination and verify it

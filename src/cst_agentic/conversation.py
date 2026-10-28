@@ -28,7 +28,6 @@ from .conversation_gateway import CallOutcome, ConversationGateway, ProtocolPaus
 from .discovery import GROUP_GUIDANCE, ToolDiscovery
 from .mcp_client import McpToolCall
 from .recovery import RecoveryError, RecoveryStore
-from .working_project import TaskPermission
 
 INSTRUCTIONS = (
     "You are the CST Controller. Clarify missing choices and report evidence honestly. "
@@ -171,13 +170,12 @@ class ConversationCoordinator:
         self._catalogue_loader = catalogue_loader
         self._request_admission = request_admission
         self._context_budget = context_budget
-        self._interpreters = dict(interpreters or {})
         self._clock = clock
         self._history_batches: list[_SettledBatch] = []
         self._omitted_batches = 0
         self._omitted_observations = 0
         self._evidence: list[Observation] = []
-        self._gateway = ConversationGateway(connection, allowlist, self._interpreters, discovery)
+        self._gateway = ConversationGateway(connection, allowlist, interpreters or {}, discovery)
         self._on_event = on_event
         self._events: list[ConversationEvent] = []
         if not math.isfinite(model_timeout_s) or not 0 < model_timeout_s <= 120:
@@ -227,27 +225,6 @@ class ConversationCoordinator:
     @property
     def evidence(self) -> tuple[Observation, ...]:
         return tuple(deepcopy(self._evidence))
-
-    async def establish_task(self, permission: TaskPermission) -> ConversationReply:
-        """Explicit local human instruction, never a model-callable capability."""
-        if self._busy:
-            return self._reply("A turn is pending.", "paused")
-        self._busy = True
-        try:
-            await self._connection.establish_working_project(permission)
-            await self._start_objective(permission.outcome)
-            self._requested_scope = permission.changes
-            return self._reply(
-                "Selected actual live project verified. Existing-project overview gaps: "
-                "geometry, units, parameters, solver/setup and results remain uninspected. "
-                "Qwen interprets requests and agreed consequences; technical checks remain active."
-            )
-        except Exception:
-            return self._reply(
-                "Task prerequisites refused or unresolved; no dependent work admitted.", "paused"
-            )
-        finally:
-            self._busy = False
 
     def _append_settled(self, items: list[TResponseInputItem]) -> None:
         batch = _SettledBatch(
@@ -386,14 +363,6 @@ class ConversationCoordinator:
         on_event: Callable[[ConversationEvent], None] | None = None,
     ) -> ConversationReply:
         """Wait for a settled turn or input pause; no mid-task cancel command."""
-        if isinstance(message, str) and message.strip().startswith("task: "):
-            try:
-                permission = TaskPermission.from_json(json_object(message.strip()[6:]))
-            except Exception:
-                return self._reply(
-                    "Invalid explicit task instruction; see docs/controller-project.md.", "paused"
-                )
-            return await self.establish_task(permission)
         if self._busy:
             return ConversationReply(
                 "A turn is pending; submit ordinary input at its settled prompt.", "paused"
@@ -426,7 +395,7 @@ class ConversationCoordinator:
                 return self._reply(
                     "Commands: help, status (last observation only), continue, "
                     "new task: <objective>, same task: <clarification>, "
-                    "refresh tools, stop simulation, manual intervention, task: <JSON>, quit. "
+                    "refresh tools, stop simulation, manual intervention, quit. "
                     "Ordinary messages wait for a settled reply; no mid-task cancel command. "
                     "CST work requires reviewed discovery/context and "
                     "live-target prerequisites (#24)."

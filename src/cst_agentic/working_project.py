@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
@@ -12,104 +11,6 @@ from .mcp_client import McpToolCall
 from .output_storage import export_outputs
 from .project_storage import ProjectLocation, ProjectStorageError
 from .recovery import RecoveryError
-
-
-def _signature(name: str, arguments: Mapping[str, Any]) -> str:
-    return json.dumps([name, dict(arguments)], sort_keys=True, allow_nan=False)
-
-
-@dataclass(frozen=True)
-class TaskPermission:
-    """Legacy local setup input; operation/consequence fields are not execution grants."""
-
-    path: str
-    action: Literal["create", "open"]
-    launch_new: bool
-    outcome: str
-    changes: str
-    consequences: frozenset[str]
-    operations: frozenset[str]
-
-    def __post_init__(self) -> None:
-        if self.action not in {"create", "open"} or self.launch_new is not True:
-            raise RecoveryError("Explicit new-instance launch and create/open action required.")
-        if any(
-            not isinstance(value, str) or not value.strip()
-            for value in (self.path, self.outcome, self.changes)
-        ):
-            raise RecoveryError("Task destination, outcome and agreed changes are required.")
-        if not Path(self.path).is_absolute():
-            raise RecoveryError("Task destination must be absolute.")
-        if not isinstance(self.consequences, frozenset) or not self.consequences <= {
-            "save",
-            "overwrite",
-            "discard",
-            "delete_results",
-            "run_simulation",
-        }:
-            raise RecoveryError("Unknown task consequence permission.")
-        if not isinstance(self.operations, frozenset):
-            raise RecoveryError("Immutable exact operation grants are required.")
-        for signature in self.operations:
-            try:
-                name, arguments = json.loads(signature)
-                if (
-                    not isinstance(name, str)
-                    or not isinstance(arguments, dict)
-                    or _signature(name, arguments) != signature
-                ):
-                    raise ValueError
-            except (TypeError, ValueError):
-                raise RecoveryError("Invalid exact operation grant.") from None
-
-    @classmethod
-    def from_json(cls, value: Mapping[str, Any]) -> TaskPermission:
-        """Only explicit local human input may call this; never model output."""
-        if set(value) != {
-            "path",
-            "action",
-            "launch_new",
-            "outcome",
-            "changes",
-            "consequences",
-            "operations",
-        }:
-            raise RecoveryError("Task instruction requires exact documented fields.")
-        if value["action"] not in {"create", "open"} or value["launch_new"] is not True:
-            raise RecoveryError("Explicit new-instance launch and create/open action required.")
-        for field in ("path", "outcome", "changes"):
-            if not isinstance(value[field], str) or not value[field].strip():
-                raise RecoveryError("Task destination, outcome and agreed changes are required.")
-        if not Path(value["path"]).is_absolute():
-            raise RecoveryError("Task destination must be absolute.")
-        consequences = value["consequences"]
-        if not isinstance(consequences, list) or any(
-            item not in {"save", "overwrite", "discard", "delete_results", "run_simulation"}
-            for item in consequences
-        ):
-            raise RecoveryError("Unknown task consequence permission.")
-        operations = value["operations"]
-        if not isinstance(operations, list):
-            raise RecoveryError("Exact agreed operations are required.")
-        signatures = set()
-        for operation in operations:
-            if (
-                not isinstance(operation, dict)
-                or set(operation) != {"name", "arguments"}
-                or not isinstance(operation["name"], str)
-                or not isinstance(operation["arguments"], dict)
-            ):
-                raise RecoveryError("Each operation requires a name and exact arguments.")
-            signatures.add(_signature(operation["name"], operation["arguments"]))
-        return cls(
-            value["path"],
-            value["action"],
-            True,
-            value["outcome"],
-            value["changes"],
-            frozenset(consequences),
-            frozenset(signatures),
-        )
 
 
 @dataclass(frozen=True)
@@ -141,7 +42,6 @@ class WorkingProject:
     """Live evidence belongs to one connection; conversational tasks do not renew it."""
 
     def __init__(self) -> None:
-        self.permission: TaskPermission | None = None
         self.target_path: str | None = None
         self.selection_action: Literal["create", "open"] | None = None
         self.binding: LiveBinding | None = None
@@ -159,19 +59,6 @@ class WorkingProject:
         self.stage = "probe"
         self.valid = True
         self.generation += 1
-
-    def begin(self, permission: TaskPermission) -> None:
-        if permission.launch_new is not True:
-            raise RecoveryError("Explicit new-instance launch permission required.")
-        if self.connection is not None:
-            raise RecoveryError("New-instance task requires a fresh Controller session.")
-        location = _selection_location(permission.path, permission.action)
-        self.permission = permission
-        self.target_path = location.path
-        self.selection_action = permission.action
-        self.stage = "probe"
-        self.generation += 1
-        self.valid = True
 
     def select(self, name: str, arguments: Mapping[str, Any]) -> ProjectLocation:
         """Validate the actual proposed destination; never adopt an active project."""

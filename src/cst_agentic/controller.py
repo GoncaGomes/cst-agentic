@@ -24,8 +24,8 @@ from mcp.types import Tool
 
 from .mcp_client import CstMcpClient, McpAttempt, McpStartupError, McpToolCall, _validate_timeout
 from .project_storage import ProjectLocation
-from .recovery import Incident, RecoveryError, RecoveryStore
-from .working_project import TaskPermission, WorkingProject
+from .recovery import RecoveryError, RecoveryStore
+from .working_project import WorkingProject
 
 
 @dataclass(frozen=True)
@@ -146,7 +146,6 @@ class ControllerSession:
     construct a manual-mode ControllerMcpClient with reviewed child settings.
 
     Every unresolved central incident blocks new work/replacement transport.
-    The legacy isolation callback cannot override human reconciliation.
     """
 
     def __init__(
@@ -158,7 +157,6 @@ class ControllerSession:
         dispatch_check: Callable[
             [ProjectLocation | None, str, Mapping[str, Any]], DispatchEvidence | None
         ],
-        isolation_check: Callable[[ProjectLocation, tuple[Incident, ...]], bool] | None = None,
         readback_inventory: frozenset[str] = frozenset(),
         working_project: WorkingProject | None = None,
     ) -> None:
@@ -167,8 +165,6 @@ class ControllerSession:
         self._inventory = inventory
         self._dispatch_check = dispatch_check
         self.working_project = working_project
-        # Compatibility-only argument. The single-instance prototype never
-        # allows a callback to bypass central human reconciliation.
         if not readback_inventory <= inventory:
             raise RecoveryError("Readback operations must belong to the approved inventory.")
         self._readback_inventory = readback_inventory
@@ -213,7 +209,7 @@ class ControllerSession:
             )
         return False
 
-    def _check_route(self, project: ProjectLocation | None, *, readback: bool = False) -> None:
+    def _check_route(self, *, readback: bool = False) -> None:
         incidents = tuple(
             record
             for record in self.store.incidents(unresolved_only=True)
@@ -242,7 +238,7 @@ class ControllerSession:
         if not isinstance(explicit_request, str) or not explicit_request.strip():
             raise RecoveryError("A fresh explicit task is required.")
         project = ProjectLocation.inspect(project_path)
-        self._check_route(project)  # Must precede even construction of a transport.
+        self._check_route()  # Must precede even construction of a transport.
         if (
             self._client is not None
             and self._project is not None
@@ -257,29 +253,6 @@ class ControllerSession:
         self._readback_used = False
         self._project = project
         await self._open_client()
-
-    async def establish_working_project(self, permission: TaskPermission) -> None:
-        if self.working_project is None:
-            raise RecoveryError("Live target adapter unavailable.")
-        self.working_project.begin(permission)
-        await self.start_task(Path(permission.path), permission.outcome)
-        path = ProjectLocation.inspect(Path(permission.path)).path
-        for name, arguments in (
-            ("cst_connection_status", {}),
-            ("cst_connect", {"mode": "new"}),
-            (
-                "cst_create_project" if permission.action == "create" else "cst_open_project",
-                {"path": path},
-            ),
-        ):
-            await self.dispatch(
-                name,
-                arguments,
-                timeout_s=480 if name == "cst_connect" else 120,
-                settled=lambda result: True,
-            )
-            if self._paused:
-                raise RecoveryError("Working project prerequisites failed; reconcile locally.")
 
     async def _open_client(self) -> None:
         if self._client is None:
@@ -422,7 +395,7 @@ class ControllerSession:
                 raise RecoveryError("Check connection status before explicit new-instance launch.")
             if not self._entered or self._closing or self._paused:
                 raise RecoveryError("A healthy active Controller session is required.")
-            self._check_route(None)
+            self._check_route()
             self.working_project.launch()
             self._task_id = str(uuid.uuid4())
             self._task_complete = False
@@ -434,7 +407,7 @@ class ControllerSession:
         ):
             if self._dispatch_lock.locked() or self._paused or self._closing:
                 raise RecoveryError("Project selection requires a settled healthy session.")
-            self._check_route(None)
+            self._check_route()
             self._project = self.working_project.select(name, dict(arguments or {}))
         if (
             not self._entered
@@ -510,7 +483,7 @@ class ControllerSession:
                         project.file_id is not None and current.file_id != project.file_id
                     ):
                         return False
-                self._check_route(current, readback=readback)
+                self._check_route(readback=readback)
                 if save_destination is not None:
                     destination = ProjectLocation.inspect(save_destination)
                     if current is None or destination.path != current.path:
