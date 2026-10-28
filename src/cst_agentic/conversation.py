@@ -262,20 +262,19 @@ class ConversationCoordinator:
         return batch
 
     def _compact_old_batch(self) -> bool:
-        """Only settled batches are recorded. Keep recent and current discussion.
+        """Only settled batches are recorded. Keep recent pairs and all discussion.
 
-        Conservatively pin *all* current-task discussion, including unanswered
-        questions/engineering choices; we do not ask a model which permissions
-        or questions it thinks can be forgotten. If that cannot fit, pause.
+        A new objective does not end session-wide instructions or agreed choices.
+        Pin discussion structurally, without classifying its meaning or asking a
+        model what can be forgotten. If that cannot fit, pause before requesting.
         """
         for index, batch in enumerate(self._history_batches):
-            old_objective = batch.objective_generation != self._objective_generation
             old_tool_batch = (
                 batch.has_calls
                 and not batch.has_discussion
                 and index < len(self._history_batches) - 4
             )
-            if old_objective or old_tool_batch:
+            if old_tool_batch:
                 removed_ids = {
                     item.get("call_id")
                     for item in batch.items
@@ -290,7 +289,7 @@ class ConversationCoordinator:
                     "context_compacted",
                     "Omitted an old complete settled batch; removed evidence support is "
                     "unavailable, never a verified fact. "
-                    "Current discussion and recent pairs retained.",
+                    "All conversation discussion and recent pairs retained.",
                 )
                 return True
         return False
@@ -330,7 +329,7 @@ class ConversationCoordinator:
             "discussion_summary": {
                 "provenance": "discussion context, not verified facts or execution authority",
                 "omitted_settled_batches": self._omitted_batches,
-                "text": "Earlier discussion/results may be omitted; use retained original "
+                "text": "Older tool-only results may be omitted; use retained original "
                 "instructions and choices, not summaries, to plan. "
                 "No omitted result supports a fact.",
             },

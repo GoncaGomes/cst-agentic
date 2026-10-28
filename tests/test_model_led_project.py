@@ -15,7 +15,7 @@ from mcp.types import CallToolResult, Tool
 from test_working_project import Client
 
 from cst_agentic.controller import ControllerSession
-from cst_agentic.conversation import ConversationCoordinator
+from cst_agentic.conversation import ConversationCoordinator, UserMessage
 from cst_agentic.output_storage import interpret_export_response
 from cst_agentic.recovery import RecoveryStore
 from cst_agentic.working_project import WorkingProject, interpret_setup_response
@@ -187,6 +187,56 @@ def setup_steps(path):
         [function_call("cst_connect", {"mode": "new"}, call_id="launch")],
         [function_call("cst_create_project", {"path": str(path)}, call_id="select")],
     ]
+
+
+@pytest.mark.asyncio
+async def test_session_restriction_survives_healthy_objectives_or_pauses_before_context_loss(
+    tmp_path,
+):
+    restriction = "For this entire session, never save or run a simulation."
+    steps = setup_steps(tmp_path / "exact.cst") + [
+        [conversation_message("Selected.")],
+        [function_call("cst_project_info", {}, call_id="first-inspection")],
+        [conversation_message("Inspection received.")],
+        [conversation_message("Discussion noted.")],
+        [function_call("cst_project_info", {}, call_id="later-inspection")],
+        [conversation_message("Inspection received.")],
+    ]
+    async with flow(tmp_path, steps) as (coordinator, session, working, peer, model, _):
+        assert (await coordinator.submit(restriction)).state == "reply"
+        assert (
+            await coordinator.submit(UserMessage("Inspect the project", new_objective=True))
+        ).state == "reply"
+        discussion = "Additional agreed discussion: " + "x" * 60_000
+        assert (await coordinator.submit(discussion)).state == "reply"
+        requests_before = len(model.calls)
+        dispatches_before = len(peer.calls)
+        reply = await coordinator.submit(
+            UserMessage("Inspect again. Details: " + "y" * 15_000, new_objective=True)
+        )
+
+        # Retention is structural; the model need not declare or remember a rule.
+        assert all(
+            any(item.get("content") == restriction for item in request.input)
+            for request in model.calls
+        )
+        assert any(item.get("content") == restriction for item in coordinator.history)
+        assert any(item.get("content") == discussion for item in coordinator.history)
+        if reply.state == "paused":
+            assert any(event.kind == "context_pause" for event in reply.events)
+            assert len(model.calls) == requests_before
+            assert len(peer.calls) == dispatches_before
+        else:
+            assert reply.state == "reply"
+            assert any(event.kind == "context_compacted" for event in reply.events)
+        assert working.valid and working.binding is not None
+        assert not session.paused and not session.store.incidents(unresolved_only=True)
+        assert {call[0] for call in peer.calls} == {
+            "cst_connection_status",
+            "cst_connect",
+            "cst_create_project",
+            "cst_project_info",
+        }
 
 
 @pytest.mark.asyncio

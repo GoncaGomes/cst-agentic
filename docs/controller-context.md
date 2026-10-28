@@ -83,19 +83,29 @@ contains the entire received response and **all** matched outcomes, including
 skipped/rejected calls. It is removed whole, never one call/result at a time.
 Compaction occurs before model admission, never during native dispatch.
 
-Within the current objective, all conversational exchanges are conservatively
-essential, including unanswered questions and discussion co-returned with calls.
-The four most recent settled batches are also retained. Older tool-only batches
-may be removed under pressure; earlier-objective batches may be removed even if
-recent, since current scope is projected independently. If protected content
-still cannot fit, `context_pause` explains the blocker. A smaller explicit new
-task can retire oversized earlier-task discussion; it grants no new native target
-or execution permission.
+Across the entire Controller session, all conversational exchanges are
+conservatively essential, including original user instructions, agreed choices,
+unanswered questions and discussion co-returned with calls. Starting a new
+objective (explicitly or through the model) never makes that discussion eligible
+for removal. The runtime does not classify sentences or ask the model which
+instructions still apply. The four most recent settled batches are also retained.
+Only older complete tool-only batches may be removed under pressure. If protected
+content still cannot fit, `context_pause` explains the blocker before another
+model request. A smaller new task cannot bypass that capacity pause by retiring
+earlier discussion; a fresh session requires the user to restate applicable
+instructions and does not bypass recovery or technical prerequisites.
 
 For model-recognized transitions, the exact triggering user message (including
 restrictions) and the complete transition response/pairs belong to the new
 objective. A shorter model objective label cannot replace them or make them
-eligible for old-task compaction. Oversized essential transition discussion pauses.
+eligible for compaction. Oversized essential transition discussion pauses.
+
+This retention policy adds no model-callable instruction buffer or disk-backed
+decision memory (#34). Startup remains two MCP functions plus application-owned
+discovery, with the existing sixteen-active-function ceiling and seventy-two-tool
+eligible MCP inventory. A proposed `persistent_instructions(text)` function is
+deferred pending explicit exposure/schema/count/batch contract review; it is not
+needed for retention or ordinary tool execution.
 
 Compaction emits `context_compacted`, counts omitted batches/observations and
 retains a bounded discussion-context omission summary, explicitly **not verified
@@ -121,9 +131,11 @@ not silently truncated to make a request fit.
 Deterministic tests use the shared `ConversationCoordinator.submit` seam with
 explicitly synthetic context attestations. They cover missing validation,
 accounting/headroom, safe overflow pauses, batch pairing, evidence-support loss,
-large outcomes/discovery rejections, unanswered questions, changed objectives and
-requested targets. Production-factory/configuration tests check attestation
-binding and continued independent acceptance gates with a controlled stdio peer.
+large outcomes/discovery rejections, prior-objective unanswered questions,
+session-wide restrictions across healthy live-binding task transitions, and safe
+capacity pauses without losing original discussion. Production-factory/configuration
+tests check attestation binding and continued independent acceptance gates with a
+controlled stdio peer.
 
 - Offline deterministic/local-wrapper evidence: automated tests.
 - Actual institutional endpoint context/schema validation: **not run**.
