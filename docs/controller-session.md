@@ -48,6 +48,11 @@ before client construction. Any unresolved incident refuses this manual route
 before transport startup until explicit local human reconciliation.
 Missing/corrupt expected state likewise blocks admission.
 The lease remains held through provider and transport cleanup.
+Use `uv run cst-agentic recovery status` and
+`uv run cst-agentic recovery reconcile <incident-id>` after exiting the old
+Controller for local reporting/reconciliation without any transport or endpoint
+configuration. Explicit human findings must address effects, continuing activity
+and closure of the previous CST instance. See [recovery](controller-recovery.md).
 
 Public stdio, SDK session, initialization, paginated catalogue discovery and
 bootstrap catalogue admission run in one lifecycle-owner task within the complete
@@ -113,11 +118,11 @@ a replay of the consumed #14 experiments.
 Run offline checks with `uv run pytest -q`, `uv run ruff format --check .`,
 `uv run ruff check .`, and `uv run pyright`.
 
-**#17 remains open under the single-instance/manual-recovery decision.** The
-previous isolated-B exception is superseded, not an outstanding proof requirement.
-Production dispatch/settlement/reconciliation acceptance, additional abrupt-death
-windows and the persistence-plus-temporary-cleanup compound-error regression
-remain outstanding. Coordinator-level dispatch and compound cancellation/persistence
-are tested offline as described in the conversation document. The permanent client latch and no-replay rules are
-unchanged. No endpoint, configured-model behavioral, native CST/isolation or
+Recovery now has a local reconciliation command, shared-coordinator transition
+coverage, 22 additional actual-wrapper abrupt-death windows and focused compound
+persistence/temporary-cleanup regressions. The previous isolated-B exception is
+superseded, not an outstanding proof requirement. Controller restart requires all
+incidents reconciled, a fresh session and explicit task with ordinary technical
+prerequisites; the old uncertainty latch stays permanent. No replay is introduced.
+No endpoint, configured-model behavioral, native CST or
 power-loss evidence is supplied, and no connected experiment is authorized.

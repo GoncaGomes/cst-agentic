@@ -148,6 +148,78 @@ def test_whole_application_crash_blocks_restart_before_transport(
         assert store.incidents()[0].state == "in_flight"
 
 
+@pytest.mark.parametrize(
+    ("window", "expected", "durable_state"),
+    [
+        ("lease-created", "blocked", None),
+        ("header-before-fsync", "blocked", None),
+        ("header-after-fsync", "blocked", None),
+        ("initial-before-fsync", "blocked", None),
+        ("initial-after-fsync", "blocked", None),
+        ("initial-before-replace", "blocked", None),
+        ("initial-after-replace", "clean", "empty"),
+        ("prepare-before-fsync", "clean", "empty"),
+        ("prepare-after-fsync", "clean", "empty"),
+        ("prepare-before-replace", "clean", "empty"),
+        ("prepare-after-replace", "blocked", "in_flight"),
+        ("sdk-admission", "blocked", "in_flight"),
+        ("response-received", "blocked", "in_flight"),
+        ("receipt-before-fsync", "blocked", "in_flight"),
+        ("receipt-after-fsync", "blocked", "in_flight"),
+        ("receipt-before-replace", "blocked", "in_flight"),
+        ("receipt-after-replace", "blocked", "received_unresolved"),
+        ("trusted-interpretation", "blocked", "received_unresolved"),
+        ("settle-before-fsync", "blocked", "received_unresolved"),
+        ("settle-after-fsync", "blocked", "received_unresolved"),
+        ("settle-before-replace", "blocked", "received_unresolved"),
+        ("settle-after-replace", "clean", "settled"),
+    ],
+)
+def test_abrupt_death_windows_through_actual_wrapper(
+    tmp_path: Path, launcher: Path, window: str, expected: str, durable_state: str | None
+) -> None:
+    state = tmp_path / "state"
+    seen = tmp_path / "seen"
+    target = project(tmp_path)
+    driver = Path(__file__).parent / "fixtures" / "recovery_window_driver.py"
+    args = [window, expected, str(state), str(target), str(launcher), str(seen)]
+    crash = subprocess.run(
+        ["uv", "run", "--no-sync", "python", str(driver), "crash", *args],
+        capture_output=True,
+        timeout=40,
+    )
+    assert crash.returncode == 23, f"Crash window not reached: {window}"
+    if seen.exists():
+        assert_peer_terminated(seen)
+        seen.unlink()
+    if durable_state is not None:
+        data = json.loads((state / "recovery.json").read_text(encoding="utf-8"))
+        assert [record["state"] for record in data["incidents"]] == (
+            [] if durable_state == "empty" else [durable_state]
+        )
+    (state / "transport-created").unlink(missing_ok=True)
+    restart = subprocess.run(
+        ["uv", "run", "--no-sync", "python", str(driver), "restart", *args],
+        capture_output=True,
+        timeout=40,
+    )
+    assert restart.returncode == 0, f"Incorrect fresh-process admission: {window}"
+    assert (state / "transport-created").exists() == (expected == "clean")
+    assert not seen.exists(), "Restart replayed a tool call"
+    if window == "response-received":
+        other = tmp_path / "b"
+        other.mkdir()
+        args[3] = str(other / "b.cst")
+        restart_b = subprocess.run(
+            ["uv", "run", "--no-sync", "python", str(driver), "restart", *args],
+            capture_output=True,
+            timeout=40,
+        )
+        assert restart_b.returncode == 0, "Fresh-process B bypassed unresolved A"
+        assert not (state / "transport-created").exists()
+        assert not seen.exists()
+
+
 @pytest.mark.asyncio
 async def test_cleanup_failure_retains_primary_error(tmp_path: Path, launcher: Path) -> None:
     """Focused failure injection at the wrapper's real SDK context-exit seam."""

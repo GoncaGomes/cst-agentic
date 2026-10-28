@@ -67,6 +67,15 @@ def test_lease_context_preserves_application_primary_error(tmp_path: Path) -> No
     assert caught.value is primary
 
 
+def test_existing_empty_lease_is_incomplete_initialization_not_first_use(tmp_path):
+    state = tmp_path / "state"
+    state.mkdir()
+    (state / "session.lock").touch()
+    with pytest.raises(RecoveryError, match="incomplete"):
+        with RecoveryStore(state).session():
+            pytest.fail("An initial expected-state crash was treated as a clean restart")
+
+
 @pytest.mark.parametrize("corruption", ["missing", "invalid", "missing_field", "bad_clearance"])
 def test_expected_missing_or_corrupt_state_blocks(tmp_path: Path, corruption: str) -> None:
     state = tmp_path / "state"
@@ -98,10 +107,95 @@ def test_human_findings_do_not_clear_unresolved_activity(tmp_path: Path) -> None
         )
         assert store.incidents(unresolved_only=True)[0].human_evidence is True
         store.reconcile(
-            incident, project_confirmed=True, effects_resolved=True, activity_resolved=True
+            incident,
+            project_confirmed=True,
+            effects_resolved=True,
+            activity_resolved=True,
+            instance_closed=True,
         )
         assert store.incidents(unresolved_only=True) == ()
         assert store.incidents()[0].state == "reconciled"
+
+
+def test_reconciliation_requires_previous_instance_closed_and_retains_findings(tmp_path: Path):
+    state = tmp_path / "state"
+    with RecoveryStore(state).session() as store:
+        incident = store.prepare(str(uuid.uuid4()), "edit", None)
+        store.finish(incident, "uncertain")
+        store.reconcile(
+            incident, project_confirmed=True, effects_resolved=True, activity_resolved=True
+        )
+        assert store.incidents(unresolved_only=True)[0].state == "uncertain"
+        store.reconcile(
+            incident,
+            project_confirmed=True,
+            effects_resolved=True,
+            activity_resolved=True,
+            instance_closed=True,
+        )
+        assert not store.incidents(unresolved_only=True)
+    with RecoveryStore(state).session() as store:
+        record = store.incidents()[0]
+        assert record.state == "reconciled" and record.instance_closed
+        assert [finding.instance_closed for finding in record.findings] == [False, True]
+        assert all(finding.provenance == "local_human" for finding in record.findings)
+        assert all(
+            finding.limitations == "not_independently_verified" for finding in record.findings
+        )
+
+
+@pytest.mark.parametrize("previous_state", ["reconciled", "settled", "uncertain"])
+def test_legacy_history_does_not_invent_instance_closure(tmp_path, previous_state):
+    state = tmp_path / "state"
+    with RecoveryStore(state).session() as store:
+        incident = store.prepare(str(uuid.uuid4()), "edit", None)
+    ledger = state / "recovery.json"
+    data = json.loads(ledger.read_text(encoding="utf-8"))
+    data["version"] = 1
+    record = data["incidents"][0]
+    record.pop("findings")
+    record.pop("instance_closed")
+    record.update(
+        state=previous_state, human_evidence=True, effects_resolved=True, activity_resolved=True
+    )
+    ledger.write_text(json.dumps(data), encoding="utf-8")
+    with RecoveryStore(state).session() as store:
+        record = store.incidents()[0]
+        assert record.id == incident and not record.instance_closed
+        assert bool(store.incidents(unresolved_only=True)) == (previous_state != "settled")
+        if previous_state != "settled":
+            store.reconcile(
+                incident,
+                project_confirmed=True,
+                effects_resolved=True,
+                activity_resolved=True,
+                instance_closed=True,
+            )
+            assert not store.incidents(unresolved_only=True)
+    if previous_state != "settled":
+        assert json.loads(ledger.read_text(encoding="utf-8"))["version"] == 2
+
+
+@pytest.mark.parametrize("field", ["provenance", "limitations", "instance_closed"])
+def test_missing_expected_human_finding_fields_block(tmp_path, field):
+    state = tmp_path / "state"
+    with RecoveryStore(state).session() as store:
+        incident = store.prepare(str(uuid.uuid4()), "edit", None)
+        store.finish(incident, "uncertain")
+        store.reconcile(
+            incident,
+            project_confirmed=True,
+            effects_resolved=True,
+            activity_resolved=True,
+            instance_closed=True,
+        )
+    ledger = state / "recovery.json"
+    data = json.loads(ledger.read_text(encoding="utf-8"))
+    del data["incidents"][0]["findings"][0][field]
+    ledger.write_text(json.dumps(data), encoding="utf-8")
+    with pytest.raises(RecoveryError, match="missing or corrupt"):
+        with RecoveryStore(state).session():
+            pytest.fail("Missing expected human evidence was silently supplied")
 
 
 def test_uncertainty_or_restart_cannot_be_finalized_without_human(tmp_path: Path) -> None:
@@ -119,7 +213,11 @@ def test_uncertainty_or_restart_cannot_be_finalized_without_human(tmp_path: Path
         with pytest.raises(RecoveryError, match="human reconciliation"):
             store.finish(record, "settled")
         store.reconcile(
-            record, project_confirmed=True, effects_resolved=True, activity_resolved=True
+            record,
+            project_confirmed=True,
+            effects_resolved=True,
+            activity_resolved=True,
+            instance_closed=True,
         )
         assert store.incidents(unresolved_only=True) == ()
 
@@ -180,3 +278,28 @@ def test_fresh_process_lease_refusal(tmp_path: Path) -> None:
             timeout=30,
         )
         assert result.returncode == 0
+
+
+def test_persistence_and_temporary_cleanup_failures_are_both_retained(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    store = RecoveryStore(tmp_path / "state")
+    with store.session():
+
+        def refuse(*args: object, **kwargs: object) -> None:
+            raise OSError("private filesystem detail")
+
+        with monkeypatch.context() as patch:
+            patch.setattr(os, "replace", refuse)
+            patch.setattr(Path, "unlink", refuse)
+            with pytest.raises(ExceptionGroup) as caught:
+                store.prepare(str(uuid.uuid4()), "edit", None)
+        assert [str(error) for error in caught.value.exceptions] == [
+            "Recovery persistence failed; dispatch is blocked.",
+            "Recovery temporary-file cleanup failed.",
+        ]
+        assert all(isinstance(error, RecoveryError) for error in caught.value.exceptions)
+        with pytest.raises(RecoveryError, match="not ready"):
+            store.prepare(str(uuid.uuid4()), "edit", None)
+    with RecoveryStore(store.directory).session() as reopened:
+        assert reopened.incidents() == ()  # Failed preparation never authorized dispatch.

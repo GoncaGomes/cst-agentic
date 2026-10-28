@@ -23,10 +23,12 @@ Run `uv sync` from the repository root to install dependencies and the applicati
 
 ## Connectivity check (milestone 1)
 
-The separate [Controller recovery safety slice](docs/controller-recovery.md)
-provides central incident storage, a per-user session lease and guarded dispatch
-for future Controller integration. It does not enable a conversational/live CST
-modeling command or change this connectivity check. A separate
+The separate [Controller recovery implementation](docs/controller-recovery.md)
+integrates central incident storage, a per-user session lease and guarded dispatch
+with the manual runtime and shared coordinator. Local `recovery status` and
+`recovery reconcile <incident-id>` commands report incidents and record human
+findings without CST or model access. This does not establish native CST acceptance
+or change the connectivity check. A separate
 [manual Controller session](docs/controller-session.md) adds explicit startup and
 confirmed exit without implicitly launching or attaching to CST. The model-led
 [working-project flow](docs/controller-project.md) supports separate launch/selection
