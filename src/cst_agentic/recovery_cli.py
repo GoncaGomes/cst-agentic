@@ -1,5 +1,7 @@
 """Application-owned local human reconciliation; no provider or transport access."""
 
+from collections.abc import Callable
+
 from .recovery import Incident, RecoveryError, RecoveryStore
 
 
@@ -14,17 +16,23 @@ def _report(record: Incident) -> None:
     )
 
 
-def _finding(prompt: str) -> bool:
+def _finding(prompt: str, read_input: Callable[[str], str] | None = None) -> bool:
     while True:
-        answer = input(prompt + " [yes/no]: ").strip().lower()
+        answer = (read_input or input)(prompt + " [yes/no]: ").strip().lower()
         if answer in {"yes", "no"}:
             return answer == "yes"
         print("Enter yes or no based on your local inspection; unknown means no.")
 
 
-def run_local_recovery(action: str, incident_id: str | None = None) -> int:
+def run_local_recovery(
+    action: str,
+    incident_id: str | None = None,
+    *,
+    store: RecoveryStore | None = None,
+    read_input: Callable[[str], str] | None = None,
+) -> int:
     """Hold the same exclusive lease, without constructing a Controller client."""
-    with RecoveryStore().session() as store:
+    with (store or RecoveryStore()).session() as store:
         print(
             "Local recovery only: no CST calls. Findings are human-provided, "
             "not independently verified. Closing CST or restarting Windows alone "
@@ -48,10 +56,16 @@ def run_local_recovery(action: str, incident_id: str | None = None) -> int:
             "solver activity, and close the previous CST instance. Unknown findings stay pending."
         )
         try:
-            project = _finding("Have you identified all affected work, including unknown scope?")
-            effects = _finding("Have you inspected and addressed the operation's partial effects?")
-            activity = _finding("Have you resolved all continuing solver/activity from this work?")
-            closed = _finding("Have you closed the previous CST instance?")
+            project = _finding(
+                "Have you identified all affected work, including unknown scope?", read_input
+            )
+            effects = _finding(
+                "Have you inspected and addressed the operation's partial effects?", read_input
+            )
+            activity = _finding(
+                "Have you resolved all continuing solver/activity from this work?", read_input
+            )
+            closed = _finding("Have you closed the previous CST instance?", read_input)
         except (EOFError, KeyboardInterrupt):
             print("Reconciliation interrupted; no new findings recorded; incident remains pending.")
             return 1

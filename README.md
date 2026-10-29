@@ -38,6 +38,11 @@ Production model work remains blocked pending #23 endpoint admission. Its shared
 with scripted models and controlled peers, including approved progressive tool
 discovery; offline tests do not establish native CST correctness.
 
+The [fixed evaluation harness](docs/controller-evaluation.md) exports the agreed
+scenario pack, drives offline Controller tracer trials and independently scores
+retained evidence. Its durable campaign ledger does not grant permission to run
+live model or native CST campaigns. Start with `uv run cst-agentic evaluate --help`.
+
 An explicit command verifies that the OpenAI Agents SDK can use the institutional Qwen
 endpoint to call `cst_connection_status` through the `cst-studio-mcp` MCP server, with the
 CST connection forced to disabled (offline) mode. A disconnected status is the *expected*

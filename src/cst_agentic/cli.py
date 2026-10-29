@@ -16,6 +16,7 @@ from cst_agentic.config import ConfigError, load_connectivity_config
 from cst_agentic.connectivity import run_connectivity_check
 from cst_agentic.controller_config import load_controller_config
 from cst_agentic.controller_runtime import EXIT_WARNING, run_controller_terminal
+from cst_agentic.evaluation_cli import add_evaluation_parser, run_evaluation
 from cst_agentic.mcp_client import McpStartupError
 from cst_agentic.recovery import RecoveryError
 from cst_agentic.recovery_cli import run_local_recovery
@@ -66,6 +67,7 @@ def _build_parser() -> argparse.ArgumentParser:
         "reconcile", help="Record explicit local human findings."
     )
     reconcile.add_argument("incident_id", help="Incident ID from recovery status.")
+    add_evaluation_parser(subparsers)
     return parser
 
 
@@ -109,6 +111,8 @@ def main(argv: list[str] | None = None) -> int:
         return _run_verify(args.env)
     if args.command == "controller":
         return _run_controller(args.env)
+    if args.command == "evaluate":
+        return run_evaluation(args)
     if args.command == "recovery":
         try:
             return run_local_recovery(args.recovery_action, getattr(args, "incident_id", None))
