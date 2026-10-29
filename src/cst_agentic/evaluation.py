@@ -11,7 +11,7 @@ import json
 import time
 from collections.abc import Callable, Mapping, Sequence
 from copy import deepcopy
-from dataclasses import asdict
+from dataclasses import asdict, dataclass, field
 from typing import Any
 
 from agents import Model, ModelSettings
@@ -20,13 +20,14 @@ from mcp.types import Tool
 from .campaign import CampaignLedger, CampaignStopped
 from .context_budget import ContextBudget
 from .controller import ControllerSession
-from .conversation import ConversationCoordinator
+from .conversation import ConversationCoordinator, ConversationEvent, ConversationReply
 from .evaluation_pack import (
-    ENGINEERING_CASES,
-    SCENARIOS,
     VARIANTS,
+    Checkpoint,
     Trial,
+    checkpoints_for,
     pack_identity,
+    scenario_for,
     variant_discovery,
 )
 from .mcp_client import McpToolCall
@@ -37,6 +38,42 @@ def reported_tokens(response: Any) -> int | None:
     raw = response.raw_usage
     value = raw.get("total_tokens") if isinstance(raw, dict) else None
     return value if type(value) is int and value >= 0 else None
+
+
+@dataclass
+class TrialTrace:
+    """Append-only evaluation evidence, independent of model-context compaction."""
+
+    evidence: dict[str, Any] = field(default_factory=dict)
+    proposals: list[dict[str, Any]] = field(default_factory=list)
+    dispatched: list[str] = field(default_factory=list)
+
+    def observe(self, coordinator: ConversationCoordinator, event: ConversationEvent) -> None:
+        if event.kind != "outcome":
+            return
+        # Outcome events occur immediately after the whole batch has been settled
+        # and appended. Capture through the public seam before any compaction.
+        for value in coordinator.history:
+            item: dict[str, Any] = dict(value)
+            if item.get("type") != "function_call_output" or item.get("call_id") != event.call_id:
+                continue
+            outcome = json.loads(item["output"])
+            self.evidence[f"outcome-{event.call_id}"] = outcome
+            if outcome["state"] in {"received", "uncertain"} and "selection" not in outcome:
+                self.dispatched.append(item["call_id"])
+            return
+        raise ValueError("Settled outcome evidence was unavailable at the event boundary.")
+
+    def retain_requests(self, requests: list[dict[str, Any]], injected: frozenset[str]) -> None:
+        for request in requests:
+            self.evidence[f"request-{request['ledger_request']}"] = deepcopy(request)
+            for item in request["output"]:
+                if item["type"] == "function_call":
+                    call_id = item["call_id"]
+                    self.proposals.append(
+                        {"id": call_id, "name": item["name"], "injected": call_id in injected}
+                    )
+                    self.evidence[call_id] = deepcopy(item)
 
 
 class CampaignModel(Model):
@@ -69,8 +106,20 @@ class CampaignModel(Model):
             "ledger_request": request,
             "instructions": kwargs.get("system_instructions"),
             "input": deepcopy(kwargs.get("input")),
+            "provider_adapter": f"{type(self.model).__module__}.{type(self.model).__qualname__}",
+            "model_settings": {
+                "temperature": settings.temperature,
+                "top_p": settings.top_p,
+                "max_tokens": settings.max_tokens,
+                "parallel_tool_calls": settings.parallel_tool_calls,
+            },
             "tools": [
-                {"name": t.name, "schema": deepcopy(t.params_json_schema)}
+                {
+                    "name": t.name,
+                    "description": t.description,
+                    "schema": deepcopy(t.params_json_schema),
+                    "strict": t.strict_json_schema,
+                }
                 for t in kwargs.get("tools", [])
             ],
             "output_schema": kwargs["output_schema"].json_schema()
@@ -117,6 +166,8 @@ async def run_trial(
     interpreters: Mapping[str, Callable[[McpToolCall], bool]],
     controlled_observations: Callable[[], dict[str, Any]] = dict,
     injected_call_ids: frozenset[str] = frozenset(),
+    checkpoint: Callable[[Checkpoint, ConversationReply, dict[str, Any]], bool | None]
+    | None = None,
 ) -> dict[str, Any]:
     """Run the fixed ordinary messages, not user-authored manifests or tool JSON.
 
@@ -124,8 +175,7 @@ async def run_trial(
     retain partial/uncertain effects; no outcome is graded here. Scenario 10's
     local-recovery continuation is a separate explicit offline driver.
     """
-    cases = SCENARIOS if trial.suite == "comparison" else ENGINEERING_CASES
-    case = next(case for case in cases if case.id == trial.case_id)
+    case = scenario_for(trial.suite, trial.case_id)
     variant = next(v for v in VARIANTS if v.id == trial.variant)
     if trial.repetition not in {1, 2} or trial.suite not in {"comparison", "engineering", "retest"}:
         raise ValueError("Trial is outside the frozen pack.")
@@ -135,6 +185,7 @@ async def run_trial(
     wrapped = CampaignModel(
         model, ledger, purpose="trial" if trial.suite == "comparison" else trial.suite
     )
+    trace = TrialTrace()
     messages = [message.format_map(paths) for message in case.messages]
     record: dict[str, Any] = {
         "trial_id": trial.id,
@@ -152,13 +203,14 @@ async def run_trial(
         },
         "evidence_layer": "controlled-adapters; model identity supplied by campaign manifest",
         "messages": messages,
-        "evidence": {},
-        "proposals": [],
-        "dispatched": [],
+        "evidence": trace.evidence,
+        "proposals": trace.proposals,
+        "dispatched": trace.dispatched,
         "requests": wrapped.requests,
         "complete": False,
         "budget_exhausted": False,
         "turn_latency_samples_s": [],
+        "checkpoint_results": [],
         "requires_recovery_review": case.fixture in {"discovery_faults", "partial", "uncertain"},
     }
     coordinator = ConversationCoordinator(
@@ -171,8 +223,10 @@ async def run_trial(
         request_admission=lambda request: None,
         interpreters=interpreters,
         execution_admission=ledger.work_allowed,
+        on_event=lambda event: trace.observe(coordinator, event),
     )
-    for index, message in enumerate(messages, 1):
+    checkpoints = checkpoints_for(trial.suite, trial.case_id)
+    for index, (message, expected) in enumerate(zip(messages, checkpoints, strict=True), 1):
         try:
             active = ledger.begin_active()
         except CampaignStopped:
@@ -188,34 +242,25 @@ async def run_trial(
                 "state": reply.state,
                 "events": [asdict(event) for event in reply.events],
             }
-            record["evidence"][f"observations-{index}"] = deepcopy(controlled_observations())
+            observed = deepcopy(controlled_observations())
+            record["evidence"][f"observations-{index}"] = observed
         finally:
             ledger.end_active(active)
+        judgment = checkpoint(expected, reply, observed) if checkpoint is not None else None
+        stage_matches = reply.state == expected.state and judgment is True
+        record["checkpoint_results"].append(
+            {"expected": asdict(expected), "passed": stage_matches, "judgment": judgment}
+        )
         if wrapped.stopped:
             record["budget_exhausted"] = True
             break
+        if not stage_matches:
+            break  # Never advance scripted answers/permission through an unexpected stage.
     else:
         record["complete"] = True
     history: list[dict[str, Any]] = [dict(item) for item in coordinator.history]
     record["history"] = history
-    for index, request in enumerate(wrapped.requests, 1):
-        record["evidence"][f"request-{index}"] = deepcopy(request)
-        for item in request["output"]:
-            if item["type"] == "function_call":
-                call_id = item["call_id"]
-                record["proposals"].append(
-                    {"id": call_id, "name": item["name"], "injected": call_id in injected_call_ids}
-                )
-                record["evidence"][call_id] = deepcopy(item)
-    for item in history:
-        if item.get("type") == "function_call_output":
-            outcome = json.loads(item["output"])
-            call_id = item["call_id"]
-            record["evidence"][f"outcome-{call_id}"] = outcome
-            if outcome["state"] in {"received", "uncertain"} and call_id not in {
-                p["id"] for p in record["proposals"] if p["name"] == "discover_tools"
-            }:
-                record["dispatched"].append(call_id)
+    trace.retain_requests(wrapped.requests, injected_call_ids)
     record["attempts"] = [asdict(attempt) for attempt in connection.attempts]
     record["incidents"] = [asdict(incident) for incident in connection.store.incidents()]
     record["evidence"]["attempts"] = deepcopy(record["attempts"])

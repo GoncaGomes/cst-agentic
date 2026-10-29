@@ -9,7 +9,7 @@ from dataclasses import asdict
 from pathlib import Path
 
 from .evaluation_offline import run_offline_smoke
-from .evaluation_pack import ENGINEERING_CASES, SCENARIOS, pack_manifest
+from .evaluation_pack import pack_manifest, scenario_for
 from .evaluation_scoring import CallRating, Finding, Review, score_campaign
 
 
@@ -35,8 +35,7 @@ def add_evaluation_parser(subparsers) -> None:
 def review_template(records: list[dict]) -> dict:
     template = {}
     for record in records:
-        cases = SCENARIOS if record["suite"] == "comparison" else ENGINEERING_CASES
-        case = next(case for case in cases if case.id == record["case_id"])
+        case = scenario_for(record["suite"], record["case_id"])
         template[record["trial_id"]] = asdict(
             Review(
                 requirements={key: Finding(None) for key in case.required},

@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import json
+import time
 from contextlib import asynccontextmanager
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 
@@ -14,7 +16,7 @@ from .campaign import CampaignLedger
 from .context_budget import ContextBudget, adapter_identity
 from .controller import ControllerSession
 from .discovery import APPROVED_MCP_TOOLS
-from .evaluation import CampaignModel, run_trial
+from .evaluation import CampaignModel, TrialTrace, run_trial
 from .evaluation_pack import Trial, pack_identity, pack_manifest
 from .mcp_client import CstMcpClient, McpCallError
 from .recovery import RecoveryError, RecoveryStore
@@ -128,11 +130,11 @@ def _call(name: str, arguments: dict, call_id: str):
     return [function_call(name, arguments, call_id=call_id)]
 
 
-def _launch_steps():
+def _launch_steps(prefix: str = ""):
     return [
-        _call("cst_connection_status", {}, "probe"),
-        _call("discover_tools", {"groups": ["session_project"]}, "session-tools"),
-        _call("cst_connect", {"mode": "new"}, "launch"),
+        _call("cst_connection_status", {}, prefix + "probe"),
+        _call("discover_tools", {"groups": ["session_project"]}, prefix + "session-tools"),
+        _call("cst_connect", {"mode": "new"}, prefix + "launch"),
         _say("Controlled launch without a selected project."),
     ]
 
@@ -161,6 +163,14 @@ def _interpreters():
     }
 
 
+@dataclass(frozen=True)
+class ContinuationResult:
+    checks: dict[str, bool]
+    requests: list[dict[str, Any]]
+    trace: TrialTrace
+    latency_s: float
+
+
 async def uncertainty_continuation(
     state: Path,
     peer: ControlledPeer,
@@ -168,9 +178,11 @@ async def uncertainty_continuation(
     project: Path,
     other: Path,
     ledger: CampaignLedger,
-) -> tuple[dict[str, bool], list[dict[str, Any]]]:
+) -> ContinuationResult:
     """Synthetic human findings through the same local CLI path, no transport there."""
     checks: dict[str, bool] = {}
+    trace = TrialTrace()
+    started = time.monotonic()
     with RecoveryStore(state).session() as store:
         incidents = store.incidents(unresolved_only=True)
         checks["incident_retained"] = len(incidents) == 1 and incidents[0].state == "uncertain"
@@ -228,7 +240,7 @@ async def uncertainty_continuation(
         # Real coordinator, explicit fresh task, normal launch/open prerequisites.
         model = CampaignModel(
             ScriptedModel(
-                _launch_steps()
+                _launch_steps("fresh-")
                 + [
                     _call("cst_open_project", {"path": str(project)}, "fresh-open"),
                     _call("discover_tools", {"groups": ["parameters"]}, "fresh-parameters"),
@@ -250,6 +262,8 @@ async def uncertainty_continuation(
             context_budget=offline_context(),
             request_admission=lambda request: None,
             interpreters=_interpreters(),
+            execution_admission=ledger.work_allowed,
+            on_event=lambda event: trace.observe(coordinator, event),
         )
         await coordinator.submit("Open CST")
         reply = await coordinator.submit(f"Open {project} and set patch_l to 30 mm, no save/run.")
@@ -259,12 +273,53 @@ async def uncertainty_continuation(
             and fresh_peer.calls[-1] == "cst_set_parameter"
         )
         # A central settled record is not proof the live target has stayed valid.
-        fresh_peer.live_path = other
-        # Direct controlled call checks response interpretation against held live state.
-        response = await session.dispatch("cst_project_info", {}, settled=working.accept)
-        checks["central_state_does_not_prove_live_target"] = session.paused and not working.valid
-        checks["live_state_evidence_retained"] = response.structured_content is not None
-    return checks, model.requests
+        if ledger.work_allowed() and working.binding is not None and not session.paused:
+            fresh_peer.live_path = other
+            # Direct controlled check also retains final campaign admission.
+            response = await session.dispatch(
+                "cst_project_info", {}, settled=working.accept, admission_check=ledger.work_allowed
+            )
+            checks["central_state_does_not_prove_live_target"] = (
+                session.paused and not working.valid
+            )
+            checks["live_state_evidence_retained"] = response.structured_content is not None
+        else:
+            checks["central_state_does_not_prove_live_target"] = False
+            checks["live_state_evidence_retained"] = False
+        trace.evidence["continuation-attempts"] = [asdict(a) for a in session.attempts]
+        trace.evidence["continuation-incidents"] = [asdict(i) for i in session.store.incidents()]
+    trace.retain_requests(model.requests, frozenset())
+    return ContinuationResult(checks, model.requests, trace, time.monotonic() - started)
+
+
+def _offline_checkpoints(
+    case_id: int, peer: ControlledPeer, session: ControllerSession, project: Path
+):
+    stage = 0
+    uncertain_calls: int | None = None
+
+    def check(expected, reply, observations):
+        nonlocal stage, uncertain_calls
+        stage += 1
+        if stage == 1:
+            return peer.path is None and peer.calls.count("cst_connect") == 1
+        if stage == 2:
+            return peer.path == project.resolve() and not session.paused
+        if case_id == 1:
+            return (
+                any(effect["operation"] == "cst_create_cylinder" for effect in peer.effects)
+                and peer.calls.count("cst_connect") == 1
+                and not session.paused
+            )
+        if stage == 3:
+            uncertain_calls = len(peer.calls)
+        return (
+            session.paused
+            and len(peer.calls) == uncertain_calls
+            and bool(session.store.incidents(unresolved_only=True))
+        )
+
+    return check
 
 
 async def run_offline_smoke(directory: Path) -> dict[str, Any]:
@@ -331,6 +386,7 @@ async def run_offline_smoke(directory: Path) -> dict[str, Any]:
                 interpreters=_interpreters(),
                 controlled_observations=peer.observations,
                 injected_call_ids=frozenset({"uncertain-edit"}) if case_id == 10 else frozenset(),
+                checkpoint=_offline_checkpoints(case_id, peer, session, project),
             )
             if case_id == 10:
                 before = len(peer.calls)
@@ -341,13 +397,21 @@ async def run_offline_smoke(directory: Path) -> dict[str, Any]:
         if case_id == 10:
             active = ledger.begin_active()
             try:
-                checks, requests = await uncertainty_continuation(
+                continuation = await uncertainty_continuation(
                     state, peer, client, project.resolve(), other.resolve(), ledger
                 )
-                record["evidence"]["recovery-continuation"] = checks
-                record["evidence"]["continuation-requests"] = requests
-                record["requests"].extend(requests)
-                record["latencies_s"].extend(r["latency_s"] for r in requests)
+                record["evidence"]["recovery-continuation"] = continuation.checks
+                record["evidence"].update(continuation.trace.evidence)
+                record["requests"].extend(continuation.requests)
+                record["proposals"].extend(continuation.trace.proposals)
+                record["dispatched"].extend(continuation.trace.dispatched)
+                record["latencies_s"].extend(r["latency_s"] for r in continuation.requests)
+                record["active_trial_latency_s"] += continuation.latency_s
+                record["complete"] &= all(continuation.checks.values())
+                record["budget_exhausted"] |= not ledger.work_allowed()
+                record["usage_available"] = all(
+                    q["reported_tokens"] is not None for q in record["requests"]
+                )
             finally:
                 ledger.end_active(active)
         record["evidence_layer"] = "offline-only"

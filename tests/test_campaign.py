@@ -136,3 +136,22 @@ async def test_probe_model_boundary_accounts_active_time_and_actual_reported_usa
     assert state["requests"] == 1
     assert state["missing_usage"] == 1  # SDK default zeros are not actual usage evidence.
     assert not ledger.active
+
+
+def test_interrupted_active_interval_keeps_elapsed_time_after_reopen(tmp_path):
+    from cst_agentic.campaign import CampaignLedger, CampaignStopped
+
+    path = tmp_path / "ledger.db"
+    ledger = CampaignLedger.create(path, identity="interrupted")
+    ledger.clock = lambda: 100.0
+    interval = ledger.begin_active()
+    reopened = CampaignLedger.open(path, identity="interrupted")
+    reopened.clock = lambda: 200.0
+    state = reopened.snapshot()
+    assert state["active_intervals"] == [{"id": interval, "started_at": 100.0, "ended_at": None}]
+    assert state["active_seconds"] == 100
+    with pytest.raises(CampaignStopped, match="explicit settlement"):
+        reopened.begin_active()
+    reopened.end_active(interval)
+    reopened.clock = lambda: 300.0
+    assert reopened.snapshot()["active_seconds"] == 100

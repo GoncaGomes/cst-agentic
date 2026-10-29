@@ -69,3 +69,19 @@ def test_experimental_discovery_changes_only_grouping_ceiling_and_named_prompt_g
         assert (f"At most {variant.ceiling}" in selector.guidance) is variant.ceiling_guidance
         assert selector.select({"groups": ["dialog_recovery"]})["accepted"] is False
     assert production.select({"groups": ["parameters"]})["limit"] == 16
+
+
+def test_frozen_experiment_does_not_change_when_production_guidance_changes(monkeypatch):
+    import importlib
+
+    from cst_agentic import discovery, evaluation_pack
+
+    identity = evaluation_pack.pack_identity()
+    try:
+        monkeypatch.setattr(discovery, "GROUP_CATALOGUE", {})
+        monkeypatch.setattr(discovery, "GROUP_GUIDANCE", "Future production guidance")
+        importlib.reload(evaluation_pack)
+        assert evaluation_pack.pack_identity() == identity
+    finally:
+        monkeypatch.undo()
+        importlib.reload(evaluation_pack)

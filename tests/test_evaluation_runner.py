@@ -68,6 +68,7 @@ async def test_runner_delivers_fixed_original_turns_through_real_selector_and_pr
                 else lambda r: True
                 for t in catalogue
             },
+            checkpoint=lambda expected, reply, observations: True,
         )
         assert record["complete"] is True
         assert record["usage_available"] is False
@@ -82,6 +83,63 @@ async def test_runner_delivers_fixed_original_turns_through_real_selector_and_pr
         assert record["evidence"]["turn-3"]["text"] == "I refuse to create the cylinder."
         assert record["variant"]["ceiling"] == 16
         assert working.binding is not None
+
+
+@pytest.mark.asyncio
+async def test_executed_call_evidence_survives_context_compaction(tmp_path):
+    from cst_agentic.context_budget import ContextBudget
+    from cst_agentic.evaluation import run_trial
+    from cst_agentic.evaluation_offline import (
+        ControlledPeer,
+        _interpreters,
+        _launch_steps,
+        _say,
+        controlled_catalogue,
+        controlled_session,
+        offline_context,
+    )
+
+    class DetailedPeer(ControlledPeer):
+        async def call_tool(self, name, arguments, *, meta=None):
+            result = await super().call_tool(name, arguments, meta=meta)
+            result.structured_content["padding"] = "x" * 3_000
+            return result
+
+    project = tmp_path / "a.cst"
+    steps = _launch_steps() + [
+        [function_call("cst_create_project", {"path": str(project)}, call_id="select")],
+        _say("Selected."),
+        [function_call("cst_save_project", {}, call_id="unrequested-save")],
+    ]
+    for i in range(16):
+        steps.append([function_call("cst_project_info", {"sample": i}, call_id=f"read-{i}")])
+    steps.extend([_say("Controlled effects only."), _say("Healthy follow-up.")])
+    ledger = CampaignLedger.create(tmp_path / "ledger.db", identity="compaction")
+    peer = DetailedPeer(tmp_path)
+    context = offline_context()
+    context = ContextBudget(**{**context.__dict__, "input_capacity": 40_000, "headroom": 1_000})
+    async with controlled_session(RecoveryStore(tmp_path / "state"), peer) as (session, _, _):
+        record = await run_trial(
+            Trial("comparison", 1, 1, "baseline"),
+            model=ScriptedModel(steps),
+            connection=session,
+            catalogue=controlled_catalogue(),
+            ledger=ledger,
+            context_budget=context,
+            paths={"project": str(project), "other_project": str(tmp_path / "b.cst")},
+            interpreters=_interpreters(),
+            checkpoint=lambda expected, reply, observations: True,
+        )
+    assert record["complete"]
+    assert any(
+        e["kind"] == "context_compacted"
+        for turn in record["evidence"].values()
+        if isinstance(turn, dict)
+        for e in turn.get("events", [])
+    )
+    assert not any(item.get("call_id") == "unrequested-save" for item in record["history"])
+    assert "unrequested-save" in record["dispatched"]
+    assert "outcome-unrequested-save" in record["evidence"]
 
 
 @pytest.mark.asyncio
@@ -101,6 +159,10 @@ async def test_offline_smoke_includes_real_local_reconciliation_and_permanent_ol
     assert checks["old_client_blocked_after_reconciliation"]
     assert checks["replacement_factory_never_called_before_reconciliation"]
     assert checks["fresh_prerequisites_then_dispatch"]
+    assert "fresh-edit" in recovery["dispatched"]
+    assert "outcome-fresh-edit" in recovery["evidence"]
+    assert any(p["id"] == "fresh-edit" for p in recovery["proposals"])
+    assert len({p["id"] for p in recovery["proposals"]}) == len(recovery["proposals"])
     assert (tmp_path / "offline" / "records.json").is_file()
     with pytest.raises(FileExistsError):
         await run_offline_smoke(tmp_path / "offline")
@@ -191,6 +253,7 @@ async def test_harness_technical_guards_and_partial_effects_are_not_semantic_aut
             paths={"project": str(project), "other_project": str(tmp_path / "b.cst")},
             interpreters=_interpreters(),
             controlled_observations=peer.observations,
+            checkpoint=lambda expected, reply, observations: True,
         )
         if fault in {"schema", "visibility", "connection"}:
             assert "bad" not in record["dispatched"]
@@ -212,3 +275,72 @@ async def test_harness_technical_guards_and_partial_effects_are_not_semantic_aut
             assert "dependent" not in record["dispatched"]
             assert session.paused
             assert record["incidents"][-1]["state"] == "received_unresolved"
+
+
+@pytest.mark.asyncio
+async def test_unexpected_question_does_not_receive_later_setup_or_run_authorization(tmp_path):
+    from cst_agentic.evaluation import run_trial
+    from cst_agentic.evaluation_offline import (
+        ControlledPeer,
+        _interpreters,
+        _launch_steps,
+        _say,
+        controlled_catalogue,
+        controlled_session,
+        offline_context,
+    )
+
+    path = tmp_path / "a.cst"
+    steps = _launch_steps() + [
+        [function_call("cst_create_project", {"path": str(path)}, call_id="select")],
+        _say("Selected."),
+        _say("Unexpected question about an unrelated design."),
+        _say("Must not receive the scripted numerical fixture or permission to run."),
+    ]
+    ledger = CampaignLedger.create(tmp_path / "ledger.db", identity="checkpoints")
+    model = ScriptedModel(steps)
+    peer = ControlledPeer(tmp_path)
+    judgments = iter((True, True, False))
+    async with controlled_session(RecoveryStore(tmp_path / "state"), peer) as (session, _, _):
+        record = await run_trial(
+            Trial("comparison", 3, 1, "baseline"),
+            model=model,
+            connection=session,
+            catalogue=controlled_catalogue(),
+            ledger=ledger,
+            context_budget=offline_context(),
+            paths={"project": str(path), "other_project": str(tmp_path / "b.cst")},
+            interpreters=_interpreters(),
+            checkpoint=lambda expected, reply, observed: next(judgments),
+        )
+    assert record["complete"] is False
+    assert len(record["checkpoint_results"]) == 3
+    assert len(model.calls) == 7
+    assert "turn-4" not in record["evidence"]
+    assert not any(
+        "Run the simulation and monitor it" in str(r["input"]) for r in record["requests"]
+    )
+
+
+@pytest.mark.asyncio
+async def test_recovery_continuation_rechecks_budget_before_fresh_edit(tmp_path, monkeypatch):
+    from agents.testing import ModelStep
+
+    from cst_agentic import evaluation_offline
+
+    def model_with_budget_exhaustion(steps):
+        rewritten = []
+        for step in steps:
+            if any(getattr(item, "call_id", None) == "fresh-edit" for item in step):
+                step = ModelStep(output=step, raw_usage={"total_tokens": 500_001})
+            rewritten.append(step)
+        return ScriptedModel(rewritten)
+
+    monkeypatch.setattr(evaluation_offline, "ScriptedModel", model_with_budget_exhaustion)
+    report = await evaluation_offline.run_offline_smoke(tmp_path / "offline")
+    record = report["records"][1]
+    assert record["budget_exhausted"]
+    assert not record["complete"]
+    assert "fresh-edit" not in record["dispatched"]
+    assert record["evidence"]["outcome-fresh-edit"]["state"] == "skipped"
+    assert report["ledger"]["token_overshoot"] == 1

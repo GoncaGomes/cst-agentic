@@ -102,6 +102,7 @@ class CampaignLedger:
             raise CampaignStopped("Campaign active clock moved backwards; admission blocked.")
         active = sum((end if end is not None else now) - start for start, end in intervals)
         return {
+            "identity": self.identity,
             "requests": requests,
             "reported_tokens": tokens,
             "missing_usage": missing,
@@ -109,12 +110,28 @@ class CampaignLedger:
             "token_overshoot": max(0, tokens - TOKEN_LIMIT),
             "active_seconds": active,
             "active_overshoot_s": max(0, active - ACTIVE_LIMIT_S),
+            "active_intervals": [
+                {"id": row[0], "started_at": row[1], "ended_at": row[2]}
+                for row in db.execute("SELECT id, start, end FROM active ORDER BY id")
+            ],
             "revision_claimed": bool(db.execute("SELECT revision FROM campaign").fetchone()[0]),
             "latency_samples_s": [
                 row[0]
                 for row in db.execute("SELECT latency FROM requests WHERE settled=1 ORDER BY id")
             ],
             "claimed_trials": [row[0] for row in db.execute("SELECT id FROM trials ORDER BY id")],
+            "request_records": [
+                {
+                    "id": row[0],
+                    "purpose": row[1],
+                    "settled": bool(row[2]),
+                    "reported_tokens": row[3],
+                    "latency_s": row[4],
+                }
+                for row in db.execute(
+                    "SELECT id, purpose, settled, tokens, latency FROM requests ORDER BY id"
+                )
+            ],
         }
 
     def snapshot(self) -> dict[str, Any]:
