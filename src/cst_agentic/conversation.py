@@ -25,7 +25,7 @@ from .canonical_schema import json_object
 from .context_budget import ContextBudget
 from .controller import ControllerSession
 from .conversation_gateway import CallOutcome, ConversationGateway, ProtocolPause
-from .discovery import GROUP_GUIDANCE, ToolDiscovery
+from .discovery import ToolDiscovery
 from .mcp_client import McpToolCall
 from .recovery import RecoveryError, RecoveryStore
 
@@ -157,6 +157,7 @@ class ConversationCoordinator:
         on_event: Callable[[ConversationEvent], None] | None = None,
         model_timeout_s: float = 120,
         context_budget: ContextBudget | None = None,
+        execution_admission: Callable[[], bool] | None = None,
     ) -> None:
         self._model = model
         self._connection = connection
@@ -170,6 +171,7 @@ class ConversationCoordinator:
         self._catalogue_loader = catalogue_loader
         self._request_admission = request_admission
         self._context_budget = context_budget
+        self._execution_admission = execution_admission
         self._clock = clock
         self._history_batches: list[_SettledBatch] = []
         self._omitted_batches = 0
@@ -309,7 +311,7 @@ class ConversationCoordinator:
             "notes": "No approved decision-memory adapter available",
         }
         return ModelRequest(
-            INSTRUCTIONS + (" " + GROUP_GUIDANCE if self._discovery is not None else ""),
+            INSTRUCTIONS + (" " + self._discovery.guidance if self._discovery is not None else ""),
             [{"role": "user", "content": json.dumps(context)}, *self.history],
             self.active_tools,
             AgentOutputSchema(ConversationDecision),
@@ -615,7 +617,11 @@ class ConversationCoordinator:
                 outcomes = await self._gateway.settle(
                     calls,
                     request.tools,
-                    admit=lambda: self._clock() - started < 1200 and not self._repeat_pause,
+                    admit=lambda: (
+                        self._clock() - started < 1200
+                        and not self._repeat_pause
+                        and (self._execution_admission is None or self._execution_admission())
+                    ),
                     observe=self._observe,
                     reject_reason=(
                         "Objective transition: originating task state is stale; "

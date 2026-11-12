@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import json
 from collections import Counter
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from copy import deepcopy
 from dataclasses import dataclass
 from types import MappingProxyType
@@ -212,14 +212,23 @@ GROUP_GUIDANCE = (
 )
 
 
-def discovery_definition() -> Tool:
+@dataclass(frozen=True)
+class DiscoveryProfile:
+    """Explicit test-only settings; never loaded by the production factory."""
+
+    groups: Mapping[str, OperationalGroup]
+    ceiling: int
+    guidance: str
+
+
+def discovery_definition(groups: Mapping[str, Any] = GROUPS) -> Tool:
     return Tool(
         name="discover_tools",
         description="Replace selected groups; schemas activate on the next internal request.",
         input_schema={
             "type": "object",
             "properties": {
-                "groups": {"type": "array", "items": {"type": "string", "enum": list(GROUPS)}}
+                "groups": {"type": "array", "items": {"type": "string", "enum": list(groups)}}
             },
             "required": ["groups"],
             "additionalProperties": False,
@@ -230,7 +239,19 @@ def discovery_definition() -> Tool:
 class ToolDiscovery:
     """Detached accepted catalogue and selection; never dispatches an MCP tool."""
 
-    def __init__(self, catalogue: Sequence[Tool]) -> None:
+    def __init__(
+        self, catalogue: Sequence[Tool], *, profile: DiscoveryProfile | None = None
+    ) -> None:
+        self._members = (
+            {name: group.members for name, group in profile.groups.items()}
+            if profile is not None
+            else dict(GROUPS)
+        )
+        self._limit = profile.ceiling if profile is not None else ACTIVE_LIMIT
+        self.guidance = profile.guidance if profile is not None else GROUP_GUIDANCE
+        self._inventory = frozenset(STARTUP_MCP).union(*self._members.values())
+        if not self._inventory <= APPROVED_MCP_TOOLS or self._limit not in {12, 16, 20}:
+            raise ValueError("Discovery profile exceeds reviewed experimental settings.")
         self._catalogue: dict[str, Tool] = {}
         self._reviewed_schemas: dict[str, str] = {}
         self._unavailable: dict[str, str] = {}
@@ -253,7 +274,7 @@ class ToolDiscovery:
         unavailable: dict[str, str] = {}
         for tool in deepcopy(catalogue):
             name = tool.name
-            if name not in APPROVED_MCP_TOOLS:
+            if name not in self._inventory:
                 continue
             if counts[name] != 1:
                 unavailable[name] = "duplicate canonical name"
@@ -269,7 +290,7 @@ class ToolDiscovery:
                 continue
             self._reviewed_schemas[name] = key
             accepted[name] = tool
-        for name in APPROVED_MCP_TOOLS - accepted.keys() - unavailable.keys():
+        for name in self._inventory - accepted.keys() - unavailable.keys():
             unavailable[name] = "missing canonical tool"
         self._catalogue, self._unavailable = accepted, unavailable
         self._groups = ()
@@ -282,7 +303,7 @@ class ToolDiscovery:
         )
         disabled = [
             f"{group} ({'; '.join(f'{n}: {unavailable[n]}' for n in names if n in unavailable)})"
-            for group, names in GROUPS.items()
+            for group, names in self._members.items()
             if any(n in unavailable for n in names)
         ]
         return self.blocker or (
@@ -298,8 +319,11 @@ class ToolDiscovery:
     def tools(self) -> tuple[Tool, ...]:
         if self.blocker is not None:
             return ()  # Coordinator refuses a request, never transmits a smaller startup.
-        names = dict.fromkeys((*STARTUP_MCP, *(n for g in self._groups for n in GROUPS[g])))
-        return (*deepcopy(tuple(self._catalogue[name] for name in names)), discovery_definition())
+        names = dict.fromkeys((*STARTUP_MCP, *(n for g in self._groups for n in self._members[g])))
+        return (
+            *deepcopy(tuple(self._catalogue[name] for name in names)),
+            discovery_definition(self._members),
+        )
 
     def _result(self, accepted: bool, requested: Any, reason: str) -> dict[str, Any]:
         return {
@@ -309,7 +333,7 @@ class ToolDiscovery:
             "current_groups": list(self._groups),
             "active_tools": [tool.name for tool in self.tools],
             "visible_count": len(self.tools),
-            "limit": ACTIVE_LIMIT,
+            "limit": self._limit,
             "activation": "next internal request" if accepted else "unchanged",
         }
 
@@ -358,11 +382,11 @@ class ToolDiscovery:
             )
         if not isinstance(groups, list) or any(not isinstance(g, str) for g in groups):
             return self.reject("groups must be an array of group identifier strings.", groups)
-        unknown = sorted(set(groups) - GROUPS.keys())
+        unknown = sorted(set(groups) - self._members.keys())
         if unknown:
             return self.reject("Unknown groups: " + ", ".join(unknown), groups)
         proposed = tuple(sorted(set(groups)))
-        names = set(STARTUP_MCP).union(*(GROUPS[g] for g in proposed))
+        names = set(STARTUP_MCP).union(*(self._members[g] for g in proposed))
         count = len(names) + 1
         unavailable = sorted(names - self._catalogue.keys())
         if unavailable:
@@ -371,9 +395,9 @@ class ToolDiscovery:
                 + "; ".join(f"{name}: {self._unavailable[name]}" for name in unavailable),
                 groups,
             )
-        if count > ACTIVE_LIMIT:
+        if count > self._limit:
             return self.reject(
-                f"Proposed visible count {count} exceeds limit {ACTIVE_LIMIT}.", groups
+                f"Proposed visible count {count} exceeds limit {self._limit}.", groups
             )
         if proposed in self._seen:
             reason = (
