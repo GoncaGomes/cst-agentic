@@ -2,10 +2,10 @@
 
 ## Project Overview
 
-CST-Agentic develops an agentic system to control CST Studio Suite, run
-simulations and analyze results. The intended application architecture has a CST
-controller using MCP and an analysis agent with dedicated tools. This direction
-does not establish that every capability is implemented or verified.
+CST-Agentic provides one command: `uv run cst-agentic verify-connectivity`.
+It contacts the configured model and calls `cst_connection_status` through MCP
+with `CST_CONNECT_MODE=disabled`. Expected results are `mode=offline` and
+`project_open=false`. This verifies connectivity, not native CST operations.
 
 ## Environment
 - **Python** >= 3.12

@@ -1,70 +1,55 @@
-# Protected MCP client integration
+# Protected MCP client
 
-Issue [#16](https://github.com/GoncaGomes/cst-agentic/issues/16) extends the existing
-client without enabling connected Controller behavior in the connectivity command.
+The base MCP client supports the connectivity check without enabling native CST
+operations. The check's gateway exposes and allows only `cst_connection_status`.
 
-## Catalogue and outcomes
+## Catalogue and responses
 
-- `await client.discover_tools()` still returns names in discovery order,
-  including duplicates.
+- `await client.discover_tools()` returns names in discovery order, including
+  duplicates, following every pagination cursor.
 - `await client.discover_tool_definitions()` returns detached SDK `Tool` objects
-  across all pages. Input/output schemas and metadata are canonical, not converted
-   into stricter schemas. Catalogue access does not grant execution permission.
-  Catalogue pages share the dispatch serialization lock, include queueing in each
-  page allowance, and refuse access after permanent client uncertainty. The
-  Controller session further restricts refresh to settled lifecycle-owner points.
-- `McpToolCall.text` and `.payload` retain their first-text-block meanings.
-  `.content` retains **all** returned content blocks; `.structured_content` retains
-  the returned structured data. These are detached from the SDK response.
-- Client-created records set `.evidence_complete=True`: no returned blocks or
-  structured content were omitted/truncated by the client. Legacy manually created
-  records default to `False`. This is not proof that the server reported every
-  effect, that a rebuild succeeded, or that the native operation had no partial
-  effects. A future bounded model-facing projection must identify its omissions.
+  with canonical input/output schemas and metadata, without strict-schema
+  conversion. Catalogue access does not grant execution permission.
+- Catalogue pages share the dispatch lock, include queueing in each page's
+  request allowance, and refuse access after permanent client uncertainty.
+- `McpToolCall.text` and `.payload` describe the first text block. `.content`
+  retains all returned blocks; `.structured_content` retains structured data.
+  These are detached from the SDK response.
+- Client-created records set `.evidence_complete=True`: the client omitted no
+  returned blocks or structured data. Legacy manually created records default
+  to `False`. Neither value proves native execution success or absence of
+  partial effects.
 
-## Dispatch
+## Dispatch and attempt records
 
-```python
-outcome = await client.call_tool(
-    tool_name,
-    arguments,
-    timeout_s=operation_allowance_s,
-    dispatch_guard=check_current_prerequisites,
-)
-```
+`await client.call_tool(name, arguments)` serializes calls per client. Optional
+`timeout_s` overrides the request allowance for one call; optional
+`dispatch_guard` is a synchronous no-argument callback that must return exactly
+`True` before dispatch. False, invalid/async results or exceptions refuse
+dispatch without latching uncertainty. Guard exception text is not exposed.
+Keep guards short: synchronous code cannot be preempted safely.
 
-Both keyword arguments are optional; existing two-argument callers are unchanged.
-Allowances must be finite positive numbers, not booleans. The explicit allowance
-does not mutate `client.request_timeout_s`. Queueing, the guard and SDK execution
-consume one allowance; waiting does not earn a new execution budget.
+Allowances must be finite positive numbers, not booleans. Queueing, the guard
+and SDK execution consume one allowance. Arguments are deep-copied before the
+first await. Every admitted call produces a `McpAttempt` in `.attempts`, with
+timings, dispatch state, terminal outcome and a returned record if available.
+Only returned responses appear in `.calls`.
 
-The execution gateway supplies a synchronous `() -> bool` guard. It must return
-exactly `True` after checking current authorization, target and prerequisites.
-It can also require successful synchronous recovery-marker persistence before
-approving. There is no await between approval and the dispatch marker. Keep the
-guard short: synchronous code cannot be force-timed-out safely. Its elapsed time
-is checked before dispatch. False, invalid/async results or exceptions refuse
-dispatch without latching uncertainty; exception text is not exposed.
+- `not_dispatched`: queue expiry, guard refusal, cancellation before dispatch,
+  a missing session or an already uncertain client. No SDK call was made.
+- `received`: a response returned, possibly a tool error or partial effects.
+- `uncertain`: timeout, cancellation or SDK/transport failure after dispatch.
+  All subsequent calls and catalogue requests on that client are blocked.
 
-The client does **not** choose policy maxima, implement a recovery store, validate
-task authorization itself, or provide a new direct SDK dispatch route. Those are
-Controller integration responsibilities. The agreed maxima remain ordinary/status
-120 s, launch 480 s, short wait 45 s and stop 60 s. They are not native timeout
-settings or hard real-time guarantees.
+Attempt diagnostics use bounded categories rather than raw exception text.
+There is no automatic replay; replacing a client does not establish what an
+uncertain operation did. The client supplies transport guards, not application
+authorization or durable recovery.
 
-## Safety and evidence boundary
+## Verification boundary
 
-Queue expiry and guard refusal are `not_dispatched`. A returned domain/tool error
-is `received`, possibly with partial effects. Post-dispatch timeout, cancellation
-or SDK exception is `uncertain`: it permanently blocks **all** subsequent tool
-calls on that client, including status and stop. No retry, reconnect or new client
-proves reconciliation. Simulation stop uses the same serialized connection and
-cannot overtake active work.
-
-Offline tests use fake SDK sessions and the actual public SDK/stdio wrapper with
-a disposable local JSON-RPC peer. The latter checks pagination, response handling,
-SDK validation uncertainty, received domain failures and normal context cleanup.
-It does not certify failed cleanup, crash durability, native CST behavior, endpoint
-schema acceptance or solver-stop latency. Existing lifecycle implementation and
-connectivity configuration remain unchanged. No CST or institutional endpoint
-request is part of these tests.
+Offline tests use fake SDK sessions and the real SDK/stdio wrapper with a
+disposable local JSON-RPC peer. They cover pagination, response handling,
+serialization, request bounds, uncertainty and normal cleanup. They do not
+certify crash durability, native CST behavior, endpoint schema acceptance or
+solver behavior. No CST or institutional endpoint request is part of the tests.

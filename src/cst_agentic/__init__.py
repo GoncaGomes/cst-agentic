@@ -1,8 +1,4 @@
-"""CST-Agentic: agentic control of CST Studio Suite through an MCP server.
-
-This package currently provides the model/MCP connectivity check (milestone 1).
-See ``docs/tasks/T001-verify-model-mcp-connectivity.md`` for the scope.
-"""
+"""CST-Agentic: model/MCP connectivity verification with CST in disabled mode."""
 
 __all__ = ["__version__"]
 
