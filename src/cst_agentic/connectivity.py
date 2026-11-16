@@ -15,7 +15,7 @@ import os
 import time
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from agents import Agent, RunConfig, Runner
 from agents.items import ToolCallItem
@@ -25,6 +25,9 @@ from openai import AsyncOpenAI
 from .config import ConnectivityConfig
 from .mcp_client import CstMcpClient, McpError, McpToolCall
 from .tool_gateway import ALLOWED_TOOLS, ToolGateway, build_status_tool
+
+if TYPE_CHECKING:
+    from .discovery import DiscoveryReport
 
 REPORTS_PATH = Path("tests/reports")
 
@@ -410,7 +413,7 @@ def _verify(state: dict[str, Any], checks: list[Check]) -> None:
 
 
 def save_json_report(
-    report: ConnectivityReport,
+    report: ConnectivityReport | DiscoveryReport,
     report_path: Path,
     file_name: str,
 ) -> None:
