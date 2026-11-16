@@ -1,93 +1,97 @@
 # cst-agentic
 
-Python tooling for exploring the integration of language models such as Qwen
-with CST Studio Suite through the Model Context Protocol (MCP).
-
-The project currently provides a single connectivity check:
-`uv run cst-agentic verify-connectivity`. It contacts the configured model
-through the institutional Skynet OpenAI-compatible endpoint and verifies that
-the model can call `cst_connection_status` through `cst-studio-mcp`.
-
-The check runs with CST connectivity disabled. It does not launch CST, edit
-projects or run simulations.
+`cst-agentic` is a Python CLI for testing how a language model interacts with
+`cst-studio-mcp` through the Model Context Protocol (MCP). It provides
+connectivity and tool discovery checks with `CST_CONNECT_MODE=disabled`.
 
 ## Requirements
 
-- Python 3.12+ and [uv](https://docs.astral.sh/uv/).
-- Access to Skynet and a model that supports tool calling.
-- An existing `cst-studio-mcp` installation with a runnable executable and
-  working directory. This repository does not install the MCP server.
+- Python 3.12 or later and [uv](https://docs.astral.sh/uv/).
+- Access to the OpenAI-compatible Skynet endpoint and a model that supports tool calling.
+- An existing `cst-studio-mcp` installation with an executable and a working directory.
 
 ## Quick start
 
-From the repository root:
+Install the locked dependencies from the repository root.
 
 ```powershell
 uv sync --locked
 ```
 
-Create a local `.env` file with these settings, replacing the placeholders:
+Create a `.env` file in the repository root and replace the placeholders with
+your Skynet and MCP server settings.
 
 ```dotenv
 SKYNET_BASE_URL=https://your-skynet-endpoint.example/v1
 SKYNET_API_KEY=replace-with-your-key
-AGENT=your-qwen-model-id
+AGENT=your-model-id
 CST_MCP_SERVER_EXECUTABLE=C:/path/to/cst-studio-mcp.exe
 CST_MCP_SERVER_CWD=C:/path/to/server-directory
 ```
 
-`AGENT` is the model ID available at your endpoint. The `.env` file takes
-precedence over process environment variables; missing values fall back to
-the environment. The command does not modify the file or use an unrelated
-`OPENAI_API_KEY`. Keep credentials out of commits and shared diagnostics.
+`AGENT` is the model ID available on your Skynet endpoint. Values in `.env`
+take precedence over environment variables. Keep `.env` out of version control.
 
-Keep CST closed, then run:
+Run either check.
 
 ```powershell
 uv run cst-agentic verify-connectivity
+uv run cst-agentic discover-tools
 ```
 
-To use a configuration file elsewhere:
+Both commands accept `--env` to specify a different configuration file.
 
 ```powershell
-uv run cst-agentic verify-connectivity --env C:/path/to/.env
+uv run cst-agentic discover-tools --env C:/path/to/.env
 ```
 
-### Expected result
+## Checks
 
-The MCP server is started with `CST_CONNECT_MODE=disabled`, and only
-`cst_connection_status` is exposed to the model. A successful response reports:
+### Connectivity
 
-```text
-mode=offline
-project_open=false
-```
+`verify-connectivity` starts the MCP server with `CST_TOOLSETS=core` and
+exposes only `cst_connection_status` to the model. The check verifies that the
+model calls it through MCP and correctly reports an offline connection with no
+open project (`mode: offline`, `project_open: false`).
 
-**Disconnected is the expected result**, not a failure. The check verifies
-that the model actually called the tool through MCP and summarized its
-response. It prints diagnostics and exits 0 on success or 1 on failure.
+### Tool discovery
 
-This verifies model/MCP connectivity only, not native CST compatibility,
-modeling or solver correctness. Offline tests do not establish that a real
-Skynet/MCP integration works; validate that separately with the command above.
+`discover-tools` starts the MCP server with `CST_TOOLSETS=all` and loads its
+tool catalog. The model receives one callable function,
+`discover_tools(groups)`, which looks up definitions in the 18 configured
+[tool groups](src/cst_agentic/tool_groups.py).
+
+In a single agent run, the model must look up each group once and name all the
+tools it finds. The check requires every group to return its full set of MCP
+definitions. The run allows up to 24 agent turns and makes zero MCP tool
+execution requests. The report lists each tool found once.
+
+### Reports
+
+Both checks print a summary and exit with status `0` on success or `1` on
+failure. The JSON reports contain the recorded calls, validation checks, and
+the model's final response.
+
+| Command | JSON report |
+| --- | --- |
+| `verify-connectivity` | `tests/reports/connectivity.json` |
+| `discover-tools` | `tests/reports/one_call_tool_discovery.json` |
 
 ## Development
 
-Application code lives in `src/cst_agentic/`, with offline tests in `tests/`.
+Run the formatter check, linter, type checker, and test suite with the same
+locked dependencies as Windows CI.
 
 ```powershell
-uv run cst-agentic --help
-uv run --locked pytest
-uv run --locked ruff format --check .
-uv run --locked ruff check .
-uv run --locked pyright
+uv sync --locked --dev
+uv run --no-sync ruff format --check .
+uv run --no-sync ruff check .
+uv run --no-sync pyright
+uv run --no-sync pytest -q
 ```
 
-Tests use scripted model replies, fake MCP sessions and a disposable local
-MCP peer. They do not contact Skynet or launch CST. Windows CI runs the same
-checks with locked dependencies.
+The offline tests use scripted model replies, fake MCP sessions, and a local
+MCP test server.
 
-Further details:
-
-- [MCP client behavior and safety guarantees](docs/protected-mcp-client.md)
-- [Source-language convention](docs/project-language.md)
+- [MCP client behavior](docs/protected-mcp-client.md)
+- [Project language conventions](docs/project-language.md)
