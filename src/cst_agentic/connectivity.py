@@ -13,7 +13,8 @@ from __future__ import annotations
 import json
 import os
 import time
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
+from pathlib import Path
 from typing import Any
 
 from agents import Agent, RunConfig, Runner
@@ -24,6 +25,8 @@ from openai import AsyncOpenAI
 from .config import ConnectivityConfig
 from .mcp_client import CstMcpClient, McpError, McpToolCall
 from .tool_gateway import ALLOWED_TOOLS, ToolGateway, build_status_tool
+
+REPORTS_PATH = Path("tests/reports")
 
 SYSTEM_INSTRUCTIONS = (
     "You are verifying connectivity to a CST Studio Suite MCP server that is "
@@ -296,8 +299,7 @@ async def run_connectivity_check(
 
     passed = all(check.passed for check in checks)
     success = passed and state["error"] is None
-
-    return ConnectivityReport(
+    connectivity_report = ConnectivityReport(
         success=success,
         stage=state["stage"],
         error=state["error"],
@@ -312,6 +314,8 @@ async def run_connectivity_check(
         checks=checks,
         duration_s=time.monotonic() - started,
     )
+    save_json_report(connectivity_report, REPORTS_PATH, "connectivity.json")
+    return connectivity_report
 
 
 def _verify(state: dict[str, Any], checks: list[Check]) -> None:
@@ -403,3 +407,15 @@ def _verify(state: dict[str, Any], checks: list[Check]) -> None:
             else "answer does not reference the disconnected status",
         )
     )
+
+
+def save_json_report(
+    report: ConnectivityReport,
+    report_path: Path,
+    file_name: str,
+) -> None:
+    data = asdict(report)
+    report_path.mkdir(parents=True, exist_ok=True)
+    output_path = report_path / file_name
+    with output_path.open("w", encoding="utf-8") as f:
+        json.dump(data, f, indent=4)

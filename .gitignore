@@ -16,3 +16,6 @@ wheels/
 .agents/local/
 docs/CST_Controller_Tool_Discovery_Plan.md
 tools_group.txt
+
+# Local reports
+tests/reports
