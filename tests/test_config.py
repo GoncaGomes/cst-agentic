@@ -285,3 +285,24 @@ def test_child_env_strips_credentials_and_forces_mode(tmp_path: Path) -> None:
     assert env["CST_WORK_DIR"] == str(cfg.work_dir)
     assert env["CST_TOOLSETS"] == "core"
     assert env["PATH"] == "C:\\bin"
+
+
+def test_discovery_child_env_preserves_sanitization_and_forces_all(tmp_path: Path) -> None:
+    cfg = _cfg(tmp_path)
+    parent = {
+        "PATH": "C:\\bin",
+        "SKYNET_API_KEY": "not-for-child",
+        "SOME_TOKEN": "not-for-child",
+        "CST_CONNECT_MODE": "auto",
+        "CST_TOOLSETS": "core",
+        "CST_WORK_DIR": "C:\\other",
+    }
+    before = parent.copy()
+    env = cfg.discovery_child_env(parent)
+    expected = cfg.child_env(parent)
+    expected["CST_TOOLSETS"] = "all"
+    assert env == expected
+    assert parent == before
+    assert env["CST_CONNECT_MODE"] == "disabled"
+    assert env["CST_WORK_DIR"] == str(cfg.work_dir)
+    assert not any(_is_credential_key(key) for key in env)

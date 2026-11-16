@@ -6,14 +6,18 @@ import json
 from typing import Any
 
 import pytest
+from agents.tool_context import ToolContext
 
 from cst_agentic.mcp_client import McpToolCall
 from cst_agentic.tool_gateway import (
     ALLOWED_TOOLS,
     ToolGateway,
     ToolNotAllowedError,
+    build_discovery_too,
+    build_discovery_tool,
     build_status_tool,
 )
+from cst_agentic.tool_groups import GROUP_CATALOGUE, ToolGroups
 
 
 class RecordingMcp:
@@ -64,3 +68,39 @@ def test_status_tool_metadata() -> None:
     schema = tool.params_json_schema
     assert schema.get("type") == "object"
     assert not schema.get("required")
+
+
+@pytest.mark.asyncio
+async def test_discovery_tool_metadata_and_real_wrapper() -> None:
+    groups = ToolGroups([])
+    tool = build_discovery_tool(groups)
+    assert build_discovery_too is build_discovery_tool
+    assert tool.name == "discover_tools"
+    schema = tool.params_json_schema
+    assert schema["additionalProperties"] is False
+    assert schema["required"] == ["groups"]
+    assert schema["properties"]["groups"]["items"]["enum"] == list(GROUP_CATALOGUE)
+    for name in GROUP_CATALOGUE:
+        assert name in tool.description
+    arguments = '{"groups": []}'
+    context = ToolContext(
+        context=None, tool_name=tool.name, tool_call_id="lookup", tool_arguments=arguments
+    )
+    response = await tool.on_invoke_tool(context, arguments)
+    assert json.loads(response) == groups.calls[0]
+    assert groups.calls[0]["success"]
+
+
+@pytest.mark.asyncio
+async def test_discovery_wrapper_rejects_malformed_arguments() -> None:
+    from agents.exceptions import ModelBehaviorError
+
+    groups = ToolGroups([])
+    tool = build_discovery_tool(groups)
+    arguments = '{"groups": "geometry_basic"}'
+    context = ToolContext(
+        context=None, tool_name=tool.name, tool_call_id="lookup", tool_arguments=arguments
+    )
+    with pytest.raises(ModelBehaviorError):
+        await tool.on_invoke_tool(context, arguments)
+    assert groups.calls == []

@@ -76,6 +76,12 @@ class ConnectivityConfig:
         env["CST_TOOLSETS"] = "core"
         return env
 
+    def discovery_child_env(self, parent_env: Mapping[str, str]) -> dict[str, str]:
+        """Use the same sanitization and offline mode, with every toolset listed."""
+        env = self.child_env(parent_env)
+        env["CST_TOOLSETS"] = "all"
+        return env
+
 
 def _is_credential_key(key: str) -> bool:
     """Return True when a variable name looks like it carries a secret."""

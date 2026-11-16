@@ -17,5 +17,6 @@ wheels/
 docs/CST_Controller_Tool_Discovery_Plan.md
 tools_group.txt
 
-# Local reports
+# Local reports/documents
 tests/reports
+docs/tools_group_mvp.txt

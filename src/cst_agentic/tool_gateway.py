@@ -1,9 +1,8 @@
-"""Tool allowlist enforcement for the connectivity check.
+"""Model-facing tools for the connectivity and discovery checks.
 
-The model is offered exactly one tool (``cst_connection_status``). This module
-adds an application-level gate so that, in addition to what the model can see,
-any dispatch to a tool outside the allowlist is rejected before it reaches the
-MCP transport. Prompt instructions alone are not a control; this gate is.
+Connectivity exposes only ``cst_connection_status`` and gates MCP dispatch
+with an allowlist. Discovery exposes only a local catalogue lookup with no
+MCP dispatch route. Prompt instructions alone are not an execution control.
 """
 
 from __future__ import annotations
@@ -15,6 +14,7 @@ from typing import Any
 from agents import FunctionTool, function_tool
 
 from .mcp_client import CstMcpClient, McpToolCall
+from .tool_groups import GROUP_CATALOGUE, ToolGroups, group_description
 
 #: The only MCP tool this check is allowed to execute.
 ALLOWED_TOOLS: frozenset[str] = frozenset({"cst_connection_status"})
@@ -79,3 +79,22 @@ def build_status_tool(gateway: ToolGateway) -> FunctionTool:
         return call.text
 
     return cst_connection_status
+
+
+def build_discovery_tool(group: ToolGroups) -> FunctionTool:
+    """Build a discovery-only tool with no MCP execution route."""
+
+    @function_tool(failure_error_function=None)
+    async def discover_tools(groups: list[str]) -> str:
+        """Look up MCP tool definitions for the selected capability groups."""
+        return json.dumps(group.discover(groups))
+
+    discover_tools.description = group_description()
+    discover_tools.params_json_schema["properties"]["groups"]["items"]["enum"] = list(
+        GROUP_CATALOGUE
+    )
+    return discover_tools
+
+
+# Retain the factory spelling requested for the one-call discovery test.
+build_discovery_too = build_discovery_tool
