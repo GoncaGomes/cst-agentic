@@ -81,6 +81,24 @@ def build_status_tool(gateway: ToolGateway) -> FunctionTool:
     return cst_connection_status
 
 
+def build_dispatch_tool(gateway: ToolGateway) -> FunctionTool:
+    @function_tool(strict_mode=False, failure_error_function=None)
+    async def dispatch_tool(name: str, arguments: dict[str, Any]) -> str:
+        """Execute a CST MCP tool using its exact name and discovered input schema."""
+        try:
+            call = await gateway.dispatch(name, arguments)
+        except ToolNotAllowedError:
+            return json.dumps({"is_error": True, "message": "Tool is not allowed."})
+
+        result = call.structured_content
+        if result is None:
+            result = call.payload if call.payload is not None else call.text
+
+        return json.dumps({"is_error": call.is_error, "result": result})
+
+    return dispatch_tool
+
+
 def build_discovery_tool(group: ToolGroups) -> FunctionTool:
     """Build a discovery-only tool with no MCP execution route."""
 
