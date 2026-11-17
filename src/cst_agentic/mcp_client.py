@@ -244,6 +244,9 @@ class CstMcpClient:
         except Exception as exc:
             await self._aclose()
             raise McpStartupError(f"MCP initialize failed: {_describe(exc)}") from exc
+        except asyncio.CancelledError:
+            await self._aclose()
+            raise
 
         self.server_name = init.server_info.name
         self.server_version = init.server_info.version
