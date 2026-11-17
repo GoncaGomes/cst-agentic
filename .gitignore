@@ -20,3 +20,4 @@ tools_group.txt
 # Local reports/documents
 tests/reports
 docs/tools_group_mvp.txt
+tests/data
