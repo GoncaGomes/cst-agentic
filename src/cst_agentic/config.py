@@ -196,7 +196,7 @@ def load_connectivity_config(
     request_timeout = request_timeout_s if request_timeout_s is not None else 120.0
     startup_timeout = startup_timeout_s if startup_timeout_s is not None else 60.0
     shutdown_timeout = shutdown_timeout_s if shutdown_timeout_s is not None else 15.0
-    mcp_request_timeout = mcp_request_timeout_s if mcp_request_timeout_s is not None else 30.0
+    mcp_request_timeout = mcp_request_timeout_s if mcp_request_timeout_s is not None else 600
     for label, value in (
         ("request_timeout_s", request_timeout),
         ("startup_timeout_s", startup_timeout),
